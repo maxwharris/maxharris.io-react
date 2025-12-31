@@ -19,8 +19,10 @@ const Home = () => {
 
   return (
     <>
-      <Hero 
-        title="MAX HARRIS\nFULL STACK\nDEVELOPER"
+      <Hero
+        title={`MAX HARRIS
+FULL STACK
+DEVELOPER`}
         description="Building innovative web solutions and digital experiences"
       />
       <About />
