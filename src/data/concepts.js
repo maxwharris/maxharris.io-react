@@ -8,14 +8,6 @@ export const concepts = [
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
   },
   {
-    id: 2,
-    title: "RemixThis",
-    placeholder: "R",
-    tags: ["Web Audio", "Node.js", "MongoDB"],
-    description: "A music remixing platform combining Soundcloud and WhoSampled functionality. Users can upload samples or YouTube links and create remixes, with email verification and community-driven music collaboration.",
-    gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-  },
-  {
     id: 3,
     title: "Ink Atlas",
     placeholder: "IA",
