@@ -1,0 +1,30 @@
+/* Projects Grid Section */
+.completed-projects {
+  padding: 100px 0;
+  background: #fafafa;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .projects-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .completed-projects {
+    padding: 60px 0;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}

@@ -1,0 +1,45 @@
+/* About Section */
+.about {
+  padding: 100px 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+}
+
+.about-content {
+  text-align: center;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 60px;
+  text-align: center;
+}
+
+.about-text {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-text p {
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .about {
+    padding: 60px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,38 @@
+/* Contact Section */
+.contact {
+  padding: 100px 0;
+  background: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.contact-content {
+  text-align: center;
+}
+
+.contact-info p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.contact-email {
+  display: inline-block;
+  color: #000;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: color 0.2s ease;
+}
+
+.contact-email:hover {
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contact {
+    padding: 60px 0;
+  }
+}

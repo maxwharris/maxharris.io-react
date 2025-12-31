@@ -1,0 +1,46 @@
+/* Hero Section */
+.hero {
+  padding: 120px 0 80px;
+  background: #fafafa;
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.hero-title {
+  font-size: clamp(48px, 8vw, 120px);
+  font-weight: 900;
+  line-height: 0.9;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  margin-bottom: 40px;
+  white-space: pre-line;
+}
+
+.hero-description {
+  font-size: 18px;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: 400;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero {
+    padding: 100px 0 60px;
+  }
+
+  .hero-title {
+    font-size: clamp(32px, 10vw, 64px);
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: clamp(24px, 8vw, 48px);
+  }
+}
