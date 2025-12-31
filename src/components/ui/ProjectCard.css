@@ -1,56 +1,123 @@
 /* Project Card */
 .project-item {
-  background: white;
-  border: 1px solid #e0e0e0;
-  padding: 40px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  border: 1px solid var(--color-gray-100);
+}
+
+/* Subtle hover glow effect */
+.project-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  pointer-events: none;
 }
 
 .project-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-gray-200);
+}
+
+.project-item:hover::before {
+  opacity: 1;
 }
 
 .project-content h3 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: #000;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: var(--color-black);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  transition: transform var(--transition-base);
+}
+
+.project-item:hover .project-content h3 {
+  transform: translateX(4px);
 }
 
 .project-content p {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 24px;
+  font-size: 15px;
+  color: var(--color-gray-600);
+  line-height: 1.75;
+  margin-bottom: 32px;
+  font-weight: 400;
 }
 
 .project-link {
-  display: inline-block;
-  color: #000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-black);
   text-decoration: none;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  transition: color 0.2s ease;
+  letter-spacing: 0.12em;
+  transition: all var(--transition-fast);
+  position: relative;
+  padding-bottom: 2px;
+}
+
+/* Animated underline */
+.project-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-black);
+  transition: width var(--transition-base);
 }
 
 .project-link:hover {
-  color: #666;
+  transform: translateX(4px);
+}
+
+.project-link:hover::after {
+  width: 100%;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .project-item {
-    padding: 30px;
+    padding: 36px;
+  }
+
+  .project-content h3 {
+    font-size: 20px;
+  }
+
+  .project-content p {
+    font-size: 14px;
+    margin-bottom: 28px;
   }
 }
 
 @media (max-width: 480px) {
   .project-item {
-    padding: 20px;
+    padding: 28px;
+  }
+
+  .project-content h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .project-content p {
+    margin-bottom: 24px;
   }
 }

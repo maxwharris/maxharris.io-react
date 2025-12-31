@@ -1,8 +1,19 @@
 /* About Section */
 .about {
-  padding: 100px 0;
-  background: white;
-  border-top: 1px solid #e0e0e0;
+  padding: 140px 0;
+  background: var(--color-off-white);
+  position: relative;
+}
+
+/* Subtle top border with gradient */
+.about::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
 .about-content {
@@ -10,36 +21,79 @@
 }
 
 .section-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #000;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--color-black);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 60px;
+  letter-spacing: 0.15em;
+  margin-bottom: 72px;
   text-align: center;
+  position: relative;
+  display: inline-block;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Decorative underline */
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: var(--color-black);
 }
 
 .about-text {
-  max-width: 800px;
+  max-width: 880px;
   margin: 0 auto;
 }
 
 .about-text p {
-  font-size: 16px;
-  line-height: 1.7;
-  margin-bottom: 24px;
-  color: #333;
+  font-size: 18px;
+  line-height: 1.85;
+  margin-bottom: 28px;
+  color: var(--color-gray-700);
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .about {
-    padding: 60px 0;
+    padding: 100px 0;
+  }
+
+  .section-title {
+    font-size: 24px;
+    margin-bottom: 56px;
+  }
+
+  .about-text p {
+    font-size: 16px;
+    line-height: 1.8;
   }
 }
 
 @media (max-width: 480px) {
+  .about {
+    padding: 80px 0;
+  }
+
   .section-title {
-    font-size: 20px;
+    font-size: 22px;
+    margin-bottom: 48px;
+  }
+
+  .section-title::after {
+    width: 50px;
+    height: 2px;
+  }
+
+  .about-text p {
+    font-size: 15px;
+    margin-bottom: 24px;
   }
 }

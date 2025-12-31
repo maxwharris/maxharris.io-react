@@ -1,38 +1,100 @@
 /* Contact Section */
 .contact {
-  padding: 100px 0;
-  background: #fafafa;
-  border-top: 1px solid #e0e0e0;
+  padding: 140px 0;
+  background: var(--color-black);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle gradient overlay */
+.contact::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .contact-content {
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .contact-info p {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 24px;
+  font-size: 17px;
+  color: var(--color-gray-400);
+  margin-bottom: 32px;
+  font-weight: 400;
 }
 
 .contact-email {
   display: inline-block;
-  color: #000;
+  color: var(--color-white);
   text-decoration: none;
-  font-weight: 600;
-  font-size: 18px;
+  font-weight: 700;
+  font-size: 24px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  transition: color 0.2s ease;
+  letter-spacing: 0.12em;
+  transition: all var(--transition-base);
+  position: relative;
+  padding-bottom: 6px;
+}
+
+/* Animated underline */
+.contact-email::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-white);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--transition-base);
 }
 
 .contact-email:hover {
-  color: #666;
+  color: var(--color-gray-200);
+  transform: translateY(-2px);
+}
+
+.contact-email:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .contact {
-    padding: 60px 0;
+    padding: 100px 0;
+  }
+
+  .contact-email {
+    font-size: 20px;
+  }
+
+  .contact-info p {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact {
+    padding: 80px 0;
+  }
+
+  .contact-email {
+    font-size: 18px;
+    letter-spacing: 0.1em;
+  }
+
+  .contact-info p {
+    font-size: 15px;
+    margin-bottom: 28px;
   }
 }
