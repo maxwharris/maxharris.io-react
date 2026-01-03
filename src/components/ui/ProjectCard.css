@@ -41,6 +41,7 @@
 
 /* Project Image/Placeholder */
 .project-image {
+  display: block;
   width: 100%;
   height: 280px;
   overflow: hidden;
@@ -52,6 +53,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top left;
   transition: transform var(--transition-slow);
 }
 

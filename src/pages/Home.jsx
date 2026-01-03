@@ -23,6 +23,7 @@ const Home = () => {
         title={`max harris
 developer+`}
         description="creating digital solutions and more"
+        showLinks={true}
       />
       <About />
       <Contact />

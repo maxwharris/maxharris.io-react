@@ -1,6 +1,6 @@
 /* About Section - Enhanced */
 .about {
-  padding: 160px 0;
+  padding: 80px 0 160px;
   background: var(--color-off-white);
   position: relative;
 }
@@ -65,7 +65,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .about {
-    padding: 120px 0;
+    padding: 60px 0 120px;
   }
 
   .section-title {
@@ -88,7 +88,7 @@
 
 @media (max-width: 480px) {
   .about {
-    padding: 100px 0;
+    padding: 50px 0 100px;
   }
 
   .section-title {
