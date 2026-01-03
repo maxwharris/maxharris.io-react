@@ -1,6 +1,6 @@
-/* Concepts Grid Section */
+/* Concepts Grid Section - Enhanced */
 .concepts {
-  padding: 140px 0;
+  padding: 160px 0;
   background: var(--color-off-white);
   position: relative;
 }
@@ -18,39 +18,40 @@
 
 .concepts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 48px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .concepts {
-    padding: 120px 0;
+    padding: 140px 0;
   }
 
   .concepts-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 36px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
   }
 }
 
 @media (max-width: 768px) {
+  .concepts {
+    padding: 120px 0;
+  }
+
+  .concepts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
   .concepts {
     padding: 100px 0;
   }
 
   .concepts-grid {
     grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-
-@media (max-width: 480px) {
-  .concepts {
-    padding: 80px 0;
-  }
-
-  .concepts-grid {
-    gap: 28px;
+    gap: 24px;
   }
 }

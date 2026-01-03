@@ -20,10 +20,9 @@ const Home = () => {
   return (
     <>
       <Hero
-        title={`MAX HARRIS
-FULL STACK
-DEVELOPER`}
-        description="Building innovative web solutions and digital experiences"
+        title={`max harris
+developer+`}
+        description="creating digital solutions and more"
       />
       <About />
       <Contact />

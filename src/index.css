@@ -1,3 +1,6 @@
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -6,32 +9,42 @@
 }
 
 :root {
-  /* Monochrome Palette */
+  /* Enhanced Monochrome Palette */
   --color-black: #000000;
   --color-dark: #0a0a0a;
   --color-gray-900: #1a1a1a;
   --color-gray-800: #262626;
   --color-gray-700: #333333;
+  --color-gray-650: #3d3d3d;
   --color-gray-600: #4a4a4a;
-  --color-gray-500: #666666;
+  --color-gray-500: #6b6b6b;
   --color-gray-400: #888888;
   --color-gray-300: #a8a8a8;
   --color-gray-200: #d4d4d4;
+  --color-gray-150: #e0e0e0;
   --color-gray-100: #e8e8e8;
   --color-gray-50: #f5f5f5;
+  --color-gray-25: #f8f8f8;
   --color-white: #ffffff;
   --color-off-white: #fafafa;
 
-  /* Premium Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  /* Refined Shadow System */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.03);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 16px 32px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.06);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
 
-  /* Premium Hover Shadows */
-  --shadow-hover: 0 30px 60px -12px rgba(0, 0, 0, 0.25), 0 18px 36px -18px rgba(0, 0, 0, 0.15);
+  /* Interactive Shadows */
+  --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-active: 0 16px 32px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.06);
+
+  /* Border Colors */
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.16);
 
   /* Spacing */
   --spacing-xs: 8px;
@@ -41,16 +54,18 @@
   --spacing-xl: 80px;
   --spacing-2xl: 120px;
 
-  /* Border Radius */
+  /* Border Radius - More Contemporary */
+  --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
 
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 html {
@@ -60,7 +75,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'courier prime', 'courier new', courier, monospace;
   line-height: 1.6;
   color: var(--color-black);
   background-color: var(--color-off-white);
@@ -83,37 +98,65 @@ body::before {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 60px;
+  padding: 0 80px;
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Inter', sans-serif;
-  font-weight: 800;
+  font-family: 'courier prime', 'courier new', courier, monospace;
+  font-weight: 700;
   line-height: 1.1;
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
   color: var(--color-black);
 }
 
 p {
   margin: 0;
-  color: var(--color-black);
+  color: var(--color-gray-500);
   font-weight: 400;
-  line-height: 1.7;
+  line-height: 1.9;
+  letter-spacing: -0.015em;
+}
+
+/* Common Text Utilities */
+.text-primary {
+  color: var(--color-black);
+}
+
+.text-secondary {
+  color: var(--color-gray-500);
+}
+
+.text-tertiary {
+  color: var(--color-gray-400);
+}
+
+.label-text {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.15em;
+  color: var(--color-gray-400);
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .container {
-    padding: 0 40px;
+    padding: 0 60px;
   }
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 0 32px;
+  }
+}
+
+@media (max-width: 480px) {
   .container {
     padding: 0 24px;
   }

@@ -7,7 +7,7 @@ const Projects = () => {
     <>
       <Hero 
         title="PROJECTS"
-        description="Completed work and concepts in development"
+        description="completed work & works in progress"
       />
       <ProjectsGrid />
       <ConceptsGrid />

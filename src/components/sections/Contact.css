@@ -1,6 +1,6 @@
-/* Contact Section */
+/* Contact Section - Enhanced */
 .contact {
-  padding: 140px 0;
+  padding: 160px 0;
   background: var(--color-black);
   position: relative;
   overflow: hidden;
@@ -27,18 +27,21 @@
 .contact-info p {
   font-size: 17px;
   color: var(--color-gray-400);
-  margin-bottom: 32px;
+  margin-bottom: 40px;
   font-weight: 400;
+  line-height: 1.8;
+  letter-spacing: -0.01em;
 }
 
 .contact-email {
   display: inline-block;
   color: var(--color-white);
   text-decoration: none;
+  font-family: 'courier prime', 'courier new', courier, monospace;
   font-weight: 700;
   font-size: 24px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  letter-spacing: 0.08em;
   transition: all var(--transition-base);
   position: relative;
   padding-bottom: 6px;
@@ -61,6 +64,7 @@
 .contact-email:hover {
   color: var(--color-gray-200);
   transform: translateY(-2px);
+  letter-spacing: 0.1em;
 }
 
 .contact-email:hover::after {
@@ -71,7 +75,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .contact {
-    padding: 100px 0;
+    padding: 120px 0;
   }
 
   .contact-email {
@@ -80,12 +84,13 @@
 
   .contact-info p {
     font-size: 16px;
+    margin-bottom: 36px;
   }
 }
 
 @media (max-width: 480px) {
   .contact {
-    padding: 80px 0;
+    padding: 100px 0;
   }
 
   .contact-email {
@@ -95,6 +100,6 @@
 
   .contact-info p {
     font-size: 15px;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
   }
 }

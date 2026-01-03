@@ -7,8 +7,8 @@ const About = () => {
         <div className="about-content">
           <h2 className="section-title">ABOUT</h2>
           <div className="about-text">
-            <p>I'm a passionate full-stack developer with expertise in modern web technologies. I specialize in creating scalable, user-friendly applications that solve real-world problems.</p>
-            <p>My approach combines technical excellence with creative problem-solving to deliver exceptional digital experiences.</p>
+            <p>experience with software development on web, ios, android, windows, and linux</p>
+            <p>i enjoy solving problems and making new ones</p>
           </div>
         </div>
       </div>
