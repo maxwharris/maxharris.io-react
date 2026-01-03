@@ -23,20 +23,21 @@ export const completedProjects = [
   {
     id: 4,
     title: "wavshare.io",
-    description: "a 'open source' music sharing platform where users can download shared tracks and share remixes",
+    description: "an 'open source' music sharing platform where users can download shared tracks and share remixes",
     link: "https://wavshare.io",
     image: "/images/wavshare.png"
   },
   {
     id: 5,
     title: "PolyMono",
-    description: "A New York themed Monopoly game",
-    link: "http://mp.maxharris.io"
+    description: "new york themed monopoly game (private)",
+    link: "http://mp.maxharris.io",
+    image: "/images/polymono.png"
   },
   {
     id: 6,
     title: "Krupp Holdings site",
-    description: "Corporate website for Krupp Holdings",
+    description: "company website for krupp holdings investment group",
     link: "https://kruppholdings.com",
     image: "/images/kruppholdings.png"
   }
