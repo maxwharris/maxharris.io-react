@@ -1,11 +1,17 @@
 import './ConceptCard.css';
 
-const ConceptCard = ({ title, placeholder, tags, description, designApproach }) => {
-  return (
-    <div className={`concept-item concept-${designApproach}`}>
+const ConceptCard = ({ title, placeholder, tags, description, designApproach, image, link }) => {
+  const cardContent = (
+    <>
       <div className="concept-thumbnail">
-        <span className="thumbnail-placeholder">{placeholder}</span>
-        <div className="thumbnail-decoration"></div>
+        {image ? (
+          <img src={image} alt={title} className="concept-image" />
+        ) : (
+          <>
+            <span className="thumbnail-placeholder">{placeholder}</span>
+            <div className="thumbnail-decoration"></div>
+          </>
+        )}
       </div>
       <div className="concept-content">
         <h3>{title}</h3>
@@ -18,6 +24,20 @@ const ConceptCard = ({ title, placeholder, tags, description, designApproach }) 
         </div>
         <p>{description}</p>
       </div>
+    </>
+  );
+
+  if (link) {
+    return (
+      <a href={link} target="_blank" rel="noopener noreferrer" className={`concept-item concept-${designApproach}`}>
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <div className={`concept-item concept-${designApproach}`}>
+      {cardContent}
     </div>
   );
 };

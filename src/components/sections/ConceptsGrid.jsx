@@ -15,7 +15,9 @@ const ConceptsGrid = ({ showTitle = true }) => {
               placeholder={concept.placeholder}
               tags={concept.tags}
               description={concept.description}
-              gradient={concept.gradient}
+              designApproach={concept.designApproach}
+              image={concept.image}
+              link={concept.link}
             />
           ))}
         </div>
