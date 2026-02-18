@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Projects from './pages/Projects';
 import GitRedirect from './pages/GitRedirect';
 import LinkedInRedirect from './pages/LinkedInRedirect';
+import ETFComparison from './etf';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="projects" element={<Projects />} />
+          <Route path="etf" element={<ETFComparison />} />
         </Route>
         <Route path="git" element={<GitRedirect />} />
         <Route path="gh" element={<GitRedirect />} />
