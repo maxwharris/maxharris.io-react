@@ -13,8 +13,8 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="projects" element={<Projects />} />
-          <Route path="etf" element={<ETFComparison />} />
         </Route>
+        <Route path="etf" element={<ETFComparison />} />
         <Route path="git" element={<GitRedirect />} />
         <Route path="gh" element={<GitRedirect />} />
         <Route path="github" element={<GitRedirect />} />
