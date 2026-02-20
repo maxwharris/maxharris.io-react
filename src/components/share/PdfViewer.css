@@ -1,0 +1,43 @@
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pdf-canvas {
+  border-radius: 4px;
+  display: block;
+  pointer-events: none;
+}
+
+.pdf-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  font-family: 'courier prime', monospace;
+}
+
+.pdf-btn {
+  font-family: 'courier prime', monospace;
+  font-size: 12px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.pdf-btn:hover:not(:disabled) {
+  color: #000;
+}
+
+.pdf-btn:disabled {
+  color: #ccc;
+  cursor: default;
+}
+
+.pdf-page {
+  font-size: 12px;
+  color: #888;
+}

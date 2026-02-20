@@ -22,10 +22,10 @@
   transition: none;
 }
 
-.canvas-item-delete {
+.canvas-item-delete,
+.canvas-item-download {
   position: absolute;
   top: -8px;
-  right: -8px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -40,9 +40,19 @@
   justify-content: center;
   opacity: 0;
   transition: opacity 0.15s;
+  text-decoration: none;
 }
 
-.canvas-item:hover .canvas-item-delete {
+.canvas-item-delete {
+  right: -8px;
+}
+
+.canvas-item-download {
+  right: 18px;
+}
+
+.canvas-item:hover .canvas-item-delete,
+.canvas-item:hover .canvas-item-download {
   opacity: 1;
 }
 
@@ -50,6 +60,12 @@
   background: #f00;
   color: #fff;
   border-color: #f00;
+}
+
+.canvas-item-download:hover {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
 }
 
 .canvas-item-img {

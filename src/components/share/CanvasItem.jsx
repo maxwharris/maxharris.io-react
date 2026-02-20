@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import PdfViewer from './PdfViewer';
 import './CanvasItem.css';
 
 const CanvasItem = ({ item, onMove, onDelete }) => {
@@ -7,7 +8,7 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
 
   const handlePointerDown = useCallback(
     (e) => {
-      if (e.target.closest('.canvas-item-delete')) return;
+      if (e.target.closest('.canvas-item-delete') || e.target.closest('.canvas-item-download') || e.target.closest('.pdf-controls')) return;
       e.preventDefault();
       const el = itemRef.current;
       el.setPointerCapture(e.pointerId);
@@ -50,6 +51,9 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
     if (item.type === 'image') {
       return <img src={item.url} alt={item.filename} className="canvas-item-img" />;
     }
+    if (item.type === 'pdf') {
+      return <PdfViewer url={item.url} />;
+    }
     if (item.type === 'file') {
       return (
         <a
@@ -70,6 +74,8 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
     return null;
   };
 
+  const hasUrl = item.url && item.type !== 'text';
+
   return (
     <div
       ref={itemRef}
@@ -80,6 +86,18 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
       onPointerUp={handlePointerUp}
     >
       {renderContent()}
+      {hasUrl && (
+        <a
+          className="canvas-item-download"
+          href={item.url}
+          download={item.filename}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Download"
+        >
+          &#8595;
+        </a>
+      )}
       <button
         className="canvas-item-delete"
         onClick={() => onDelete(item.id)}

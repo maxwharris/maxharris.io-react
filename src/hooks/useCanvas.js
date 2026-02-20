@@ -24,6 +24,9 @@ export function useCanvas(socket) {
       setItems((prev) => prev.filter((item) => item.id !== id));
     });
 
+    // Request initial state (handles race where canvas:init fired before listeners registered)
+    socket.emit('canvas:request-init');
+
     return () => {
       socket.off('canvas:init');
       socket.off('item:added');

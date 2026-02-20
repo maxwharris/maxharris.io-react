@@ -1,7 +1,22 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Toolbar.css';
 
-const Toolbar = ({ onAddText, connected, connectedUsers }) => {
+const Toolbar = ({ onAddText, onAddFiles, connected, connectedUsers }) => {
+  const fileInputRef = useRef(null);
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      onAddFiles(files);
+    }
+    e.target.value = '';
+  };
+
   return (
     <div className="share-toolbar">
       <Link to="/" className="share-toolbar-logo">
@@ -11,6 +26,16 @@ const Toolbar = ({ onAddText, connected, connectedUsers }) => {
         <button className="share-toolbar-btn" onClick={onAddText}>
           + text
         </button>
+        <button className="share-toolbar-btn" onClick={handleFileClick}>
+          + file
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
         <div className="share-toolbar-status">
           <span
             className={`share-status-dot ${connected ? 'connected' : ''}`}

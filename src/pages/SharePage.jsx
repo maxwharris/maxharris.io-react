@@ -11,36 +11,24 @@ import './SharePage.css';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
 
+function getFileType(contentType) {
+  if (IMAGE_TYPES.includes(contentType)) return 'image';
+  if (contentType === 'application/pdf') return 'pdf';
+  return 'file';
+}
+
 const SharePage = () => {
   const { socket, connected, connectedUsers } = useSocket();
   const { items, addItem, moveItem, deleteItem } = useCanvas(socket);
   const [dragging, setDragging] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
 
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    setDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e) => {
-    if (e.currentTarget === e.target) {
-      setDragging(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback(
-    async (e) => {
-      e.preventDefault();
-      setDragging(false);
-
-      const files = Array.from(e.dataTransfer.files);
-      const dropX = e.clientX;
-      const dropY = e.clientY - 48; // offset for toolbar height
-
+  const uploadFiles = useCallback(
+    async (files, baseX, baseY) => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const offsetX = dropX + i * 30;
-        const offsetY = dropY + i * 30;
+        const x = baseX + i * 30;
+        const y = baseY + i * 30;
 
         try {
           const { uploadUrl, key, publicUrl, id } = await getPresignedUrl(
@@ -50,13 +38,11 @@ const SharePage = () => {
 
           await uploadToS3(uploadUrl, file);
 
-          const isImage = IMAGE_TYPES.includes(file.type);
-
           const item = {
             id,
-            type: isImage ? 'image' : 'file',
-            x: offsetX,
-            y: offsetY,
+            type: getFileType(file.type),
+            x,
+            y,
             s3Key: key,
             url: publicUrl,
             filename: file.name,
@@ -71,6 +57,36 @@ const SharePage = () => {
       }
     },
     [addItem]
+  );
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    if (e.currentTarget === e.target) {
+      setDragging(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setDragging(false);
+      const files = Array.from(e.dataTransfer.files);
+      uploadFiles(files, e.clientX, e.clientY - 48);
+    },
+    [uploadFiles]
+  );
+
+  const handleAddFiles = useCallback(
+    (files) => {
+      const centerX = window.innerWidth / 2 - 100;
+      const centerY = window.innerHeight / 2 - 50;
+      uploadFiles(files, centerX, centerY);
+    },
+    [uploadFiles]
   );
 
   const handleAddText = useCallback(
@@ -98,6 +114,7 @@ const SharePage = () => {
     >
       <Toolbar
         onAddText={() => setShowTextInput(true)}
+        onAddFiles={handleAddFiles}
         connected={connected}
         connectedUsers={connectedUsers}
       />

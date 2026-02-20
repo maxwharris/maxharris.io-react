@@ -6,6 +6,11 @@ export function setupShareSocket(io) {
     // Send current state to newly connected client
     socket.emit('canvas:init', getAllItems());
 
+    // Client can request init again (handles race condition)
+    socket.on('canvas:request-init', () => {
+      socket.emit('canvas:init', getAllItems());
+    });
+
     // Broadcast connected user count
     io.emit('users:count', io.engine.clientsCount);
 
