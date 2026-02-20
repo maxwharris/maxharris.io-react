@@ -110,3 +110,13 @@
   word-break: break-word;
   min-width: 100px;
 }
+
+.canvas-item-link {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.canvas-item-link:hover {
+  color: #1d4ed8;
+}

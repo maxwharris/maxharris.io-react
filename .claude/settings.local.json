@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(xcopy:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(test:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ssh:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }

@@ -2,13 +2,39 @@ import { useRef, useCallback } from 'react';
 import PdfViewer from './PdfViewer';
 import './CanvasItem.css';
 
+const URL_REGEX = /(https?:\/\/[^\s]+|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+(?:com|org|net|io|dev|co|me|app|edu|gov|ai|tv|gg|ly|fm|sh|uk|ca|de|fr|jp|eu|tech|xyz|info|biz)[^\s]*)/gi;
+
+function linkifyText(text) {
+  const parts = text.split(URL_REGEX);
+  if (parts.length === 1) return text;
+
+  return parts.map((part, i) => {
+    if (i % 2 === 1) {
+      const href = /^https?:\/\//.test(part) ? part : `https://${part}`;
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="canvas-item-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 const CanvasItem = ({ item, onMove, onDelete }) => {
   const itemRef = useRef(null);
   const dragState = useRef(null);
 
   const handlePointerDown = useCallback(
     (e) => {
-      if (e.target.closest('.canvas-item-delete') || e.target.closest('.canvas-item-download') || e.target.closest('.pdf-controls')) return;
+      if (e.target.closest('.canvas-item-delete') || e.target.closest('.canvas-item-download') || e.target.closest('.pdf-controls') || e.target.closest('.canvas-item-link')) return;
       e.preventDefault();
       const el = itemRef.current;
       el.setPointerCapture(e.pointerId);
@@ -69,7 +95,7 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
       );
     }
     if (item.type === 'text') {
-      return <div className="canvas-item-text">{item.content}</div>;
+      return <div className="canvas-item-text">{linkifyText(item.content)}</div>;
     }
     return null;
   };
