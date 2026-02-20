@@ -47,6 +47,15 @@ export function moveItem(id, x, y) {
   return item;
 }
 
+export function resizeItem(id, scale) {
+  const item = items.find((i) => i.id === id);
+  if (item) {
+    item.scale = scale;
+    debouncedSave();
+  }
+  return item;
+}
+
 export function deleteItem(id) {
   items = items.filter((i) => i.id !== id);
   debouncedSave();

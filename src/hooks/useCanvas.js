@@ -20,6 +20,12 @@ export function useCanvas(socket) {
       );
     });
 
+    socket.on('item:resized', ({ id, scale }) => {
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, scale } : item))
+      );
+    });
+
     socket.on('item:deleted', ({ id }) => {
       setItems((prev) => prev.filter((item) => item.id !== id));
     });
@@ -31,6 +37,7 @@ export function useCanvas(socket) {
       socket.off('canvas:init');
       socket.off('item:added');
       socket.off('item:moved');
+      socket.off('item:resized');
       socket.off('item:deleted');
     };
   }, [socket]);
@@ -53,6 +60,16 @@ export function useCanvas(socket) {
     [socket]
   );
 
+  const resizeItem = useCallback(
+    (id, scale) => {
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, scale } : item))
+      );
+      socket?.emit('item:resize', { id, scale });
+    },
+    [socket]
+  );
+
   const deleteItem = useCallback(
     (id) => {
       setItems((prev) => prev.filter((item) => item.id !== id));
@@ -61,5 +78,5 @@ export function useCanvas(socket) {
     [socket]
   );
 
-  return { items, addItem, moveItem, deleteItem };
+  return { items, addItem, moveItem, resizeItem, deleteItem };
 }

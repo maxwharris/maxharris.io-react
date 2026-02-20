@@ -9,6 +9,7 @@
   touch-action: none;
   transition: box-shadow 0.15s;
   max-width: 400px;
+  transform-origin: top left;
 }
 
 .canvas-item:hover {
@@ -52,7 +53,8 @@
 }
 
 .canvas-item:hover .canvas-item-delete,
-.canvas-item:hover .canvas-item-download {
+.canvas-item:hover .canvas-item-download,
+.canvas-item:hover .canvas-item-resize {
   opacity: 1;
 }
 
@@ -109,6 +111,23 @@
   white-space: pre-wrap;
   word-break: break-word;
   min-width: 100px;
+}
+
+.canvas-item-resize {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: linear-gradient(135deg, transparent 50%, #ccc 50%);
+  border-radius: 0 0 4px 0;
+}
+
+.canvas-item-resize:hover {
+  background: linear-gradient(135deg, transparent 50%, #999 50%);
 }
 
 .canvas-item-link {

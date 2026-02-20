@@ -28,13 +28,14 @@ function linkifyText(text) {
   });
 }
 
-const CanvasItem = ({ item, onMove, onDelete }) => {
+const CanvasItem = ({ item, onMove, onDelete, onResize }) => {
   const itemRef = useRef(null);
   const dragState = useRef(null);
+  const resizeState = useRef(null);
 
   const handlePointerDown = useCallback(
     (e) => {
-      if (e.target.closest('.canvas-item-delete') || e.target.closest('.canvas-item-download') || e.target.closest('.pdf-controls') || e.target.closest('.canvas-item-link')) return;
+      if (e.target.closest('.canvas-item-delete') || e.target.closest('.canvas-item-download') || e.target.closest('.pdf-controls') || e.target.closest('.canvas-item-link') || e.target.closest('.canvas-item-resize')) return;
       e.preventDefault();
       const el = itemRef.current;
       el.setPointerCapture(e.pointerId);
@@ -51,6 +52,15 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
 
   const handlePointerMove = useCallback(
     (e) => {
+      if (resizeState.current) {
+        const deltaX = e.clientX - resizeState.current.startX;
+        const newScale = resizeState.current.startScale *
+          (resizeState.current.startWidth + deltaX) / resizeState.current.startWidth;
+        const clamped = Math.max(0.25, Math.min(4, newScale));
+        itemRef.current.style.transform = `scale(${clamped})`;
+        resizeState.current.currentScale = clamped;
+        return;
+      }
       if (!dragState.current) return;
       const x = e.clientX - dragState.current.startX;
       const y = e.clientY - dragState.current.startY;
@@ -63,6 +73,12 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
 
   const handlePointerUp = useCallback(
     (e) => {
+      if (resizeState.current) {
+        const scale = resizeState.current.currentScale ?? resizeState.current.startScale;
+        resizeState.current = null;
+        onResize(item.id, scale);
+        return;
+      }
       if (!dragState.current) return;
       const x = e.clientX - dragState.current.startX;
       const y = e.clientY - dragState.current.startY;
@@ -70,7 +86,24 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
       itemRef.current.classList.remove('dragging');
       onMove(item.id, x, y);
     },
-    [item.id, onMove]
+    [item.id, onMove, onResize]
+  );
+
+  const handleResizeDown = useCallback(
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const el = itemRef.current;
+      el.setPointerCapture(e.pointerId);
+      const rect = el.getBoundingClientRect();
+      resizeState.current = {
+        startX: e.clientX,
+        startWidth: rect.width,
+        startScale: item.scale || 1,
+        currentScale: item.scale || 1,
+      };
+    },
+    [item.scale]
   );
 
   const renderContent = () => {
@@ -120,11 +153,13 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
     }
   };
 
+  const scale = item.scale || 1;
+
   return (
     <div
       ref={itemRef}
       className="canvas-item"
-      style={{ left: item.x, top: item.y }}
+      style={{ left: item.x, top: item.y, transform: `scale(${scale})` }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -146,6 +181,10 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
       >
         &times;
       </button>
+      <div
+        className="canvas-item-resize"
+        onPointerDown={handleResizeDown}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { getAllItems, addItem, moveItem, deleteItem } from '../services/shareStore.js';
+import { getAllItems, addItem, moveItem, resizeItem, deleteItem } from '../services/shareStore.js';
 import { deleteFile } from '../services/s3.js';
 
 export function setupShareSocket(io) {
@@ -24,6 +24,12 @@ export function setupShareSocket(io) {
     socket.on('item:move', ({ id, x, y }) => {
       moveItem(id, x, y);
       socket.broadcast.emit('item:moved', { id, x, y });
+    });
+
+    // Client resized an item
+    socket.on('item:resize', ({ id, scale }) => {
+      resizeItem(id, scale);
+      socket.broadcast.emit('item:resized', { id, scale });
     });
 
     // Client deleted an item

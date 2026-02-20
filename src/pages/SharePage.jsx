@@ -19,9 +19,10 @@ function getFileType(contentType) {
 
 const SharePage = () => {
   const { socket, connected, connectedUsers } = useSocket();
-  const { items, addItem, moveItem, deleteItem } = useCanvas(socket);
+  const { items, addItem, moveItem, resizeItem, deleteItem } = useCanvas(socket);
   const [dragging, setDragging] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
 
   const uploadFiles = useCallback(
     async (files, baseX, baseY) => {
@@ -75,18 +76,18 @@ const SharePage = () => {
       e.preventDefault();
       setDragging(false);
       const files = Array.from(e.dataTransfer.files);
-      uploadFiles(files, e.clientX, e.clientY - 48);
+      uploadFiles(files, e.clientX - pan.x, e.clientY - 48 - pan.y);
     },
-    [uploadFiles]
+    [uploadFiles, pan.x, pan.y]
   );
 
   const handleAddFiles = useCallback(
     (files) => {
-      const centerX = window.innerWidth / 2 - 100;
-      const centerY = window.innerHeight / 2 - 50;
+      const centerX = (window.innerWidth / 2 - 100) - pan.x;
+      const centerY = (window.innerHeight / 2 - 50) - pan.y;
       uploadFiles(files, centerX, centerY);
     },
-    [uploadFiles]
+    [uploadFiles, pan.x, pan.y]
   );
 
   const handleAddText = useCallback(
@@ -94,15 +95,15 @@ const SharePage = () => {
       const item = {
         id: uuidv4(),
         type: 'text',
-        x: window.innerWidth / 2 - 100,
-        y: window.innerHeight / 2 - 50,
+        x: (window.innerWidth / 2 - 100) - pan.x,
+        y: (window.innerHeight / 2 - 50) - pan.y,
         content: text,
         createdAt: new Date().toISOString(),
       };
       addItem(item);
       setShowTextInput(false);
     },
-    [addItem]
+    [addItem, pan.x, pan.y]
   );
 
   return (
@@ -119,7 +120,7 @@ const SharePage = () => {
         connectedUsers={connectedUsers}
       />
       <DropZone active={dragging} />
-      <Canvas items={items} onMove={moveItem} onDelete={deleteItem} />
+      <Canvas items={items} onMove={moveItem} onDelete={deleteItem} onResize={resizeItem} pan={pan} onPanChange={setPan} />
       {showTextInput && (
         <TextInput
           onSubmit={handleAddText}
