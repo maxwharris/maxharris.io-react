@@ -8,6 +8,7 @@
   user-select: none;
   touch-action: none;
   transition: box-shadow 0.15s;
+  width: max-content;
   max-width: 400px;
   transform-origin: top left;
 }
@@ -111,6 +112,8 @@
   white-space: pre-wrap;
   word-break: break-word;
   min-width: 100px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .canvas-item-resize {
