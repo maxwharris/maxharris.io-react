@@ -78,12 +78,12 @@ if ($LASTEXITCODE -ne 0) {
 Remove-Item $deployFile -ErrorAction SilentlyContinue
 
 Write-Host ""
-Write-Host "✅ Deployment complete!" -ForegroundColor Green
+Write-Host "Deployment complete!" -ForegroundColor Green
 Write-Host ""
-Write-Host "🌐 Your site should be accessible at:" -ForegroundColor Cyan
-Write-Host "   http://$EC2Host:4173 (direct access)" -ForegroundColor Cyan
-Write-Host "   http://maxharris.io (once DNS is configured)" -ForegroundColor Cyan
+Write-Host "Your site should be accessible at:" -ForegroundColor Cyan
+Write-Host "   http://maxharris.io (frontend - served by Nginx)" -ForegroundColor Cyan
+Write-Host "   http://api.maxharris.io (backend API)" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "📝 Next steps:" -ForegroundColor Yellow
-Write-Host "   1. Configure DNS to point maxharris.io to $EC2Host"
-Write-Host "   2. SSH to server and run: sudo certbot --nginx -d maxharris.io -d www.maxharris.io"
+Write-Host "Next steps:" -ForegroundColor Yellow
+Write-Host "   1. Ensure DNS for maxharris.io and api.maxharris.io point to $EC2Host"
+Write-Host "   2. SSH to server and run: sudo certbot --nginx -d maxharris.io -d www.maxharris.io -d api.maxharris.io"

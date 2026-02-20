@@ -1,0 +1,74 @@
+.share-textinput-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-textinput {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font-family: 'courier prime', monospace;
+}
+
+.share-textinput-area {
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 12px;
+  font-family: 'courier prime', monospace;
+  font-size: 14px;
+  resize: vertical;
+  outline: none;
+}
+
+.share-textinput-area:focus {
+  border-color: #999;
+}
+
+.share-textinput-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.share-textinput-cancel,
+.share-textinput-submit {
+  font-family: 'courier prime', monospace;
+  font-size: 13px;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+.share-textinput-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.share-textinput-cancel:hover {
+  background: #e0e0e0;
+}
+
+.share-textinput-submit {
+  background: #000;
+  color: #fff;
+}
+
+.share-textinput-submit:hover {
+  background: #333;
+}
+
+.share-textinput-submit:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}

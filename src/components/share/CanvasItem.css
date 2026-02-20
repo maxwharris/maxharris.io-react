@@ -1,0 +1,96 @@
+.canvas-item {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: box-shadow 0.15s;
+  max-width: 400px;
+}
+
+.canvas-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-item.dragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  transition: none;
+}
+
+.canvas-item-delete {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #999;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.canvas-item:hover .canvas-item-delete {
+  opacity: 1;
+}
+
+.canvas-item-delete:hover {
+  background: #f00;
+  color: #fff;
+  border-color: #f00;
+}
+
+.canvas-item-img {
+  max-width: 350px;
+  max-height: 300px;
+  display: block;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.canvas-item-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #333;
+  font-family: 'courier prime', monospace;
+  font-size: 13px;
+  min-width: 160px;
+}
+
+.canvas-item-file:hover {
+  color: #000;
+}
+
+.canvas-item-file-icon {
+  font-size: 24px;
+}
+
+.canvas-item-file-name {
+  word-break: break-all;
+}
+
+.canvas-item-text {
+  font-family: 'courier prime', monospace;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  padding: 4px 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-width: 100px;
+}

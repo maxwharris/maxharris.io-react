@@ -1,0 +1,74 @@
+.share-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+  font-family: 'courier prime', monospace;
+}
+
+.share-toolbar-logo {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.share-toolbar-logo:hover {
+  color: #666;
+}
+
+.share-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.share-toolbar-btn {
+  font-family: 'courier prime', monospace;
+  font-size: 13px;
+  padding: 6px 14px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.share-toolbar-btn:hover {
+  background: #333;
+}
+
+.share-toolbar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ccc;
+  transition: background 0.3s;
+}
+
+.share-status-dot.connected {
+  background: #4ade80;
+}
+
+.share-status-text {
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 0.02em;
+}

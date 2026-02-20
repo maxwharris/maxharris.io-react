@@ -29,5 +29,8 @@ dist-ssr
 .env.production.local
 .env.development.local
 
+# Server
+server/node_modules
+
 # Deployment
 maxharris-deploy.tar.gz
