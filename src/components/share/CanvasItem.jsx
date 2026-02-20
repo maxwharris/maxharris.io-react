@@ -76,6 +76,24 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
 
   const hasUrl = item.url && item.type !== 'text';
 
+  const handleDownload = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(item.url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = item.filename || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      window.open(item.url, '_blank');
+    }
+  };
+
   return (
     <div
       ref={itemRef}
@@ -87,16 +105,13 @@ const CanvasItem = ({ item, onMove, onDelete }) => {
     >
       {renderContent()}
       {hasUrl && (
-        <a
+        <button
           className="canvas-item-download"
-          href={item.url}
-          download={item.filename}
-          target="_blank"
-          rel="noopener noreferrer"
+          onClick={handleDownload}
           title="Download"
         >
           &#8595;
-        </a>
+        </button>
       )}
       <button
         className="canvas-item-delete"
