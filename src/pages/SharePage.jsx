@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSocket } from '../hooks/useSocket';
 import { useCanvas } from '../hooks/useCanvas';
@@ -23,38 +23,56 @@ const SharePage = () => {
   const [dragging, setDragging] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [uploading, setUploading] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
+  const spinnerTimeout = useRef(null);
+
+  useEffect(() => {
+    if (uploading) {
+      spinnerTimeout.current = setTimeout(() => setShowSpinner(true), 3000);
+    } else {
+      clearTimeout(spinnerTimeout.current);
+      setShowSpinner(false);
+    }
+    return () => clearTimeout(spinnerTimeout.current);
+  }, [uploading]);
 
   const uploadFiles = useCallback(
     async (files, baseX, baseY) => {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const x = baseX + i * 30;
-        const y = baseY + i * 30;
+      setUploading(true);
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const x = baseX + i * 30;
+          const y = baseY + i * 30;
 
-        try {
-          const { uploadUrl, key, publicUrl, id } = await getPresignedUrl(
-            file.name,
-            file.type
-          );
+          try {
+            const { uploadUrl, key, publicUrl, id } = await getPresignedUrl(
+              file.name,
+              file.type
+            );
 
-          await uploadToS3(uploadUrl, file);
+            await uploadToS3(uploadUrl, file);
 
-          const item = {
-            id,
-            type: getFileType(file.type),
-            x,
-            y,
-            s3Key: key,
-            url: publicUrl,
-            filename: file.name,
-            contentType: file.type,
-            createdAt: new Date().toISOString(),
-          };
+            const item = {
+              id,
+              type: getFileType(file.type),
+              x,
+              y,
+              s3Key: key,
+              url: publicUrl,
+              filename: file.name,
+              contentType: file.type,
+              createdAt: new Date().toISOString(),
+            };
 
-          addItem(item);
-        } catch (err) {
-          console.error('Upload failed:', err);
+            addItem(item);
+          } catch (err) {
+            console.error('Upload failed:', err);
+          }
         }
+      } finally {
+        setUploading(false);
       }
     },
     [addItem]
@@ -121,6 +139,11 @@ const SharePage = () => {
       />
       <DropZone active={dragging} />
       <Canvas items={items} onMove={moveItem} onDelete={deleteItem} onResize={resizeItem} pan={pan} onPanChange={setPan} />
+      {showSpinner && (
+        <div className="share-upload-spinner">
+          <div className="share-upload-spinner-ring" />
+        </div>
+      )}
       {showTextInput && (
         <TextInput
           onSubmit={handleAddText}
