@@ -5,7 +5,8 @@
 #
 # check: https://maxharris.io/
 # check: https://maxharris.io/api/health
-# check: https://api.maxharris.io/api/health
+# check: http://api.maxharris.io/api/health
+#   (http: the certificate covers maxharris.io and www only; the site itself calls /api on its own domain)
 #
 # nginx (sites-available/maxharris.io) serves dist/ and proxies /api and /socket.io to :3001.
 # server/.env exists only on the box.
