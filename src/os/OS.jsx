@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import './os.css';
 import { findWork } from '../data/site';
-import { createScene, SCENES } from './scene';
-import { OSContext, reducer, initialState, appKind, titleOf, store, clamp } from './store';
+import { createScene, SCENES, SCENE_DARK } from './board';
+import { OSContext, reducer, initialState, appKind, titleOf, store, clamp, IMM0 } from './store';
 import { newTerm } from './terminal';
 import Window from './Window';
 import Phone from './Phone';
@@ -35,8 +35,8 @@ const toRect = (o) => {
 export default function OS() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const phone = useMedia(PHONE);
-  const systemDark = useMedia('(prefers-color-scheme: dark)');
-  const theme = state.theme || (systemDark ? 'dark' : 'light');
+  // the glass follows the board unless the visitor picked a theme
+  const theme = state.theme || (SCENE_DARK[state.scene] ? 'dark' : 'light');
   const stateRef = useRef(state);
   const phoneRef = useRef(phone);
   useLayoutEffect(() => { stateRef.current = state; phoneRef.current = phone; });
@@ -48,10 +48,7 @@ export default function OS() {
   const didInit = useRef(false);
   const lastAct = useRef(0);
 
-  const themeName = useCallback(
-    () => stateRef.current.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-    [],
-  );
+  const themeName = useCallback(() => stateRef.current.theme || (SCENE_DARK[stateRef.current.scene] ? 'dark' : 'light'), []);
 
   const actions = useMemo(() => {
     const set = (patch) => dispatch({ type: 'set', patch });
@@ -79,7 +76,7 @@ export default function OS() {
       toggleTheme() { const next = themeName() === 'dark' ? 'light' : 'dark'; a.setTheme(next); a.toast(`${next} glass`); },
       setScene(name, quiet) {
         if (!SCENES.includes(name)) return;
-        store.set('mx-env', name);
+        store.set('mx-board', name);
         set({ scene: name });
         if (!quiet) a.toast(`scene: ${name}`);
       },
@@ -87,7 +84,7 @@ export default function OS() {
         v = clamp(v, 0, 1);
         const was = stateRef.current.imm;
         set({ imm: v });
-        if (v >= 0.99 && was < 0.99 && !quiet) a.toast('full immersion. turn the crown back to see the lake.');
+        if (v >= 0.99 && was < 0.99 && !quiet) a.toast('full immersion. turn the crown back to see the board.');
       },
       getImm: () => stateRef.current.imm,
       setTrash: (trash) => set({ trash }),
@@ -110,8 +107,8 @@ export default function OS() {
       },
       restart() {
         dispatch({ type: 'reset' });
-        a.setImm(0, true);
-        a.setScene('dusk', true);
+        a.setImm(IMM0, true);
+        a.setScene(stateRef.current.scene, true);
         set({ bootN: (stateRef.current.bootN || 0) + 1 });
         setTimeout(() => a.rest(), 250);
       },
@@ -156,6 +153,7 @@ export default function OS() {
     else if (path === '/about' || hash === 'about') (phoneRef.current ? a.openApp('about') : a.focus('about'));
     else if (path === '/contact' || hash === 'contact') a.openApp('mail');
     else if (path === '/terminal') a.openApp('terminal');
+    if (import.meta.env.VITE_DEMO) setTimeout(() => a.toast('five boards to try: open scenes in the dock, or right-click the board', 6000), 1600);
   }, [actions]);
   useEffect(() => {
     document.documentElement.classList.add('os-on');
@@ -177,7 +175,10 @@ export default function OS() {
     const top = state.top && state.wins[state.top];
     const live = top && !top.rest && !top.closing && !top.min;
     const path = live ? pathFor(top) : '/';
-    if (didInit.current && (window.location.pathname !== path || window.location.hash)) window.history.replaceState(window.history.state, '', path);
+    // a demo build lives at someone else's URL, so it leaves the address bar alone
+    if (didInit.current && !import.meta.env.VITE_DEMO && (window.location.pathname !== path || window.location.hash)) {
+      try { window.history.replaceState(window.history.state, '', path); } catch { /* a sandboxed preview cannot change its URL */ }
+    }
     document.title = live ? `${titleOf(top)} · max harris` : 'max harris · developer+';
   }, [state.top, state.wins]);
 
@@ -231,12 +232,10 @@ export default function OS() {
       if (stateRef.current.saver) actions.set({ saver: false });
     };
     const konami = () => {
-      if (reduced()) { actions.toast('30 extra lives. fireworks skipped: reduced motion is on.'); return; }
-      const s = stateRef.current;
-      if (s.scene === 'day' || s.scene === 'snow') actions.setScene('night', true);
+      if (reduced()) { actions.toast('30 extra lives. the surge is skipped: reduced motion is on.'); return; }
       actions.setImm(0, true);
       actions.fireworks();
-      actions.toast('↑↑↓↓←→←→ba. the windows stepped back to watch.', 3400);
+      actions.toast('↑↑↓↓←→←→ba. power surge. the windows stepped back to watch.', 3400);
       actions.set({ watching: true });
       const done = () => {
         actions.set({ watching: false });
@@ -312,7 +311,7 @@ export default function OS() {
   const cls = ['os', state.overlay === 'home' && 'homing', state.watching && 'watching', state.saver && 'saver'].filter(Boolean).join(' ');
   return (
     <OSContext.Provider value={ctx}>
-      <div className={cls} data-theme={state.theme || undefined} onContextMenu={onContextMenu}>
+      <div className={cls} data-theme={theme} data-board={state.scene} onContextMenu={onContextMenu}>
         <canvas id="world" ref={canvas} aria-hidden="true" onDoubleClick={(e) => sceneRef.current && sceneRef.current.poke(e.clientX, e.clientY)} />
         <div id="veil" aria-hidden="true" />
         {!phone && <Desk inert={covered} />}

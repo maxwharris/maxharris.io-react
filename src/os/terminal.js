@@ -1,6 +1,6 @@
 // msh: the maxOS shell. Output lines are HTML built here, with every user-typed value escaped.
 import { owner, work, personal, concepts, findWork } from '../data/site';
-import { SCENES } from './scene';
+import { SCENES } from './board';
 import { APPS, APP, esc, host, stackTop } from './store';
 
 export const PROMPT = '<span class="c1">max@maxos ~ %</span>';
@@ -71,14 +71,14 @@ export function runCommand(raw, ctx) {
       out('<span class="c3">commands</span>\n' + [
         ['help', 'this list'], ['ls [work|personal]', 'see what is here'], ['open <name>', 'open a project or app'],
         ['whoami', 'who is at the keyboard'], ['about', 'the short version'], ['contact', 'how to reach max'],
-        ['neofetch', 'system summary'], ['theme [light|dark]', 'switch the glass'], ['scene [day|dusk|night|snow]', 'change the world'],
+        ['neofetch', 'system summary'], ['theme [light|dark]', 'switch the glass'], ['scene [neon|classic|ink|...]', 'change the board'],
         ['history', 'what you typed'], ['clear', 'clean slate'], ['sudo', 'go on, try it'], ['exit', 'close the terminal'],
       ].map(([k, d]) => `  <span class="c1">${esc(pad(k, 29))}</span>${esc(d)}`).join('\n'));
       break;
     case 'ls': case 'dir':
       if (!a) out(['work/', 'personal/', 'trash/'].map((x) => `<span class="c1">${x}</span>`).join('  ') + '  about.txt  mail.app  terminal.app  scenes.app');
       else if (a.startsWith('work')) { out(work.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)}`).join('\n')); say('open <name> to look inside.', 'c2'); }
-      else if (a.startsWith('personal')) out(personal.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)}`).join('\n') + '\n' + concepts.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)} <span class="c2">(concept)</span>`).join('\n'));
+      else if (a.startsWith('personal')) out(personal.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)}${p.status === 'retired' ? ' <span class="c2">(retired)</span>' : ''}`).join('\n') + '\n' + concepts.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)} <span class="c2">(concept)</span>`).join('\n'));
       else if (a.startsWith('trash')) out(s.trash.length ? s.trash.map((t) => esc(t[1])).join('\n') : '<span class="c2">empty</span>');
       else say(`ls: ${a}: no such directory`);
       break;
@@ -98,7 +98,7 @@ export function runCommand(raw, ctx) {
       out(`email     <a href="mailto:${esc(owner.email)}">${esc(owner.email)}</a>\ngithub    <a href="${esc(owner.github)}" target="_blank" rel="noopener">${esc(host(owner.github))}</a>\nlinkedin  <a href="${esc(owner.linkedin)}" target="_blank" rel="noopener">${esc(host(owner.linkedin))}</a>\n<span class="c2">or type open mail.</span>`);
       break;
     case 'neofetch': case 'fetch': {
-      const art = ['        /\\', '       /  \\    /\\', '      /    \\  /  \\', '     /  /\\  \\/    \\', '    /  /  \\  \\     \\', '   ~~~~~~~~~~~~~~~~~~', '    ~ ~ ~ ~ ~ ~ ~ ~', '', '', '', '', '', ''];
+      const art = ['    | | | | | |', '  .-------------.', '--|             |--', '--|   maxOS     |--', '--|      26     |--', '--|             |--', "  '-------------'", '    | | | | | |', '', '', '', '', ''];
       const info = [
         ['', '<span class="c1">guest@maxos</span>'], ['', '-----------'], ['os', 'maxOS 26'], ['host', 'maxharris.io'],
         ['owner', `${esc(owner.name)}, ${esc(owner.title)}`], ['shell', 'msh 1.0'], ['uptime', uptime()],
@@ -131,11 +131,12 @@ export function runCommand(raw, ctx) {
     case 'rm': if (/-rf|-fr/.test(a)) rmJoke(); else say('rm: nothing here is yours to delete.'); break;
     case 'make': say(/sandwich/.test(a) ? 'what? make it yourself.' : "make: *** no rule to make target. (it's a website.)"); break;
     case 'coffee': case 'brew': say("error 418: i'm a teapot."); break;
-    case 'fireworks':
-      if (ctx.reduced()) say('fireworks are off because your system asks for less motion.');
-      else { say('look outside.', 'c2'); actions.fireworks(); }
+    case 'surge': case 'fireworks': case 'overclock':
+      if (ctx.reduced()) say('the surge is off because your system asks for less motion.');
+      else { say('pushing 3.3v through everything. look behind the windows.', 'c2'); actions.fireworks(); }
       break;
-    case 'hike': case 'climb': say("you can't climb these. every mountain out there is made of a seed and some sine waves."); break;
+    case 'solder': say('careful, that iron is 350°c. nothing here needs fixing. probably.'); break;
+    case 'ping': say('64 bytes from the board: icmp_seq=1 ttl=64 time=0.26 ms'); break;
     case 'hi': case 'hello': case 'hey': say("hi. most people never open the terminal. you're one of the good ones."); break;
     case 'pwd': say('/users/guest/desktop'); break;
     case 'date': say(new Date().toString().toLowerCase()); break;

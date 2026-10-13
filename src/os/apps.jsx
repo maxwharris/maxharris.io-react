@@ -1,8 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { owner, work, personal, concepts, findWork } from '../data/site';
+
+const live = personal.filter((p) => p.status !== 'retired');
+const retired = personal.filter((p) => p.status === 'retired');
 import { useOS, MOD, EASE, TRASH0, host } from './store';
 import { Icon, Disc } from './icons';
-import { SCENES } from './scene';
+import { SCENES } from './board';
 import { PROMPT, runCommand, complete, historyStep, subscribe } from './terminal';
 
 const Out = ({ href, children, className = 'lnk g' }) => (
@@ -28,7 +31,7 @@ export function About() {
       </div>
       <p className="tipline">
         {phone
-          ? 'every icon on the home screen opens something. the lake behind it is drawn live; try scenes.'
+          ? 'every icon on the home screen opens something. the circuit board behind it is drawn live; try scenes.'
           : <>windows arrange themselves, up to six at once. drag one by the bar under it to move it around. <kbd>{MOD}K</kbd> finds anything.</>}
       </p>
     </div>
@@ -55,7 +58,7 @@ function PCard({ p, label }) {
         <h4>{p.title}</h4>
         {p.tags && <ul className="chips">{p.tags.map((t) => <li key={t}>{t}</li>)}</ul>}
         <p>{p.description}</p>
-        {p.link && <Out href={p.link}>{label}</Out>}
+        {p.link ? <Out href={p.link}>{label}</Out> : p.status === 'retired' && <span className="plain"><Icon name="lock" />no longer online</span>}
       </div>
     </article>
   );
@@ -94,9 +97,10 @@ export function Files({ win }) {
   }
   return (
     <div ref={ref}>
-      <header className="wh"><Disc tint="personal" glyph="personal" /><div><h2>personal</h2><p className="sub">{personal.length} projects · {concepts.length} concepts</p></div><span className="sp" /><Seg win={win} /></header>
-      <section className="fsec"><h3 className="fh">projects</h3><div className="pgrid">{personal.map((p) => <PCard key={p.key} p={p} label={host(p.link)} />)}</div></section>
-      <section className="fsec"><h3 className="fh">concepts</h3><div className="pgrid">{concepts.map((p) => <PCard key={p.key} p={p} label="github" />)}</div></section>
+      <header className="wh"><Disc tint="personal" glyph="personal" /><div><h2>personal</h2><p className="sub">{live.length} live · {retired.length} retired · {concepts.length} concepts</p></div><span className="sp" /><Seg win={win} /></header>
+      <section className="fsec"><h3 className="fh">live</h3><div className="pgrid">{live.map((p) => <PCard key={p.key} p={p} label={host(p.link)} />)}</div></section>
+      {retired.length > 0 && <section className="fsec"><h3 className="fh">retired</h3><div className="pgrid">{retired.map((p) => <PCard key={p.key} p={p} />)}</div></section>}
+      <section className="fsec"><h3 className="fh">concept</h3><div className="pgrid">{concepts.map((p) => <PCard key={p.key} p={p} label="github" />)}</div></section>
     </div>
   );
 }
@@ -288,7 +292,11 @@ export function Trash() {
 export function Swatch({ name }) {
   return (
     <span className={`sw sw-${name}`} aria-hidden="true">
-      <svg viewBox="0 0 60 24" preserveAspectRatio="none"><path d="M0 24V17l8-6 6 4 10-11 9 8 6-3 9 7 5-2 7 5v5z" /></svg>
+      <svg viewBox="0 0 64 36" preserveAspectRatio="xMidYMid slice">
+        <path d="M-2 9h16l6 6h14M-2 14h14l6 6h18l6-6h30M-2 19h12l6 6h40M30 2v8l6 6M36 2v6l6 6h24M48 30v8M54 26v12" />
+        <rect x="22" y="22" width="14" height="10" rx="1" />
+        <circle cx="34" cy="15" r="1.6" /><circle cx="66" cy="14" r="1.6" /><circle cx="10" cy="25" r="1.6" />
+      </svg>
     </span>
   );
 }
@@ -321,7 +329,7 @@ export function Sys() {
       <Icon name="mark" className="mark" />
       <h2>maxOS 26</h2>
       <p className="eyebrow">maxharris.io</p>
-      <p>glass windows floating in front of a mountain lake that is drawn live on a canvas. the far range is plotted like a terrain scan. no stock photos, no video.</p>
+      <p>glass windows floating over a circuit board that is generated and drawn live: chips, buses and vias routed on a grid, with signals running through the traces. no stock photos, no video.</p>
       <div className="keys">
         <kbd>{MOD}K</kbd><span>search anything</span>
         <kbd>esc</kbd><span>close the front window</span>
@@ -335,10 +343,10 @@ export function Sys() {
 }
 const SECRETS = [
   '↑ ↑ ↓ ↓ ← → ← → b a',
-  'double-click the sky. then the water.',
+  'double-click the board to send a signal.',
   'leave it alone for a minute.',
   "the terminal knows more than 'help' says. try vim.",
-  'every mountain out there has a seed. you can climb none of them.',
+  'the board has a seed: the same traces every visit. hover one.',
 ];
 export function Secrets() {
   return (

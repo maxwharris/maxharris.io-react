@@ -3,7 +3,7 @@ import { work, personal, concepts } from '../data/site';
 import { useOS, APPS, APP, MOD, clamp, titleOf, kindVisual, appKind } from './store';
 import { useClock } from './useClock';
 import { Icon, Disc } from './icons';
-import { SCENES } from './scene';
+import { SCENES } from './board';
 import { Swatch } from './apps';
 
 export function ThemeButton({ className = 'mb g' }) {

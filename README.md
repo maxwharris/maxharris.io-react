@@ -1,7 +1,7 @@
 # maxharris.io
 
 Max Harris's personal site. The home page is **maxOS**: a small desktop in the browser, with glass
-windows floating over a mountain lake that is drawn live on a canvas.
+windows floating over a circuit board that is generated and drawn live on a canvas.
 
 ```bash
 npm install
@@ -21,7 +21,7 @@ npm run build
 | `src/os/apps.jsx` | what each window shows (about, work and personal folders, project, mail, trash, scenes, terminal) |
 | `src/os/shell.jsx` | menubar, desktop icons, dock, crown, home view, spotlight, menus, toast, screensaver, boot |
 | `src/os/Phone.jsx` | the home screen used on phones and upright tablets |
-| `src/os/scene.js` | the canvas world (day, dusk, night, snow); no React |
+| `src/os/board.js` | the circuit board behind the windows (neon, classic, ink, relief, gold): generated, routed and animated on a canvas; no React |
 | `src/os/terminal.js` | the terminal's commands |
 | `src/pages/SharePage.jsx`, `src/etf.jsx` | `/share` and `/etf`, loaded only when visited |
 | `server/` | express API: contact form (`/api/contact`), share board, analytics |

@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { work, findWork } from '../data/site';
+import { SCENES } from './board';
 
 // ---------- small helpers ----------
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -178,14 +179,17 @@ export function arrange(s) {
 }
 
 // ---------- reducer ----------
+// the board starts half dimmed and blurred behind the windows; the crown turns it either way
+export const IMM0 = 0.5;
+
 export function initialState() {
   const theme = store.get('mx-theme');
-  const scene = store.get('mx-env');
+  const scene = store.get('mx-board');
   return {
     wins: {}, order: [], z: 30, top: null, n: 0, solo: null, phone: false,
     theme: theme === 'light' || theme === 'dark' ? theme : null,
-    scene: ['day', 'dusk', 'night', 'snow'].includes(scene) ? scene : 'dusk',
-    imm: 0, trash: TRASH0, secrets: false,
+    scene: SCENES.includes(scene) ? scene : 'relief',
+    imm: IMM0, trash: TRASH0, secrets: false,
     overlay: null, homeTab: 'apps', menu: null, toast: null,
     watching: false, saver: false,
   };

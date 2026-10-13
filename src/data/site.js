@@ -1,7 +1,8 @@
 // Everything the site says. Work projects come from ~/Desktop/ebshome; set `hidden: true` to take
 // one off the site without losing its write-up. Images live in public/images/{work,personal}.
 
-const img = (dir, key) => ({ src: `/images/${dir}/${key}.webp`, thumb: `/images/${dir}/${key}-thumb.webp` });
+const base = import.meta.env.BASE_URL;
+const img = (dir, key) => ({ src: `${base}images/${dir}/${key}.webp`, thumb: `${base}images/${dir}/${key}-thumb.webp` });
 
 export const owner = {
   name: 'max harris',
@@ -192,10 +193,11 @@ export const work = allWork
   .filter((p) => !p.hidden)
   .map((p) => ({ ...p, images: p.shots.map((s) => img('work', s)) }));
 
+// status: 'live' while the site is up, 'retired' once it is not (the write-up stays, the link goes)
 export const personal = [
-  { key: 'wavshare', title: 'wavshare.io', description: "an 'open source' music sharing platform where users can download shared tracks and share remixes", link: 'https://wavshare.io' },
-  { key: 'polymono', title: 'PolyMono', description: 'new york themed monopoly game (private)', link: 'http://mp.maxharris.io' },
-  { key: 'kruppholdings', title: 'Krupp Holdings site', description: 'company website for krupp holdings investment group', link: 'https://kruppholdings.com' },
+  { key: 'polymono', status: 'live', title: 'PolyMono', description: 'new york themed monopoly game (private)', link: 'https://mp.maxharris.io' },
+  { key: 'kruppholdings', status: 'live', title: 'Krupp Holdings site', description: 'company website for krupp holdings investment group', link: 'https://kruppholdings.com' },
+  { key: 'wavshare', status: 'retired', title: 'wavshare.io', description: "an 'open source' music sharing platform where users can download shared tracks and share remixes", link: '' },
 ].map((p) => ({ ...p, image: img('personal', p.key) }));
 
 export const concepts = [

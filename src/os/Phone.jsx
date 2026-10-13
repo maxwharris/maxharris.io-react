@@ -52,7 +52,7 @@ export default function Phone() {
             </button>
           ))}
         </section>
-        <p className="p-foot">double-tap the sky, or the lake</p>
+        <p className="p-foot">double-tap the board to send a signal</p>
       </div>
       <nav className="p-dock glass" aria-label="dock">
         {['work', 'about', 'mail', 'terminal'].map((id) => (
