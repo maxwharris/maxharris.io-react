@@ -428,10 +428,13 @@ export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' 
     const p = tr.pts[i - 1], q = tr.pts[i];
     return [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
   }
+  // ambient signals drift slowly so they stay in the background; a double-click burst or a
+  // surge passes its own, much faster speed
+  const DRIFT = 0.15;
   function spawn(id, speed) {
     const tr = board.traces[id];
     if (!tr || tr.total < g * 4) return;
-    pulses.push({ id, d: 0, v: speed || (140 + Math.random() * 180) * U, tail: (26 + Math.random() * 40) * U });
+    pulses.push({ id, d: 0, v: speed || (140 + Math.random() * 180) * U * DRIFT, tail: (26 + Math.random() * 40) * U });
   }
   function traceNear(x, y, radius) {
     const ids = new Set(), rc = Math.ceil(radius / g), c0 = Math.round((x + g / 2) / g), r0 = Math.round((y + g / 2) / g);
