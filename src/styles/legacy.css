@@ -1,0 +1,37 @@
+/* Base styles for the standalone pages (/share, /etf), imported by those pages only so the
+   desktop at / never waits on this font. */
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+html:not(.os-on) body {
+  font-family: 'courier prime', 'courier new', courier, monospace;
+  line-height: 1.6;
+  color: #000;
+  background-color: #fafafa;
+  position: relative;
+}
+
+/* Subtle grain texture */
+html:not(.os-on) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+html:not(.os-on) :is(h1, h2, h3, h4, h5, h6) {
+  font-family: 'courier prime', 'courier new', courier, monospace;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  color: #000;
+}
+
+html:not(.os-on) p {
+  color: #6b6b6b;
+  line-height: 1.9;
+  letter-spacing: -0.015em;
+}

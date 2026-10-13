@@ -19,6 +19,11 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // the contact form and /share talk to the express server in server/ (npm start there, port 3001)
+    proxy: {
+      '/api': 'http://localhost:3001',
+      '/socket.io': { target: 'http://localhost:3001', ws: true },
+    },
   },
   preview: {
     host: true,

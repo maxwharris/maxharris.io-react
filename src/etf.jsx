@@ -1,4 +1,5 @@
 import { useState } from "react";
+import './styles/legacy.css';
 
 const etfs = [
   {

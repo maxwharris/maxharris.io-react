@@ -8,6 +8,7 @@ import DropZone from '../components/share/DropZone';
 import Canvas from '../components/share/Canvas';
 import TextInput from '../components/share/TextInput';
 import './SharePage.css';
+import '../styles/legacy.css';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
 
