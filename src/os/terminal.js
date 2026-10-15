@@ -78,7 +78,7 @@ export function runCommand(raw, ctx) {
     case 'ls': case 'dir':
       if (!a) out(['work/', 'personal/', 'trash/'].map((x) => `<span class="c1">${x}</span>`).join('  ') + '  about.txt  mail.app  terminal.app  scenes.app');
       else if (a.startsWith('work')) { out(work.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)}`).join('\n')); say('open <name> to look inside.', 'c2'); }
-      else if (a.startsWith('personal')) out(personal.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)}${p.status === 'retired' ? ' <span class="c2">(retired)</span>' : ''}`).join('\n') + '\n' + concepts.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)} <span class="c2">(concept)</span>`).join('\n'));
+      else if (a.startsWith('personal')) out(personal.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)}${p.status === 'retired' ? ' <span class="c2">(retired)</span>' : p.status === 'building' ? ' <span class="c2">(in progress)</span>' : ''}`).join('\n') + '\n' + concepts.map((p) => `<span class="c1">${esc(pad(p.key, 16))}</span>${esc(p.title)} <span class="c2">(concept)</span>`).join('\n'));
       else if (a.startsWith('trash')) out(s.trash.length ? s.trash.map((t) => esc(t[1])).join('\n') : '<span class="c2">empty</span>');
       else say(`ls: ${a}: no such directory`);
       break;

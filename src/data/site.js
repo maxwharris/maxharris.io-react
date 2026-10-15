@@ -193,12 +193,25 @@ export const work = allWork
   .filter((p) => !p.hidden)
   .map((p) => ({ ...p, images: p.shots.map((s) => img('work', s)) }));
 
-// status: 'live' while the site is up, 'retired' once it is not (the write-up stays, the link goes)
+// status: 'live' while it is up, 'retired' once it is not (the write-up stays, the link goes), or
+// 'building' for an in-progress section. A project without a screenshot (shot: false) shows its
+// app icon if it has one (appIcon), otherwise a drawn glyph (icon).
 export const personal = [
+  {
+    key: 'dahw',
+    status: 'live',
+    shot: false,
+    icon: 'wave',
+    appIcon: { light: `${base}images/personal/dahw-icon.webp`, dark: `${base}images/personal/dahw-icon-dark.webp` },
+    title: 'DAHW',
+    tags: ['Swift', 'SwiftUI', 'AVAudioEngine', 'C++'],
+    description: 'digital audio handheld workstation: a daw for iphone, built native in swift around a c++ dsp core. tracks, clips and devices sized for one hand, with a sampler at its heart: record or import any audio, even the sound from a video, then set markers, loop, warp and play it across the keys. fully local, no account. in development.',
+    link: 'https://maxharris.io/dahw',
+  },
   { key: 'polymono', status: 'live', title: 'PolyMono', description: 'new york themed monopoly game (private)', link: 'https://mp.maxharris.io' },
   { key: 'kruppholdings', status: 'live', title: 'Krupp Holdings site', description: 'company website for krupp holdings investment group', link: 'https://kruppholdings.com' },
   { key: 'wavshare', status: 'retired', title: 'wavshare.io', description: "an 'open source' music sharing platform where users can download shared tracks and share remixes", link: '' },
-].map((p) => ({ ...p, image: img('personal', p.key) }));
+].map((p) => ({ ...p, image: p.shot === false ? null : img('personal', p.key) }));
 
 export const concepts = [
   { key: 'produck', title: 'Produck', tags: ['Next.js', 'React Native', 'MongoDB'], description: 'A modern social platform for discovering, reviewing, and sharing products with your community. Features product discovery, social reviews, category organization, and cross-platform mobile app with offline support.', link: 'https://github.com/maxwharris/Produck' },

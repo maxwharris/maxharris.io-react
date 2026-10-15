@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { owner, work, personal, concepts, findWork } from '../data/site';
 
-const live = personal.filter((p) => p.status !== 'retired');
+const building = personal.filter((p) => p.status === 'building');
+const live = personal.filter((p) => p.status === 'live');
 const retired = personal.filter((p) => p.status === 'retired');
 import { useOS, MOD, EASE, TRASH0, host } from './store';
 import { Icon, Disc } from './icons';
@@ -51,9 +52,16 @@ function Seg({ win }) {
 }
 
 function PCard({ p, label }) {
+  const { theme } = useOS();
   return (
     <article className="pcard" id={`pc-${p.key}`}>
-      <span className="pimg"><img src={p.image.thumb} alt="" loading="lazy" /></span>
+      {p.image
+        ? <span className="pimg"><img src={p.image.thumb} alt="" loading="lazy" /></span>
+        : (
+          <span className="pimg pimg-icon" aria-hidden="true">
+            {p.appIcon ? <img className="appicon" src={theme === 'dark' ? p.appIcon.dark : p.appIcon.light} alt="" /> : <Disc tint={p.key} glyph={p.icon || 'personal'} />}
+          </span>
+        )}
       <div className="ptxt">
         <h4>{p.title}</h4>
         {p.tags && <ul className="chips">{p.tags.map((t) => <li key={t}>{t}</li>)}</ul>}
@@ -97,7 +105,8 @@ export function Files({ win }) {
   }
   return (
     <div ref={ref}>
-      <header className="wh"><Disc tint="personal" glyph="personal" /><div><h2>personal</h2><p className="sub">{live.length} live · {retired.length} retired · {concepts.length} concepts</p></div><span className="sp" /><Seg win={win} /></header>
+      <header className="wh"><Disc tint="personal" glyph="personal" /><div><h2>personal</h2><p className="sub">{building.length ? `${building.length} in progress · ` : ''}{live.length} live · {retired.length} retired · {concepts.length} concepts</p></div><span className="sp" /><Seg win={win} /></header>
+      {building.length > 0 && <section className="fsec"><h3 className="fh">in progress</h3><div className="pgrid">{building.map((p) => <PCard key={p.key} p={p} label={host(p.link)} />)}</div></section>}
       <section className="fsec"><h3 className="fh">live</h3><div className="pgrid">{live.map((p) => <PCard key={p.key} p={p} label={host(p.link)} />)}</div></section>
       {retired.length > 0 && <section className="fsec"><h3 className="fh">retired</h3><div className="pgrid">{retired.map((p) => <PCard key={p.key} p={p} />)}</div></section>}
       <section className="fsec"><h3 className="fh">concept</h3><div className="pgrid">{concepts.map((p) => <PCard key={p.key} p={p} label="github" />)}</div></section>

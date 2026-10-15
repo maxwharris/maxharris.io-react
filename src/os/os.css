@@ -216,6 +216,9 @@ html.os-on,html.os-on body{margin:0;height:100%;overflow:hidden;background:#1630
 .pcard.flash{animation:flash 1.6s ease}
 @keyframes flash{30%{box-shadow:0 0 0 3px var(--accent)}}
 .pimg{display:block;aspect-ratio:16/9;overflow:hidden;background:var(--plate-hi)}
+.pimg-icon{display:grid;place-items:center;background:radial-gradient(120% 90% at 30% 20%,var(--plate-hh),var(--plate))}
+.pimg-icon .disc{--s:72px}
+.pimg-icon .appicon{width:96px;height:96px;object-fit:cover;border-radius:22.5%;box-shadow:0 0 0 1px var(--line),0 14px 28px -14px rgba(0,0,0,.55)}
 .ptxt{padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
 .ptxt h4{font-size:15px;font-weight:620}
 .ptxt p{font-size:13px;color:var(--ink-2);line-height:1.45}
