@@ -204,13 +204,12 @@ export const personal = [
     icon: 'wave',
     appIcon: { light: `${base}images/personal/dahw-icon.webp`, dark: `${base}images/personal/dahw-icon-dark.webp` },
     title: 'DAHW',
-    tags: ['Swift', 'SwiftUI', 'AVAudioEngine', 'C++'],
-    description: 'digital audio handheld workstation: a daw for iphone, built native in swift around a c++ dsp core. tracks, clips and devices sized for one hand, with a sampler at its heart: record or import any audio, even the sound from a video, then set markers, loop, warp and play it across the keys. fully local, no account. in development.',
+    description: 'digital audio handheld workstation: a daw for iphone, built native in swift around a c++ dsp core. its sampler records or imports any audio, even the sound from a video, then loops, warps and plays it across the keys, all on the phone.',
     link: 'https://maxharris.io/dahw',
   },
-  { key: 'polymono', status: 'live', title: 'PolyMono', description: 'new york themed monopoly game (private)', link: 'https://mp.maxharris.io' },
-  { key: 'kruppholdings', status: 'live', title: 'Krupp Holdings site', description: 'company website for krupp holdings investment group', link: 'https://kruppholdings.com' },
-  { key: 'wavshare', status: 'retired', title: 'wavshare.io', description: "an 'open source' music sharing platform where users can download shared tracks and share remixes", link: '' },
+  { key: 'polymono', status: 'live', title: 'PolyMono', description: 'a manhattan-themed monopoly for 5 or 6 friends, played online over days on a live 3d board. built with react three fiber, node, postgres and websockets, and kept private.', link: 'https://mp.maxharris.io' },
+  { key: 'kruppholdings', status: 'live', title: 'Krupp Holdings site', description: 'company website for krupp holdings, an asset and investment management group, with pages for the firm, its brand partners and contact.', link: 'https://kruppholdings.com' },
+  { key: 'wavshare', status: 'retired', title: 'wavshare.io', description: "an 'open source' music sharing platform: post a sample or a youtube link, and others download it, remix it and post the remix back. tracks carry bpm and key so producers can search for ones that fit.", link: '' },
 ].map((p) => ({ ...p, image: p.shot === false ? null : img('personal', p.key) }));
 
 export const concepts = [
