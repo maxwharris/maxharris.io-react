@@ -408,7 +408,7 @@ export function Terminal({ win }) {
         </form>
       </div>
       <div className="tchips">
-        {['help', 'ls work', 'open euno', 'neofetch', 'scene night'].map((x) => (
+        {['help', 'ls work', 'open euno', 'neofetch', 'scene neon'].map((x) => (
           <button key={x} type="button" onClick={() => { run(x); if (!phone) inp.current.focus({ preventScroll: true }); }}>{x}</button>
         ))}
       </div>

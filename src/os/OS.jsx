@@ -113,11 +113,11 @@ export default function OS() {
         setTimeout(() => a.rest(), 250);
       },
       fireworks: () => sceneRef.current && sceneRef.current.fireworks(),
-      // the opening layout: about, then the work folder beside it (the arranger places them)
+      // the opening layout: about, then the terminal beside it (the arranger places them)
       rest() {
         if (phoneRef.current) return;
         dispatch({ type: 'open', kind: 'about', opts: {}, rest: true, delay: 0.45 });
-        dispatch({ type: 'open', kind: 'files', opts: { tab: 'work' }, rest: true, delay: 0.6 });
+        dispatch({ type: 'open', kind: 'terminal', opts: {}, rest: true, delay: 0.6 });
       },
     };
     return a;
@@ -148,11 +148,11 @@ export default function OS() {
     dispatch({ type: 'layout', phone: phoneRef.current });
     a.rest();
     if (m && findWork(m[1])) a.open('project', { key: m[1] });
-    else if (path === '/work' || path === '/projects') (phoneRef.current ? a.openApp('work') : a.focus('files'));
-    else if (path === '/personal') (phoneRef.current ? a.openApp('personal') : (a.setOpts('files', { tab: 'personal' }), a.focus('files')));
+    else if (path === '/work' || path === '/projects') a.openApp('work');
+    else if (path === '/personal') a.openApp('personal');
     else if (path === '/about' || hash === 'about') (phoneRef.current ? a.openApp('about') : a.focus('about'));
     else if (path === '/contact' || hash === 'contact') a.openApp('mail');
-    else if (path === '/terminal') a.openApp('terminal');
+    else if (path === '/terminal') (phoneRef.current ? a.openApp('terminal') : a.focus('terminal'));
     if (import.meta.env.VITE_DEMO) setTimeout(() => a.toast('five boards to try: open scenes in the dock, or right-click the board', 6000), 1600);
   }, [actions]);
   useEffect(() => {
