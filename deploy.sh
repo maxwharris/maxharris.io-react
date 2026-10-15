@@ -6,6 +6,8 @@
 # check: https://maxharris.io/
 # check: https://maxharris.io/api/health
 # check: http://api.maxharris.io/api/health
+# check: https://maxharris.io/dahw/
+# check: https://maxharris.io/dahw/privacy/
 #   (http: the certificate covers maxharris.io and www only; the site itself calls /api on its own domain)
 #
 # nginx (sites-available/maxharris.io) serves dist/ and proxies /api and /socket.io to :3001.
