@@ -20,7 +20,27 @@ export const owner = {
 
 const allWork = [
   {
+    key: 'ebsweb',
+    title: 'EBS Web',
+    icon: 'globe',
+    tagline: "the web side of a point-of-sale company: back office, online shops, admin and site",
+    description: "the cloud platform behind ebspos registers in about 600 independent stores. owners run the shop from a web back office that reads live from the register, customers order from each store's own online shop, the team runs everything from an admin console, and ebspos.com sells it all.",
+    highlights: [
+      'manager: 30+ reports, ai invoice receiving, label designer, payroll, live reads from the in-store sql server',
+      'storefront: white-label shops stocked from the register, card checkout, courier delivery, orders booked back as real sales',
+      'admin: an interactive system map with live status, store map, cost tracking and a claude docs assistant',
+      'ebspos.com: product pages, help center and a merchant application in english, korean and spanish',
+    ],
+    stack: ['react', 'vite', 'tailwind', 'node/express', 'mysql', 'sql server bridge', 'claude api'],
+    stats: [['4', 'web apps'], ['1,276', 'commits'], ['~600', 'stores']],
+    role: 'solo, jan 2026 - now',
+    link: 'https://ebspos.com',
+    linkLabel: 'ebspos.com',
+    shots: ['manager', 'storefront', 'admin', 'ebspos', 'manager-2', 'storefront-2', 'admin-2'],
+  },
+  {
     key: 'manager',
+    hidden: true,
     title: 'EBS Manager',
     icon: 'chart',
     tagline: "a store owner's whole back office, read live from the register",
@@ -40,6 +60,7 @@ const allWork = [
   },
   {
     key: 'storefront',
+    hidden: true,
     title: 'EBSPOS Storefront',
     icon: 'cart',
     tagline: 'white-label online shops for corner stores, wired into the register',
@@ -77,6 +98,7 @@ const allWork = [
   },
   {
     key: 'euno',
+    hidden: true,
     title: 'EUNO',
     icon: 'eye',
     tagline: 'a command center for a fleet of ai coding agents, built for vision pro',
@@ -96,6 +118,7 @@ const allWork = [
   },
   {
     key: 'admin',
+    hidden: true,
     title: 'EBS Admin',
     icon: 'map',
     tagline: 'the control room behind a 600-store point-of-sale cloud',
@@ -152,6 +175,7 @@ const allWork = [
   },
   {
     key: 'ebspos',
+    hidden: true,
     title: 'ebspos.com',
     icon: 'globe',
     tagline: 'the website for a pos company serving 2,700+ independent stores',
@@ -207,10 +231,19 @@ export const personal = [
     description: 'digital audio handheld workstation: a daw for iphone, built native in swift around a c++ dsp core. its sampler records or imports any audio, even the sound from a video, then loops, warps and plays it across the keys, all on the phone.',
     link: 'https://maxharris.io/dahw',
   },
+  {
+    key: 'euno',
+    status: 'live',
+    title: 'EUNO',
+    description: 'the private command center i run my workday from: one inbox for every claude code session waiting on me, a todo list people and agents share, and a plain-english calendar of every commit. a native vision pro app lets me answer sessions by voice.',
+    link: '',
+    note: 'private, runs on my own network',
+    image: img('work', 'euno'),
+  },
   { key: 'polymono', status: 'live', title: 'PolyMono', description: 'a manhattan-themed monopoly for 5 or 6 friends, played online over days on a live 3d board. built with react three fiber, node, postgres and websockets, and kept private.', link: 'https://mp.maxharris.io' },
-  { key: 'kruppholdings', status: 'live', title: 'Krupp Holdings site', description: 'company website for krupp holdings, an asset and investment management group, with pages for the firm, its brand partners and contact.', link: 'https://kruppholdings.com' },
+  { key: 'kruppholdings', hidden: true, status: 'live', title: 'Krupp Holdings site', description: 'company website for krupp holdings, an asset and investment management group, with pages for the firm, its brand partners and contact.', link: 'https://kruppholdings.com' },
   { key: 'wavshare', status: 'retired', title: 'wavshare.io', description: "an 'open source' music sharing platform: post a sample or a youtube link, and others download it, remix it and post the remix back. tracks carry bpm and key so producers can search for ones that fit.", link: '' },
-].map((p) => ({ ...p, image: p.shot === false ? null : img('personal', p.key) }));
+].filter((p) => !p.hidden).map((p) => ({ ...p, image: p.shot === false ? null : p.image || img('personal', p.key) }));
 
 export const concepts = [
   { key: 'produck', title: 'Produck', tags: ['Next.js', 'React Native', 'MongoDB'], description: 'A modern social platform for discovering, reviewing, and sharing products with your community. Features product discovery, social reviews, category organization, and cross-platform mobile app with offline support.', link: 'https://github.com/maxwharris/Produck' },

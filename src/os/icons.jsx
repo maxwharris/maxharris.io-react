@@ -45,7 +45,7 @@ const TINT = {
   terminal: ['#59616b', '#14171b'], scenes: ['#f4b073', '#1f4256'], trash: ['#f1f3f5', '#9aa6b0'],
   manager: ['#f3c062', '#b8721f'], storefront: ['#f4a493', '#b9504a'], simplemanager: ['#9ccdec', '#306c9a'], euno: ['#a9c1d2', '#284557'],
   admin: ['#b1d1a5', '#4d7750'], channels: ['#f1d684', '#b98a25'], chatebs: ['#9fdcd4', '#25807c'], ebspos: ['#c3ccd6', '#566373'],
-  nems: ['#e2bf98', '#85603f'], dahw: ['#c7a6f2', '#5b3a9c'], sys: ['#3a4752', '#0f161c'],
+  nems: ['#e2bf98', '#85603f'], ebsweb: ['#9ccdec', '#2f5f9c'], dahw: ['#c7a6f2', '#5b3a9c'], sys: ['#3a4752', '#0f161c'],
 };
 
 export function Icon({ name, className = '' }) {

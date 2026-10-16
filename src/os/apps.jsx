@@ -66,7 +66,7 @@ function PCard({ p, label }) {
         <h4>{p.title}</h4>
         {p.tags && <ul className="chips">{p.tags.map((t) => <li key={t}>{t}</li>)}</ul>}
         <p>{p.description}</p>
-        {p.link ? <Out href={p.link}>{label}</Out> : p.status === 'retired' && <span className="plain"><Icon name="lock" />no longer online</span>}
+        {p.link ? <Out href={p.link}>{label}</Out> : (p.note || p.status === 'retired') && <span className="plain"><Icon name="lock" />{p.note || 'no longer online'}</span>}
       </div>
     </article>
   );
@@ -408,7 +408,7 @@ export function Terminal({ win }) {
         </form>
       </div>
       <div className="tchips">
-        {['help', 'ls work', 'open euno', 'neofetch', 'scene neon'].map((x) => (
+        {['help', 'ls work', 'open ebsweb', 'neofetch', 'scene neon'].map((x) => (
           <button key={x} type="button" onClick={() => { run(x); if (!phone) inp.current.focus({ preventScroll: true }); }}>{x}</button>
         ))}
       </div>

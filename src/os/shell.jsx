@@ -380,7 +380,7 @@ export function Spotlight() {
               <span className="st"><b>{r.t}</b><small>{r.s}</small></span>
               <span className="kind">{r.kind}</span>
             </li>
-          )) : <li className="empty">nothing by that name. try &quot;euno&quot;, &quot;react&quot; or &quot;snow&quot;.</li>}
+          )) : <li className="empty">nothing by that name. try &quot;euno&quot;, &quot;react&quot; or &quot;neon&quot;.</li>}
         </ul>
         <div className="spot-foot">↑ ↓ move · enter opens · esc closes</div>
       </div>
