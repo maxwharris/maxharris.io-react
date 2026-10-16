@@ -23,7 +23,7 @@ npm run build
 | `src/os/Phone.jsx` | the home screen used on phones and upright tablets |
 | `src/os/board.js` | the circuit board behind the windows (neon, classic, ink, relief, gold): generated, routed and animated on a canvas; no React |
 | `src/os/terminal.js` | the terminal's commands |
-| `src/pages/SharePage.jsx`, `src/etf.jsx` | `/share` and `/etf`, loaded only when visited |
+| `src/pages/SharePage.jsx`, `src/etf.jsx` | `/share` and `/etf`, loaded only when visited. `/share` is switched off for now (`SHARE_ON` in `src/App.jsx` and `server/index.js`) |
 | `server/` | express API: contact form (`/api/contact`), share board, analytics |
 
 Deploy with `deployp` from this folder (see `../CLAUDE.md` and `deploy.sh`).
