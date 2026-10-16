@@ -2,40 +2,875 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DAHW Support</title>
-<meta name="description" content="DAHW, the Digital Audio Handheld Workstation for iPhone: support and contact.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>DAHW: handheld audio workstation for iPhone</title>
+<meta name="description" content="DAHW (Digital Audio Handheld Workstation) is a music studio for iPhone. Sample any sound, even the audio from a video, warp it to your song, chop it onto pads, then arrange, mix and export. No account, and your music stays on your phone.">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DAHW: handheld audio workstation for iPhone">
+<meta property="og:description" content="Sample any sound, even the audio from a video. Warp it to your song, chop it onto pads, then arrange, mix and export. No account, and your music stays on your iPhone.">
+<link rel="icon" href="assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <style>
-  :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --muted: #6c6c70; --line: #d8d8de; --link: #0a60d6; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #000000; --card: #1c1c1e; --ink: #f2f2f7; --muted: #a1a1a6; --line: #38383a; --link: #5aa9ff; }
+/* DAHW product page. Colours, type and radii are the app's own tokens (DAH/UI/DesignSystem/Tokens.swift,
+   docs/design/system/light-tokens.css): light by default on a #F2F2F7 base with white cards, the dark
+   appearance on black. System fonts only, no external requests. */
+:root {
+  color-scheme: light dark;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --well: #EEEEF3;
+  --seg-track: #E3E3E8;
+  --raised: #FFFFFF;
+  --raised-shadow: 0 1px 3px rgba(0,0,0,.14), 0 0 0 .5px rgba(0,0,0,.05);
+  --ink: #000000;
+  --ink-2: #5C5C61;
+  --ink-3: #6C6C70;
+  --sep: rgba(60,60,67,.16);
+  --sep-strong: rgba(60,60,67,.32);
+  --strong: #000000;
+  --on-strong: #FFFFFF;
+  --tab-on: rgba(60,60,67,.12);
+  --marker: #48484A;
+  --on-marker: #FFFFFF;
+  --elev: 0 0 0 .5px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.07);
+  --glass: rgba(255,255,255,.74);
+  --glass-solid: #FFFFFF;
+  --glass-stroke: rgba(0,0,0,.07);
+  --glass-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 8px 24px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
+  --frame: #1C1C1E;
+  --frame-ring: rgba(0,0,0,.18);
+  --frame-shadow: 0 1px 2px rgba(0,0,0,.08), 0 18px 40px -16px rgba(0,0,0,.28);
+
+  /* track colours: the fill (chips, black glyph on it) and the deep line (text) */
+  --t-orange: #FF9500; --t-orange-line: #AB5500;
+  --t-yellow: #FFCC00; --t-yellow-line: #846900;
+  --t-green: #34C759;  --t-green-line: #007E2D;
+  --t-teal: #30B0C7;   --t-teal-line: #007889;
+  --t-blue: #4995FF;   --t-blue-line: #0068DB;
+  --t-indigo: #838AFF; --t-indigo-line: #5D5CDA;
+  --t-purple: #CC69FF; --t-purple-line: #9D3FCB;
+  --t-pink: #FF588A;   --t-pink-line: #CE2061;
+  --t-neutral: #98989D; --t-neutral-line: #6C6C70;
+
+  --fill: var(--t-orange);
+  --line: var(--t-orange-line);
+
+  --max: 1120px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --section: clamp(72px, 9vw, 128px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --well: #2C2C2E;
+    --seg-track: #1C1C1E;
+    --raised: #3A3A3C;
+    --raised-shadow: 0 2px 6px rgba(0,0,0,.35);
+    --ink: #FFFFFF;
+    --ink-2: #AEAEB2;
+    --ink-3: #98989D;
+    --sep: rgba(255,255,255,.12);
+    --sep-strong: rgba(255,255,255,.24);
+    --strong: #FFFFFF;
+    --on-strong: #000000;
+    --tab-on: rgba(255,255,255,.16);
+    --marker: #E5E5EA;
+    --on-marker: #000000;
+    --elev: none;
+    --glass: rgba(42,42,46,.62);
+    --glass-solid: #1C1C1E;
+    --glass-stroke: rgba(255,255,255,.2);
+    --glass-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.5);
+    --frame: #1A1A1D;
+    --frame-ring: #2C2C30;
+    --frame-shadow: 0 24px 48px -16px rgba(0,0,0,.7);
+
+    --t-orange: #FF9F0A; --t-orange-line: #FF9F0A;
+    --t-yellow: #FFD60A; --t-yellow-line: #FFD60A;
+    --t-green: #30D158;  --t-green-line: #30D158;
+    --t-teal: #40C8E0;   --t-teal-line: #40C8E0;
+    --t-blue: #409CFF;   --t-blue-line: #409CFF;
+    --t-indigo: #8E8CFF; --t-indigo-line: #8E8CFF;
+    --t-purple: #C77DFF; --t-purple-line: #C77DFF;
+    --t-pink: #FF6482;   --t-pink-line: #FF6482;
+    --t-neutral: #D1D1D6; --t-neutral-line: #D1D1D6;
   }
-  html { background: var(--bg); }
-  body { margin: 0; padding: 32px 16px 48px; font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); background: var(--bg); }
-  main { max-width: 680px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px 24px; }
-  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 4px; }
-  h2 { font-size: 19px; margin: 28px 0 6px; }
-  p, li { margin: 0 0 12px; }
-  ul { padding-left: 22px; margin: 0 0 12px; }
-  .muted { color: var(--muted); font-size: 15px; }
-  a { color: var(--link); }
+}
+@media (prefers-contrast: more) {
+  :root { --ink-2: #3C3C43; --ink-3: #545458; --sep: rgba(60,60,67,.32); --elev: 0 0 0 1px rgba(0,0,0,.18); }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root { --ink-2: #D1D1D6; --ink-3: #AEAEB2; --sep: rgba(255,255,255,.24); --elev: 0 0 0 1px rgba(255,255,255,.24); }
+}
+
+.t-orange { --fill: var(--t-orange); --line: var(--t-orange-line); }
+.t-yellow { --fill: var(--t-yellow); --line: var(--t-yellow-line); }
+.t-green  { --fill: var(--t-green);  --line: var(--t-green-line); }
+.t-teal   { --fill: var(--t-teal);   --line: var(--t-teal-line); }
+.t-blue   { --fill: var(--t-blue);   --line: var(--t-blue-line); }
+.t-indigo { --fill: var(--t-indigo); --line: var(--t-indigo-line); }
+.t-purple { --fill: var(--t-purple); --line: var(--t-purple-line); }
+.t-pink   { --fill: var(--t-pink);   --line: var(--t-pink-line); }
+.t-neutral { --fill: var(--t-neutral); --line: var(--t-neutral-line); }
+
+/* ---- base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--bg); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+img, svg, picture { display: block; max-width: 100%; }
+img { height: auto; }
+h1, h2, h3, p, ol, ul, figure, fieldset { margin: 0; }
+ol, ul { padding: 0; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+a:hover { color: var(--line); }
+b, strong { font-weight: 600; }
+:focus-visible { outline: 2px solid var(--strong); outline-offset: 3px; border-radius: 6px; }
+section[id], [id="main"] { scroll-margin-top: 84px; }
+
+.vh {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.wrap { width: min(100% - 2 * var(--gutter), var(--max)); margin-inline: auto; }
+.ic {
+  width: 24px; height: 24px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  overflow: visible;
+}
+
+.skip {
+  position: absolute; left: 12px; top: -60px; z-index: 20;
+  padding: 10px 16px; border-radius: 999px;
+  background: var(--strong); color: var(--on-strong); font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- the bar: the app's glass transport, as navigation ---- */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  padding: 10px var(--gutter) 0;
+  pointer-events: none;
+}
+.bar {
+  pointer-events: auto;
+  max-width: var(--max); margin-inline: auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 56px; padding: 6px 6px 6px 8px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: .5px solid var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .bar { background: var(--glass-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 12px 0 4px; border-radius: 999px;
+  font-weight: 600; text-decoration: none;
+}
+.brand img { width: 32px; height: 32px; border-radius: 22.5%; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
+.bar ul { display: flex; gap: 2px; list-style: none; }
+.bar ul a {
+  display: inline-flex; align-items: center;
+  min-height: 44px; padding: 0 14px; border-radius: 999px;
+  font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap;
+}
+.bar ul a:hover { background: var(--tab-on); color: inherit; }
+@media (max-width: 640px) { .bar .opt { display: none; } }
+@media (max-width: 380px) { .bar ul a { padding: 0 10px; } }
+@media (max-width: 340px) { .brand span { display: none; } }
+
+/* ---- hero ---- */
+.hero {
+  display: grid; gap: clamp(40px, 6vw, 64px); align-items: center;
+  padding-block: clamp(28px, 5vw, 64px) var(--section);
+}
+@media (min-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr) auto; }
+}
+.app-icon {
+  width: clamp(80px, 9vw, 112px); border-radius: 22.5%;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06), 0 10px 28px -6px rgba(0,0,0,.16);
+}
+.hero h1 { margin-top: clamp(24px, 3vw, 32px); font-weight: 700; }
+.wordmark {
+  display: block;
+  font-size: clamp(76px, 2.5rem + 11vw, 168px);
+  line-height: .86; letter-spacing: -.05em;
+  margin-left: -.04em;
+}
+.fullname {
+  display: block; margin-top: clamp(14px, 2vw, 20px);
+  font-size: clamp(21px, 1.05rem + 1.1vw, 30px);
+  font-weight: 600; line-height: 1.2; letter-spacing: -.012em;
+  color: var(--ink-2);
+}
+.hero-line {
+  margin-top: clamp(20px, 2.6vw, 28px); max-width: 27em;
+  font-size: clamp(19px, 1rem + .45vw, 22px); line-height: 1.45;
+}
+.status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 28px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 36px; padding: 6px 14px 6px 12px; border-radius: 999px;
+  background: var(--card); box-shadow: var(--elev);
+  font-size: 15px; font-weight: 600; line-height: 1.25;
+}
+.badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--t-green); flex: none; }
+.status-note { font-size: 15px; color: var(--ink-2); }
+.promise { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+
+/* A phone: the screenshot in a slim rim, its corners the screen's own (about 12.5% of the width). */
+.device { container-type: inline-size; }
+.frame {
+  padding: 2.3cqi; border-radius: 14.6cqi;
+  background: var(--frame);
+  box-shadow: 0 0 0 1px var(--frame-ring), var(--frame-shadow);
+}
+.frame img { width: 100%; border-radius: 12.4cqi; }
+.device.wide .frame { padding: 1.05cqi; border-radius: 6.6cqi; }
+.device.wide .frame img { border-radius: 5.7cqi; }
+.hero-shot { justify-self: center; width: min(74vw, 340px); }
+@media (min-width: 900px) { .hero-shot { width: clamp(290px, 25vw, 340px); margin-right: clamp(0px, 3vw, 40px); } }
+
+/* ---- sections ---- */
+.section { padding-block: 0 var(--section); }
+.section h2 {
+  font-size: clamp(30px, 1.25rem + 2.2vw, 44px);
+  line-height: 1.08; letter-spacing: -.025em; font-weight: 700;
+}
+.lede { margin-top: 12px; max-width: 40em; color: var(--ink-2); }
+.section-head { margin-bottom: clamp(24px, 3.5vw, 40px); }
+
+/* overview: Max's own words, set large */
+.overview { display: grid; gap: 20px; }
+@media (min-width: 900px) { .overview { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; } }
+.overview p.says {
+  font-size: clamp(21px, 1rem + 1.1vw, 28px); line-height: 1.42; letter-spacing: -.01em;
+  max-width: 32em;
+}
+.overview .by { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+
+/* features: tiles with the app's track chips */
+.features { display: grid; gap: 12px; list-style: none; }
+@media (min-width: 640px) { .features { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .features { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+.feature {
+  background: var(--card); border-radius: 18px; box-shadow: var(--elev);
+  padding: 20px 20px 22px;
+}
+.chip {
+  display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--fill); color: #000;
+}
+.feature h3 { margin-top: 16px; font-size: 19px; line-height: 1.3; font-weight: 600; letter-spacing: -.01em; }
+.feature p { margin-top: 6px; font-size: 16px; color: var(--ink-2); }
+@media (max-width: 639px) {
+  .feature { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; padding: 16px 16px 18px; }
+  .feature .chip { grid-row: span 2; }
+  .feature h3 { margin-top: 9px; }
+}
+
+/* screens: a sideways gallery, light by default; Light | Dark is the app's segmented control */
+.screens-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 24px; }
+.screens-tools { display: flex; align-items: center; gap: 12px; }
+.look { border: 0; padding: 0; min-inline-size: 0; }
+.seg {
+  display: inline-flex; padding: 0 4px; border-radius: 999px;
+  background: var(--seg-track);
+}
+.seg label { position: relative; display: block; padding: 4px 0; cursor: pointer; }
+.seg input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: pointer;
+}
+.seg span {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 76px; min-height: 36px; padding: 0 18px; border-radius: 999px;
+  font-size: 15px; font-weight: 500; color: var(--ink-2);
+}
+.seg input:checked + span { background: var(--raised); box-shadow: var(--raised-shadow); color: var(--ink); font-weight: 600; }
+.seg input:focus-visible + span { outline: 2px solid var(--strong); outline-offset: 1px; }
+.round {
+  display: inline-grid; place-items: center;
+  width: 44px; height: 44px; border: 0; border-radius: 50%;
+  background: var(--card); color: var(--ink); box-shadow: var(--elev);
+  cursor: pointer;
+}
+.round[aria-disabled="true"] { color: var(--ink-3); cursor: default; opacity: .55; }
+.shots-nav { display: flex; gap: 8px; }
+.shots-nav[hidden] { display: none; }
+@media (max-width: 699px) { .shots-nav { display: none; } }
+
+.for-dark { display: none; }
+.screens:has(input[value="dark"]:checked) .for-dark { display: block; }
+.screens:has(input[value="dark"]:checked) .for-light { display: none; }
+
+.shots {
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: max(var(--gutter), (100% - var(--max)) / 2);
+  scrollbar-width: thin; scrollbar-color: var(--sep-strong) transparent;
+}
+.shots:focus-visible { outline-offset: -2px; border-radius: 0; }
+.shots ul {
+  display: flex; gap: clamp(16px, 2vw, 24px); width: max-content; list-style: none;
+  padding: 6px max(var(--gutter), (100% - var(--max)) / 2) 22px;
+}
+.shots li { width: clamp(220px, 62vw, 280px); scroll-snap-align: start; }
+.shots figcaption, .land figcaption { margin-top: 16px; padding-right: 8px; }
+.eyebrow { display: block; font-size: 15px; font-weight: 600; color: var(--line); }
+.cap { display: block; margin-top: 2px; font-size: 17px; font-weight: 600; line-height: 1.3; }
+.land { display: grid; gap: 28px; list-style: none; margin-top: clamp(36px, 5vw, 56px); }
+@media (min-width: 760px) { .land { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } }
+
+/* getting started */
+.tabs-note { margin-top: 12px; max-width: 40em; color: var(--ink-2); }
+.howtos { columns: 1; column-gap: 16px; }
+@media (min-width: 720px) { .howtos { columns: 2; } }
+@media (min-width: 1060px) { .howtos { columns: 3; } }
+.howto {
+  break-inside: avoid; display: inline-block; width: 100%;
+  margin: 0 0 16px; padding: 22px 22px 22px;
+  background: var(--card); border-radius: 20px; box-shadow: var(--elev);
+}
+.howto h3 {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 19px; line-height: 1.3; font-weight: 600; letter-spacing: -.01em;
+}
+.howto h3 .ic { color: var(--line); }
+.steps { margin-top: 14px; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+.steps li {
+  counter-increment: step;
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px;
+  font-size: 16px; line-height: 1.5;
+}
+.steps li::before {
+  content: counter(step);
+  display: grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--well); color: var(--ink-2);
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+/* a control's glyph, drawn as it is in the app */
+.k {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.55em; height: 1.4em; padding: 0 .3em; margin: 0 .05em;
+  border-radius: .42em; background: var(--well); color: var(--ink);
+  font-weight: 600; line-height: 1; vertical-align: -.28em;
+}
+.k svg { width: 1em; height: 1em; }
+.k.grip { background: var(--t-orange); color: #000; }
+.k.grip svg { stroke-width: 3; }
+.k.pen { background: var(--marker); color: var(--on-marker); }
+
+/* made with DAHW: each song is a clip, the placeholders empty ones */
+.songs { display: grid; gap: 16px; }
+@media (min-width: 760px) { .songs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.song, .slot { border-radius: 14px; overflow: hidden; }
+.song { background: var(--card); box-shadow: var(--elev); }
+.song h3 {
+  padding: 8px 14px; background: var(--fill); color: #000;
+  font-size: 15px; line-height: 1.35; font-weight: 600;
+}
+.song-body { padding: 14px; }
+.song-meta { font-size: 15px; color: var(--ink-2); }
+.song-len {
+  display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px;
+  background: var(--well); color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.song audio { display: block; width: 100%; margin-top: 12px; }
+.slot { border: 1.5px dashed var(--sep-strong); }
+.slot-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; background: var(--well); color: var(--ink-2);
+  font-size: 15px; font-weight: 600;
+}
+.slot-bar .ic { width: 18px; height: 18px; }
+.slot-lane { position: relative; height: 72px; }
+@media (max-width: 759px) { .slot-lane { height: 48px; } }
+.slot-lane::after {
+  content: ""; position: absolute; left: 14px; right: 14px; top: 50%;
+  border-top: 2px dotted var(--sep-strong);
+}
+
+/* support and privacy */
+.support { display: grid; gap: 16px; }
+@media (min-width: 900px) { .support { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; } }
+.panel { background: var(--card); border-radius: 20px; box-shadow: var(--elev); padding: clamp(22px, 3vw, 32px); }
+.panel h3 { font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; }
+.panel h3 + p, .panel p + p, .panel p + h3, .panel ul + p { margin-top: 12px; }
+.panel p + h3 { margin-top: 26px; }
+.mail { font-weight: 600; }
+.promise-big { margin-top: 10px; font-size: 21px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; }
+.facts { margin-top: 16px; list-style: none; display: grid; gap: 10px; }
+.facts li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; font-size: 16px; }
+.facts .ic { color: var(--ink-3); }
+.more-link { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+
+/* footer */
+.foot { border-top: .5px solid var(--sep); }
+.foot .wrap {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px;
+  padding-block: 20px calc(28px + env(safe-area-inset-bottom));
+  font-size: 15px; color: var(--ink-2);
+}
+.foot ul { display: flex; flex-wrap: wrap; gap: 4px 20px; list-style: none; }
+.foot a { display: inline-flex; align-items: center; min-height: 44px; }
 </style>
 </head>
-<body>
-<main>
-  <h1>DAHW</h1>
-  <p class="muted">Digital Audio Handheld Workstation, for iPhone. By Max Harris.</p>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
 
-  <p>DAHW is a music workstation built for one hand on a phone: a Sampler that records or imports any audio (including the sound from your videos), slices, loops and warps it, plus an Arrangement, a piano roll, Analog and FM synths, a Drum Rack, effects and a mixer. Everything happens on your iPhone, with no account.</p>
+<!-- The app's own icons (DAH/UI/DesignSystem/IconSprite.swift): 24 pt, 1.8 stroke, round caps. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="b-open" viewBox="0 0 18 24"><path d="M13 3H6v18h7"/></symbol>
+  <symbol id="b-close" viewBox="0 0 18 24"><path d="M5 3h7v18H5"/></symbol>
+  <symbol id="i-sampler" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M20 4v16M20 4h-2.6M20 20h-2.6"/><path d="M8 10v4M11 6.5v11M14 9v6M17 11v2"/></symbol>
+  <symbol id="i-tap" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6.2"/><path d="M4.6 7.4a9.6 9.6 0 0 0 0 9.2M19.4 7.4a9.6 9.6 0 0 1 0 9.2"/></symbol>
+  <symbol id="i-drums" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.8"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.8"/></symbol>
+  <symbol id="i-arrange" viewBox="0 0 24 24"><rect x="3" y="4.5" width="10" height="4" rx="1.6"/><rect x="8" y="10" width="13" height="4" rx="1.6"/><rect x="3" y="15.5" width="8" height="4" rx="1.6"/></symbol>
+  <symbol id="i-midi" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="3.2"/><path d="M7 8.8h4M10 12h6.5M7 15.2h3.5"/></symbol>
+  <symbol id="i-analog" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="3.2"/><path d="M5.5 15.5 11.5 8.5v7l6-7v7"/></symbol>
+  <symbol id="i-mixer" viewBox="0 0 24 24"><path d="M6 4v16M12 4v16M18 4v16"/><path d="M3.6 15h4.8M9.6 8.5h4.8M15.6 12.5h4.8"/></symbol>
+  <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 14.5V3.5"/><path d="M8 7.3l4-4 4 4"/><path d="M8.5 10.5H7a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5a2 2 0 0 0-2-2h-1.5"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4 15.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.5"/></symbol>
+  <symbol id="i-warp" viewBox="0 0 24 24"><path d="M2.5 12h4M17.5 12h4"/><path d="M5.5 8.5 2 12l3.5 3.5M18.5 8.5 22 12l-3.5 3.5"/><path d="M9.5 9v6M12 6.5v11M14.5 9.5v5"/></symbol>
+  <symbol id="i-keys" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M9 13v6.5M15 13v6.5"/><rect x="7.2" y="4.5" width="3.6" height="8.5" rx="1" fill="currentColor" stroke="none"/><rect x="13.2" y="4.5" width="3.6" height="8.5" rx="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M15.6 4.4a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8L8.5 19.5l-4.7.7.7-4.7z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-select" viewBox="0 0 24 24"><path d="M6 3.8v15l4.1-3.9 2.7 5.6 2.6-1.2-2.7-5.6 5.6-.4z"/></symbol>
+  <symbol id="i-record" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-fx" viewBox="0 0 24 24"><path d="M11.2 5.3a2.9 2.9 0 0 0-1.8-.6c-1.7 0-2.6 1.1-2.6 2.9v11.9"/><path d="M4.3 10.3h5.6"/><path d="M13.6 10.3l6 9.2M19.6 10.3l-6 9.2"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.8" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-loop" viewBox="0 0 24 24"><path d="M16.5 3.5 20 7l-3.5 3.5"/><path d="M4 12v-2a3 3 0 0 1 3-3h13"/><path d="M7.5 20.5 4 17l3.5-3.5"/><path d="M20 12v2a3 3 0 0 1-3 3H4"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 18V5.5l10-2V16"/><circle cx="6.8" cy="18" r="2.2"/><circle cx="16.8" cy="16" r="2.2"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-storage" viewBox="0 0 24 24"><ellipse cx="12" cy="6.5" rx="7" ry="3"/><path d="M5 6.5v11c0 1.7 3.1 3 7 3s7-1.3 7-3v-11"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></symbol>
+  <!-- Not in the app's sprite: drawn here in the same style for Light and dark. -->
+  <symbol id="i-appearance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></symbol>
+</svg>
 
-  <h2>Support</h2>
-  <p>Found a problem or have a question? Email <a href="mailto:maxwilliamharris@gmail.com">maxwilliamharris@gmail.com</a>. Include your iPhone model, your iOS version and the DAHW version (shown in Settings), and what you were doing when it happened.</p>
-  <p>Testing through TestFlight? You can also send feedback with a screenshot from inside the TestFlight app.</p>
+<header class="top">
+  <nav class="bar" aria-label="DAHW">
+    <a class="brand" href="#top"><img src="assets/icon.webp" width="32" height="32" alt=""><span>DAHW</span></a>
+    <ul>
+      <li class="opt"><a href="#features">Features</a></li>
+      <li class="opt"><a href="#screens">Screens</a></li>
+      <li><a href="#start">Get started</a></li>
+      <li><a href="#support">Support</a></li>
+    </ul>
+  </nav>
+</header>
 
-  <h2>Your projects</h2>
-  <p>Your projects live only on your iPhone. To keep a copy of a song, export it (whole song or stems) from the Arrangement's Export sheet and save it to Files.</p>
+<main id="main">
 
-  <p class="muted"><a href="/dahw/privacy/">Privacy policy</a></p>
+  <section class="hero wrap" aria-labelledby="title">
+    <div>
+      <img class="app-icon" src="assets/icon.webp" width="112" height="112" alt="The DAHW app icon">
+      <h1 id="title"><span class="wordmark">DAHW</span> <span class="fullname">Digital Audio Handheld Workstation</span></h1>
+      <p class="hero-line">A music studio for iPhone. Sample any sound, even the audio from a video, warp it to your song, chop it onto pads, then arrange, mix and export the track.</p>
+      <p class="status"><span class="badge">Beta on TestFlight (invite only)</span> <span class="status-note">Coming to the App Store, free.</span></p>
+      <p class="promise">No account. Your music stays on your phone.</p>
+    </div>
+    <div class="hero-shot device">
+      <div class="frame">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="assets/screens/dark/01-sampler.webp">
+          <img src="assets/screens/light/01-sampler.webp" width="720" height="1564" fetchpriority="high"
+               alt="DAHW’s Sampler on an iPhone: a drum break taken from a video, its two-bar loop shaded orange between the loop handles, warped in Complex from 92 to 120 BPM, with a chord held on the keyboard.">
+        </picture>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="overview" aria-labelledby="overview-title">
+    <div class="overview">
+      <h2 id="overview-title">Why I made it</h2>
+      <div>
+        <p class="says">I make music in a desktop DAW, and sampling is the part I do most: catch a sound, find its tempo, loop it, chop it, play it. I wanted that on my phone without squeezing a whole studio onto a small screen. So every screen in DAHW has one job and big controls you can work with your thumb, and it uses the words you already know: tracks, clips, devices, Warp, sends and returns, C3 as MIDI note 60. There is no account, and nothing leaves your iPhone unless you export it.</p>
+        <p class="by">Max Harris</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="features" aria-labelledby="features-title">
+    <div class="section-head">
+      <h2 id="features-title">What’s in it</h2>
+    </div>
+    <ul class="features" role="list">
+      <li class="feature t-orange">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-sampler"/></svg></span>
+        <h3>Sampler</h3>
+        <p>Record with the mic, import any audio file, or take the sound from a video. Set markers and the loop, zoom in to a single cycle, detect the BPM, warp it in Re-Pitch or Complex, transpose it, slice it, and play it on a chromatic keyboard.</p>
+      </li>
+      <li class="feature t-pink">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-tap"/></svg></span>
+        <h3>Pads</h3>
+        <p>Play slices or drums on a full-screen grid of 16 pads (8 by 2 in landscape), with four banks, velocity from where you hit, and note repeat from 1/4 to 1/32, triplets included.</p>
+      </li>
+      <li class="feature t-yellow">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-drums"/></svg></span>
+        <h3>Drum Rack</h3>
+        <p>Sixteen pads, and every pad is a full Sampler. Deal a random kit, re-roll one pad or one kind of sound, load your own samples, save the racks you like, and program beats with velocity and swing.</p>
+      </li>
+      <li class="feature t-green">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>
+        <h3>Arrangement</h3>
+        <p>MIDI and audio tracks, clips you trim, split, duplicate, loop and consolidate, a loop brace on the ruler, and recording with a count-in. Flatten any clip to audio, and undo every edit.</p>
+      </li>
+      <li class="feature t-purple">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-midi"/></svg></span>
+        <h3>Piano roll</h3>
+        <p>Tap to draw a note and drag to stretch it, select and move notes, shape velocity, quantize, and transpose by a step or an octave, in portrait or landscape.</p>
+      </li>
+      <li class="feature t-blue">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-analog"/></svg></span>
+        <h3>Analog and FM</h3>
+        <p>Analog has two oscillators, unison, a 12 or 24 dB filter, two envelopes and an LFO. FM has four operators and 11 algorithms, each drawn as a diagram. Both come with presets, and you can save your own.</p>
+      </li>
+      <li class="feature t-teal">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span>
+        <h3>Effects and mixer</h3>
+        <p>Eight effects on any track, return or the master: EQ Three, Auto Filter, Compressor, Saturator, Chorus, Delay, Reverb and Limiter. Two sends, two returns, and a mixer with delay compensation, so every track stays in time.</p>
+      </li>
+      <li class="feature t-indigo">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-export"/></svg></span>
+        <h3>Export</h3>
+        <p>Mix the song down to a 24-bit WAV or an M4A, or export stems: a WAV for every track and return, all the same length, so they line up in any DAW.</p>
+      </li>
+      <li class="feature t-neutral">
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-appearance"/></svg></span>
+        <h3>Light and dark</h3>
+        <p>Light by default, with a dark mode for dim rooms, or let it follow your iPhone. Every screen is drawn for both.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section screens" id="screens" aria-labelledby="screens-title">
+    <div class="wrap section-head screens-head">
+      <div>
+        <h2 id="screens-title">Screens</h2>
+        <p class="lede">From the demo song that DAHW opens with, Late Night Flip.</p>
+      </div>
+      <div class="screens-tools">
+        <fieldset class="look">
+          <legend class="vh">Show the screens in</legend>
+          <div class="seg">
+            <label><input type="radio" name="look" value="light" checked><span>Light</span></label>
+            <label><input type="radio" name="look" value="dark"><span>Dark</span></label>
+          </div>
+        </fieldset>
+        <div class="shots-nav" hidden>
+          <button class="round" type="button" data-dir="-1" aria-label="Previous screens"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+          <button class="round" type="button" data-dir="1" aria-label="Next screens"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="shots" role="region" aria-label="Screens in portrait, scroll sideways" tabindex="0">
+      <ul role="list">
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/01-sampler.webp" width="720" height="1564" loading="lazy" alt="The Sampler's Pitch page: a drum break's two-bar loop between its handles, warped in Complex from 92 to 120 BPM and transposed up 7 semitones, with a chord held on the keyboard.">
+            <img class="for-dark" src="assets/screens/dark/01-sampler.webp" width="720" height="1564" loading="lazy" alt="The Sampler's Pitch page: a drum break's two-bar loop between its handles, warped in Complex from 92 to 120 BPM and transposed up 7 semitones, with a chord held on the keyboard.">
+          </div></div>
+          <figcaption class="t-orange"><span class="eyebrow">Sampler</span> <span class="cap">Sample any sound, then warp it to the song</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/02-pads.webp" width="720" height="1564" loading="lazy" alt="The pad view: sixteen pads, each a named slice of the break with its own small waveform, two of them lit as they sound, with banks A to D, Touch velocity and note repeat at 1/16.">
+            <img class="for-dark" src="assets/screens/dark/02-pads.webp" width="720" height="1564" loading="lazy" alt="The pad view: sixteen pads, each a named slice of the break with its own small waveform, two of them lit as they sound, with banks A to D, Touch velocity and note repeat at 1/16.">
+          </div></div>
+          <figcaption class="t-orange"><span class="eyebrow">Pads</span> <span class="cap">Chop it and play it on big pads</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/03-arrangement.webp" width="720" height="1564" loading="lazy" alt="The Arrangement of Late Night Flip: tracks for the break, drums, Rhodes chords, an 808 sub, a pad and a vocal chop, their clips in colour, a four-bar loop on the ruler and a Rhodes clip selected.">
+            <img class="for-dark" src="assets/screens/dark/03-arrangement.webp" width="720" height="1564" loading="lazy" alt="The Arrangement of Late Night Flip: tracks for the break, drums, Rhodes chords, an 808 sub, a pad and a vocal chop, their clips in colour, a four-bar loop on the ruler and a Rhodes clip selected.">
+          </div></div>
+          <figcaption class="t-orange"><span class="eyebrow">Arrangement</span> <span class="cap">Build the whole song</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/04-drum-rack.webp" width="720" height="1564" loading="lazy" alt="The Drum Rack: sixteen pads of kicks, snares, claps, hats, crashes and percussion, one snare lit as it plays, with its Tune, Tone, Level and Decay below.">
+            <img class="for-dark" src="assets/screens/dark/04-drum-rack.webp" width="720" height="1564" loading="lazy" alt="The Drum Rack: sixteen pads of kicks, snares, claps, hats, crashes and percussion, one snare lit as it plays, with its Tune, Tone, Level and Decay below.">
+          </div></div>
+          <figcaption class="t-yellow"><span class="eyebrow">Drum Rack</span> <span class="cap">Every pad is a full Sampler</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/05-piano-roll.webp" width="720" height="1564" loading="lazy" alt="The piano roll: Rhodes chords and a melody as purple notes from C3 to E4, a chord selected, on the Transform page with transpose, quantize and duplicate.">
+            <img class="for-dark" src="assets/screens/dark/05-piano-roll.webp" width="720" height="1564" loading="lazy" alt="The piano roll: Rhodes chords and a melody as purple notes from C3 to E4, a chord selected, on the Transform page with transpose, quantize and duplicate.">
+          </div></div>
+          <figcaption class="t-purple"><span class="eyebrow">Piano roll</span> <span class="cap">Draw chords and melodies</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/06-fm-synth.webp" width="720" height="1564" loading="lazy" alt="The FM synth: its algorithm drawn as a diagram of four operators, the Electric Piano preset loaded, with a chord held on the keyboard.">
+            <img class="for-dark" src="assets/screens/dark/06-fm-synth.webp" width="720" height="1564" loading="lazy" alt="The FM synth: its algorithm drawn as a diagram of four operators, the Electric Piano preset loaded, with a chord held on the keyboard.">
+          </div></div>
+          <figcaption class="t-purple"><span class="eyebrow">Synths</span> <span class="cap">Analog and FM synths</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/07-mixer.webp" width="720" height="1564" loading="lazy" alt="The mixer's Levels page: channel strips with faders, meters, pan, and mute and solo buttons, the break's strip selected.">
+            <img class="for-dark" src="assets/screens/dark/07-mixer.webp" width="720" height="1564" loading="lazy" alt="The mixer's Levels page: channel strips with faders, meters, pan, and mute and solo buttons, the break's strip selected.">
+          </div></div>
+          <figcaption class="t-orange"><span class="eyebrow">Mixer</span> <span class="cap">Mix with sends and returns</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/08-export.webp" width="720" height="1564" loading="lazy" alt="The Export sheet on its Stems page: the song's tracks listed with a switch each, a picture of the song, and the size of the stems.">
+            <img class="for-dark" src="assets/screens/dark/08-export.webp" width="720" height="1564" loading="lazy" alt="The Export sheet on its Stems page: the song's tracks listed with a switch each, a picture of the song, and the size of the stems.">
+          </div></div>
+          <figcaption class="t-orange"><span class="eyebrow">Export</span> <span class="cap">Export the mix or every stem</span></figcaption>
+        </figure></li>
+      </ul>
+    </div>
+
+    <ul class="land wrap" role="list">
+      <li><figure>
+        <div class="device wide"><div class="frame">
+          <img class="for-light" src="assets/screens/light/09-pads-landscape.webp" width="1200" height="552" loading="lazy" alt="The pad view in landscape: sixteen pads of the break's slices in two rows of eight, two of them lit.">
+          <img class="for-dark" src="assets/screens/dark/09-pads-landscape.webp" width="1200" height="552" loading="lazy" alt="The pad view in landscape: sixteen pads of the break's slices in two rows of eight, two of them lit.">
+        </div></div>
+        <figcaption class="t-orange"><span class="eyebrow">Pads</span> <span class="cap">Sixteen pads in landscape</span></figcaption>
+      </figure></li>
+      <li><figure>
+        <div class="device wide"><div class="frame">
+          <img class="for-light" src="assets/screens/light/10-arrangement-landscape.webp" width="1200" height="552" loading="lazy" alt="The Arrangement in landscape: track headers with mute, solo and arm beside twelve bars of clips.">
+          <img class="for-dark" src="assets/screens/dark/10-arrangement-landscape.webp" width="1200" height="552" loading="lazy" alt="The Arrangement in landscape: track headers with mute, solo and arm beside twelve bars of clips.">
+        </div></div>
+        <figcaption class="t-orange"><span class="eyebrow">Arrangement</span> <span class="cap">More of the song in landscape</span></figcaption>
+      </figure></li>
+    </ul>
+  </section>
+
+  <section class="section wrap" id="start" aria-labelledby="start-title">
+    <div class="section-head">
+      <h2 id="start-title">Getting started</h2>
+      <p class="lede">DAHW opens on a demo song, Late Night Flip, so there is something to play right away.</p>
+      <p class="tabs-note">Five tabs run along the bottom: <b>Arrange</b>, <b>Clip</b>, <b>Device</b>, <b>Mix</b> and <b>Browse</b>. Select a track or a clip in Arrange, and Clip and Device show it.</p>
+    </div>
+
+    <div class="howtos">
+      <article class="howto t-orange">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-import"/></svg>Get a sound into the Sampler</h3>
+        <ol class="steps" role="list">
+          <li><span>Select a Sampler track and open <b>Device</b>. For a new one, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vh">Add</span></span> in Arrange and choose <b>Sampler</b>.</span></li>
+          <li><span>Tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span>, then <b>Load Sample…</b> (<b>Replace Sample…</b> once there is one). Choose <b>Files</b>, <b>Photos &amp; Videos</b> to use the sound of a video, or <b>Recordings</b>.</span></li>
+          <li><span>To record, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span>, then <b>Record…</b> (or <b>Record Over…</b>), and press <b>Record</b>.</span></li>
+          <li><span>DAHW detects the tempo as the sound loads. You can also start from <b>Browse</b>: pick a file, a video or a recording, then where it goes.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-orange">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-warp"/></svg>Set the loop and warp it</h3>
+        <ol class="steps" role="list">
+          <li><span>On the <b>Loop</b> page, drag the <span class="k grip"><svg class="ic" viewBox="0 0 18 24" aria-hidden="true"><use href="#b-open"/></svg><span class="vh">Loop Start</span></span> and <span class="k grip"><svg class="ic" viewBox="0 0 18 24" aria-hidden="true"><use href="#b-close"/></svg><span class="vh">Loop End</span></span> handles under the waveform, or the bar between them to move the loop. <span class="k pen">S</span> and <span class="k pen">E</span> set where the sound starts and ends.</span></li>
+          <li><span>Pinch to zoom, down to a single cycle. A double tap jumps between the whole sample and the loop.</span></li>
+          <li><span>On <b>Tempo</b>, tap <b>Detect</b> or <b>Tap</b>, or set <b>Loop Is</b> to the number of bars the loop should be.</span></li>
+          <li><span>On <b>Pitch</b>, set <b>Warp</b> to <b>Re-Pitch</b> (speed and pitch together, like tape) or <b>Complex</b> (tempo and pitch apart). The sample now follows the song’s tempo. <b>Transpose</b> and <b>Detune</b> sit beside it, and <b>Render</b> bakes it all into a new sample.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-orange">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-keys"/></svg>Play it on keys and pads</h3>
+        <ol class="steps" role="list">
+          <li><span>Play the keyboard at the bottom of the Sampler. The diamond marks the root key (C3 at first), and the arrows beside the keys change octave.</span></li>
+          <li><span>For pads, tap <b>Classic</b> at the top right and choose <b>Slice</b>. The <b>Slices</b> page slices by <b>Transients</b>, <b>Beats</b> or <b>Manual</b>, and the keyboard turns into slice pads.</span></li>
+          <li><span>Tap <b>Pads</b> beside them for the full-screen pad view: banks <b>A</b> to <b>D</b>, <b>Fixed</b> or <b>Touch</b> velocity, and <b>Repeat</b> from 1/4 to 1/32 (<b>T</b> for triplets). <b>Keys</b> goes back.</span></li>
+          <li><span>With Repeat off, long-press a pad to edit its slice: start, end, tune, gain, reverse and choke.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-yellow">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-drums"/></svg>Build a beat with the Drum Rack</h3>
+        <ol class="steps" role="list">
+          <li><span>In Arrange, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vh">Add</span></span> and choose <b>Drums</b>. The new track starts with a random kit, ready to play.</span></li>
+          <li><span>Open <b>Device</b> and tap the pads. The <b>Kit</b> page deals a <b>New Random Rack</b> or re-rolls every pad or one kind of sound, and <b>Save This Rack…</b> keeps one you like.</span></li>
+          <li><span>On <b>Steps</b>, make a <b>New Clip</b> if there is none, then tap steps to program the selected pad, with <b>Step Velocity</b> and <b>Swing</b>.</span></li>
+          <li><span>On <b>Pad</b>, <b>Replace</b> loads your own sound from Files, a video or Browse, <b>Record</b> records one, and <b>Sampler</b> opens the pad’s own Sampler.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-purple">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg>Draw notes in the piano roll</h3>
+        <ol class="steps" role="list">
+          <li><span>In Arrange, tap an empty part of a MIDI track’s lane to make a one-bar clip (drag its end to make it longer), then open <b>Clip</b>.</span></li>
+          <li><span>In <b>Draw</b> mode <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></span>, tap the grid to add a note and drag right to stretch it. Tap a note to delete it.</span></li>
+          <li><span>In <b>Select</b> mode <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-select"/></svg></span>, tap notes or drag across the grid to select them, then drag them where they go.</span></li>
+          <li><span>The <b>Velocity</b>, <b>Loop</b> and <b>Transform</b> pages set velocity, the clip’s loop, quantize and transpose. <b>Fold</b> shows only the notes in use.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-green">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg>Arrange clips and the loop</h3>
+        <ol class="steps" role="list">
+          <li><span>Tap a clip to select it, drag it to move it, and drag its edges to trim it. The bar at the bottom has <b>Split</b>, <b>Duplicate</b>, <b>Loop</b>, <b>Open</b> and <b>More</b>.</span></li>
+          <li><span>Long-press a clip for <b>Rename</b>, <b>Color</b>, <b>Consolidate</b>, <b>Reverse</b>, <b>Open in Sampler</b>, <b>Flatten to Audio</b> and the rest.</span></li>
+          <li><span>The loop is the bar along the top of the ruler: drag its ends or its middle, or long-press it for <b>Double Loop</b>, <b>Halve Loop</b> and <b>Loop to Selected Clip</b>. Turn it on and off with <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-loop"/></svg><span class="vh">Loop</span></span> in the transport; with it off, drag across the ruler to draw a new one.</span></li>
+          <li><span>Pinch to zoom, and scroll with two fingers.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-pink">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-record"/></svg>Record</h3>
+        <ol class="steps" role="list">
+          <li><span>Arm a track with the round <b>Arm</b> button beside <b>M</b> and <b>S</b> in its header. With nothing armed, Record arms the selected track.</span></li>
+          <li><span>Press the red <span class="k"><svg class="ic" aria-hidden="true" style="color:#FF3B30"><use href="#i-record"/></svg><span class="vh">Record</span></span> in the transport. DAHW counts in, then records from the playhead: the mic on an audio track, the keys or pads on a MIDI track.</span></li>
+          <li><span>Press Record again to punch out and keep playing, or Stop to end. With the loop on, every pass is a take, and <b>Undo</b> removes the newest.</span></li>
+          <li><span>Tap the position readout in the transport for the count-in, the metronome and <b>Input Quantize</b>.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-teal">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-fx"/></svg>Add effects and sends</h3>
+        <ol class="steps" role="list">
+          <li><span>On <b>Device</b>, tap the device’s name at the top (<b>Sampler</b>, for example) to open the <b>Device Chain</b>, then tap <b>Add Effect</b>.</span></li>
+          <li><span>Pick EQ Three, Auto Filter, Compressor, Saturator, Chorus, Delay, Reverb or Limiter. Drag the handle to reorder, and use the switch to turn one off.</span></li>
+          <li><span>In <b>Mix</b>, the <b>Sends</b> page sends a track to <b>Return A</b> (a Reverb) and <b>Return B</b> (a Delay), before or after the fader.</span></li>
+          <li><span><b>Chain</b> on a mixer strip opens that strip’s effects, the returns and the master included.</span></li>
+        </ol>
+      </article>
+
+      <article class="howto t-indigo">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-export"/></svg>Export a song or stems</h3>
+        <ol class="steps" role="list">
+          <li><span>Tap the project’s name at the top left of Arrange, then <b>Export</b>.</span></li>
+          <li><span><b>Mixdown</b> makes one file of the whole song: choose <b>WAV</b> (24-bit) or <b>M4A</b>. <b>Stems</b> makes a WAV for every track and return; switch off the ones you don’t need. <b>Sample</b> exports one of the project’s samples.</span></li>
+          <li><span>DAHW renders on your iPhone, from the first clip to the end of the last reverb and delay tails, then the share sheet opens: save to Files, AirDrop, or send it anywhere.</span></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="section wrap" id="songs" aria-labelledby="songs-title">
+    <div class="section-head">
+      <h2 id="songs-title">Made with DAHW</h2>
+      <p class="lede">Songs made on an iPhone in DAHW. First demos coming soon.</p>
+    </div>
+    <div class="songs">
+      <!--
+        TO ADD A SONG
+        1. Put the audio file in public/dahw/assets/songs/ (an .m4a at 256 kb/s keeps it small).
+        2. Copy the <article> below to just above the placeholders and fill in the title, the length,
+           the DAHW features it uses and the file name. The class sets the clip's colour: t-orange,
+           t-yellow, t-green, t-teal, t-blue, t-indigo, t-purple or t-pink.
+        3. Delete one placeholder (<div class="slot">) for each song added, and once the first song is
+           in, change "First demos coming soon." above to a line about the songs.
+
+      <article class="song t-orange">
+        <h3>Song title</h3>
+        <div class="song-body">
+          <p class="song-meta"><span class="song-len"><span class="vh">Length </span>2:48</span> <span class="vh">Made with </span>Sampler, Drum Rack, FM and Reverb</p>
+          <audio controls preload="none" src="assets/songs/song-file.m4a"></audio>
+        </div>
+      </article>
+      -->
+      <div class="slot" aria-hidden="true">
+        <div class="slot-bar"><svg class="ic" aria-hidden="true"><use href="#i-note"/></svg>Demo coming soon</div>
+        <div class="slot-lane"></div>
+      </div>
+      <div class="slot" aria-hidden="true">
+        <div class="slot-bar"><svg class="ic" aria-hidden="true"><use href="#i-note"/></svg>Demo coming soon</div>
+        <div class="slot-lane"></div>
+      </div>
+      <div class="slot" aria-hidden="true">
+        <div class="slot-bar"><svg class="ic" aria-hidden="true"><use href="#i-note"/></svg>Demo coming soon</div>
+        <div class="slot-lane"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="support" aria-labelledby="support-title">
+    <div class="section-head">
+      <h2 id="support-title">Support and privacy</h2>
+    </div>
+    <div class="support">
+      <div class="panel">
+        <h3>Support</h3>
+        <p>Found a problem or have a question? Email <a class="mail" href="mailto:maxwilliamharris@gmail.com">maxwilliamharris@gmail.com</a>. Include your iPhone model, your iOS version and the DAHW version (shown in Settings), and what you were doing when it happened.</p>
+        <p>Testing through TestFlight? You can also send feedback with a screenshot from inside the TestFlight app.</p>
+        <h3>Your projects</h3>
+        <p>Your projects live only on your iPhone. To keep a copy of a song, export it (whole song or stems) from the Arrangement’s Export sheet and save it to Files.</p>
+        <h3>What it runs on</h3>
+        <p>iPhone with iOS 18 or later. On an iPad, the iPhone version runs.</p>
+      </div>
+      <div class="panel">
+        <h3>Privacy</h3>
+        <p class="promise-big">No account. Your music stays on your phone.</p>
+        <ul class="facts" role="list">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-storage"/></svg><span>DAHW collects no data: no analytics, no ads, no tracking, and nothing is sent to a server.</span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>The microphone is used only when you record.</span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-import"/></svg><span>Photos and Files hand DAHW only the video or file you pick.</span></li>
+        </ul>
+        <p><a class="more-link" href="privacy/">Read the privacy policy</a></p>
+      </div>
+    </div>
+  </section>
+
 </main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>© 2026 Max Harris</p>
+    <ul role="list">
+      <li><a href="privacy/">Privacy policy</a></li>
+      <li><a href="../">maxharris.io</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+// Progressive enhancement only: buttons to step through the screens. Without this script the gallery
+// still scrolls (swipe, trackpad, or the arrow keys once it has focus) and Light | Dark still works.
+(() => {
+  const scroller = document.querySelector('.shots');
+  const nav = document.querySelector('.shots-nav');
+  if (!scroller || !nav) return;
+  const buttons = nav.querySelectorAll('button');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const update = () => {
+    const end = scroller.scrollWidth - scroller.clientWidth - 2;
+    buttons[0].setAttribute('aria-disabled', String(scroller.scrollLeft <= 2));
+    buttons[1].setAttribute('aria-disabled', String(scroller.scrollLeft >= end));
+  };
+  nav.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button || button.getAttribute('aria-disabled') === 'true') return;
+    const item = scroller.querySelector('li');
+    const gap = parseFloat(getComputedStyle(item.parentElement).columnGap) || 0;
+    const step = item.getBoundingClientRect().width + gap;
+    const count = Math.max(1, Math.floor(scroller.clientWidth / step) - 1);
+    scroller.scrollBy({ left: Number(button.dataset.dir) * step * count, behavior: reduce.matches ? 'auto' : 'smooth' });
+  });
+  scroller.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  nav.hidden = false;
+  update();
+})();
+</script>
 </body>
 </html>
