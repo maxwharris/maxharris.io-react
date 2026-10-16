@@ -318,8 +318,8 @@ b, strong { font-weight: 600; }
 }
 .by { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
 
-/* Overview: screens, light by default; Light | Dark is the app's segmented control */
-.screens-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 24px; }
+/* Overview: the tour, light by default; Light | Dark (the app's segmented control) sits under it */
+.look-row { margin-top: 2px; }
 .look { border: 0; padding: 0; min-inline-size: 0; }
 .seg {
   display: inline-flex; padding: 0 4px; border-radius: 999px;
@@ -339,8 +339,8 @@ b, strong { font-weight: 600; }
 .seg input:focus-visible + span { outline: 2px solid var(--strong); outline-offset: 1px; }
 
 .for-dark { display: none; }
-.screens:has(input[value="dark"]:checked) .for-dark { display: block; }
-.screens:has(input[value="dark"]:checked) .for-light { display: none; }
+.tour:has(input[value="dark"]:checked) .for-dark { display: block; }
+.tour:has(input[value="dark"]:checked) .for-light { display: none; }
 
 .shots {
   overflow-x: auto; overscroll-behavior-x: contain;
@@ -565,31 +565,22 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     </div>
   </section>
 
-  <section class="section wrap" id="why" aria-labelledby="why-title">
+  <section class="section wrap" id="experience" aria-labelledby="experience-title">
     <div class="overview">
-      <h2 id="why-title">Why I made it</h2>
+      <h2 id="experience-title">Designed with experience</h2>
       <div>
-        <p class="says">I make music in a desktop DAW, and sampling is the part I do most: catch a sound, find its tempo, loop it, chop it, play it. I wanted that on my phone without squeezing a whole studio onto a small screen. So every screen in DAHW has one job and big controls you can work with your thumb, and it uses the words you already know: tracks, clips, devices, Warp, sends and returns, C3 as MIDI note 60. There is no account, and nothing leaves your iPhone unless you export it.</p>
+        <p class="says">I’m a beat maker, and I wanted a mobile setup I could rely on. When I hear a sound, I want to catch it, chop it and build the beat right there, without waiting to get back to my desk. DAHW gives every screen one job and big controls for your thumb, in the words you know from a desktop DAW: tracks, clips, devices, Warp, sends and returns, C3 as MIDI note 60. Nothing leaves your iPhone unless you export it.</p>
         <p class="by">Max Harris</p>
       </div>
     </div>
   </section>
 
-  <section class="section screens" id="screens" aria-labelledby="screens-title">
-    <div class="wrap section-head screens-head">
-      <div>
-        <h2 id="screens-title">Screens</h2>
-        <p class="lede">From the demo song that DAHW opens with, Late Night Flip.</p>
-      </div>
-      <fieldset class="look">
-        <legend class="vh">Show the screens in</legend>
-        <div class="seg">
-          <label><input type="radio" name="look" value="light" checked><span>Light</span></label>
-          <label><input type="radio" name="look" value="dark"><span>Dark</span></label>
-        </div>
-      </fieldset>
+  <section class="section tour" id="tour" aria-labelledby="tour-title">
+    <div class="wrap section-head">
+      <h2 id="tour-title">Tour</h2>
+      <p class="lede">From the demo song that DAHW opens with, Late Night Flip.</p>
     </div>
-    <div class="shots" role="region" aria-label="Screens, scroll sideways" tabindex="0">
+    <div class="shots" role="region" aria-label="Tour, scroll sideways" tabindex="0">
       <ul role="list">
         <li><figure>
           <div class="device"><div class="frame">
@@ -620,6 +611,15 @@ figcaption { margin-top: 16px; padding-right: 8px; }
           <figcaption class="t-yellow"><span class="eyebrow">Drum Rack</span> <span class="cap">Every pad is a full Sampler</span></figcaption>
         </figure></li>
       </ul>
+    </div>
+    <div class="wrap look-row">
+      <fieldset class="look">
+        <legend class="vh">Show the tour in</legend>
+        <div class="seg">
+          <label><input type="radio" name="look" value="light" checked><span>Light</span></label>
+          <label><input type="radio" name="look" value="dark"><span>Dark</span></label>
+        </div>
+      </fieldset>
     </div>
   </section>
 

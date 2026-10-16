@@ -318,8 +318,8 @@ b, strong { font-weight: 600; }
 }
 .by { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
 
-/* Overview: screens, light by default; Light | Dark is the app's segmented control */
-.screens-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 24px; }
+/* Overview: the tour, light by default; Light | Dark (the app's segmented control) sits under it */
+.look-row { margin-top: 2px; }
 .look { border: 0; padding: 0; min-inline-size: 0; }
 .seg {
   display: inline-flex; padding: 0 4px; border-radius: 999px;
@@ -339,8 +339,8 @@ b, strong { font-weight: 600; }
 .seg input:focus-visible + span { outline: 2px solid var(--strong); outline-offset: 1px; }
 
 .for-dark { display: none; }
-.screens:has(input[value="dark"]:checked) .for-dark { display: block; }
-.screens:has(input[value="dark"]:checked) .for-light { display: none; }
+.tour:has(input[value="dark"]:checked) .for-dark { display: block; }
+.tour:has(input[value="dark"]:checked) .for-light { display: none; }
 
 .shots {
   overflow-x: auto; overscroll-behavior-x: contain;
@@ -898,9 +898,8 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     current = id;
     links.forEach((a) => a.removeAttribute('aria-current'));
     const a = id && byId.get(id);
-    if (!a) return;
-    a.setAttribute('aria-current', 'true');
-    const left = a.offsetLeft - (row.clientWidth - a.offsetWidth) / 2;
+    if (a) a.setAttribute('aria-current', 'true');
+    const left = a ? a.offsetLeft - (row.clientWidth - a.offsetWidth) / 2 : 0;
     row.scrollTo({ left: Math.max(0, left), behavior: reduce.matches ? 'auto' : 'smooth' });
   };
   const sections = [...byId.keys()].map((id) => document.getElementById(id)).filter(Boolean);
