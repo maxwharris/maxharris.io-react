@@ -512,57 +512,37 @@ figcaption { margin-top: 16px; padding-right: 8px; }
 .facts .ic { color: var(--ink-3); }
 @media (min-width: 900px) { .support .privacy { position: sticky; top: 92px; } }
 
-/* Updates: one block per build, newest first; the notes grouped by area as cards */
-.tf-note { margin-top: 14px; max-width: 40em; font-size: 15px; color: var(--ink-2); }
-.releases { padding-bottom: var(--section); }
+/* Updates: one plain block per build, newest first, in one centred column */
+.wrap.narrow { width: min(100% - 2 * var(--gutter), 680px); }
+.tf-note { margin-top: 14px; font-size: 15px; color: var(--ink-2); }
+.releases { display: grid; gap: 20px; padding-bottom: var(--section); }
 .release {
-  display: grid; gap: 20px;
-  padding-block: clamp(40px, 6vw, 72px);
-  border-top: .5px solid var(--sep);
+  padding: clamp(22px, 4vw, 34px);
+  background: var(--card); border-radius: 20px; box-shadow: var(--elev);
 }
-.release:first-of-type { border-top: 0; padding-top: 0; }
-@media (min-width: 900px) {
-  .release { grid-template-columns: 240px minmax(0, 1fr); column-gap: clamp(32px, 4vw, 56px); }
-  .release-head { position: sticky; top: 96px; align-self: start; }
-}
+.release-head { padding-bottom: 18px; border-bottom: .5px solid var(--sep); }
 .release h2 {
-  font-size: clamp(28px, 1.15rem + 1.6vw, 36px);
-  line-height: 1.1; letter-spacing: -.02em; font-weight: 700;
+  font-size: clamp(24px, 1rem + 1.4vw, 30px);
+  line-height: 1.15; letter-spacing: -.02em; font-weight: 700;
 }
 .release-meta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
-  margin-top: 10px; font-size: 15px; color: var(--ink-2);
+  margin-top: 8px; font-size: 14px; color: var(--ink-2);
 }
 .build {
-  padding: 2px 10px; border-radius: 999px;
+  padding: 1px 9px; border-radius: 999px;
   background: var(--well); color: var(--ink);
-  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+  font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
 }
 .release:first-of-type .release-meta::after {
-  content: "Latest"; padding: 2px 10px; border-radius: 999px;
-  background: var(--t-green); color: #000; font-size: 13px; font-weight: 600;
+  content: "Latest"; padding: 1px 9px; border-radius: 999px;
+  background: var(--t-green); color: #000; font-size: 12px; font-weight: 600;
 }
-.release-sum { margin-top: 12px; font-size: 16px; line-height: 1.5; color: var(--ink-2); max-width: 34em; }
-.areas { columns: 1; column-gap: 16px; }
-@media (min-width: 720px) { .areas { columns: 2; } }
-.area {
-  break-inside: avoid; display: inline-block; width: 100%;
-  margin: 0 0 16px; padding: 18px 20px 20px;
-  background: var(--card); border-radius: 18px; box-shadow: var(--elev);
-}
-.area h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; line-height: 1.3; font-weight: 600; }
-.area-ic {
-  display: grid; place-items: center; flex: none;
-  width: 32px; height: 32px; border-radius: 9px;
-  background: var(--fill); color: #000;
-}
-.area-ic .ic { width: 20px; height: 20px; }
-.area ul { margin-top: 12px; display: grid; gap: 8px; list-style: none; }
-.area li { position: relative; padding-left: 18px; font-size: 16px; line-height: 1.45; }
-.area li::before {
-  content: ""; position: absolute; left: 3px; top: .6em;
-  width: 6px; height: 6px; border-radius: 50%; background: var(--fill);
-}
+.release-sum { margin-top: 10px; font-size: 16px; line-height: 1.5; color: var(--ink-2); }
+.release h3 { margin-top: 22px; font-size: 17px; line-height: 1.3; font-weight: 700; color: var(--ink); }
+.release ul { margin-top: 8px; padding-left: 1.3em; display: grid; gap: 6px; }
+.release li { font-size: 16px; line-height: 1.5; color: var(--ink); }
+.release li::marker { color: var(--ink-2); }
 
 /* footer: the support address on every page */
 .foot { border-top: .5px solid var(--sep); }
@@ -581,15 +561,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
 <body id="top">
 <a class="skip" href="#main">Skip to content</a>
 
-<!-- The app's own icons (DAH/UI/DesignSystem/IconSprite.swift): 24 pt, 1.8 stroke, round caps. i-appearance is drawn here in the same style. -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <symbol id="i-sampler" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M20 4v16M20 4h-2.6M20 20h-2.6"/><path d="M8 10v4M11 6.5v11M14 9v6M17 11v2"/></symbol>
-  <symbol id="i-drums" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.8"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.8"/></symbol>
-  <symbol id="i-arrange" viewBox="0 0 24 24"><rect x="3" y="4.5" width="10" height="4" rx="1.6"/><rect x="8" y="10" width="13" height="4" rx="1.6"/><rect x="3" y="15.5" width="8" height="4" rx="1.6"/></symbol>
-  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.2c0-1.2.9-2.2 2.1-2.2h3.6l2.1 2.3h7.1c1.2 0 2.1.9 2.1 2.1v7.4c0 1.2-.9 2.2-2.1 2.2H5.6c-1.2 0-2.1-1-2.1-2.2z"/></symbol>
-  <symbol id="i-mixer" viewBox="0 0 24 24"><path d="M6 4v16M12 4v16M18 4v16"/><path d="M3.6 15h4.8M9.6 8.5h4.8M15.6 12.5h4.8"/></symbol>
-  <symbol id="i-iphone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 5h3"/></symbol>
-</svg>
+
 
 <header class="top">
   <nav class="bar" aria-label="DAHW">
@@ -605,25 +577,24 @@ figcaption { margin-top: 16px; padding-right: 8px; }
 
 <main id="main">
 
-  <div class="page-head wrap">
+  <div class="page-head wrap narrow">
     <h1>Updates</h1>
     <p class="lede">What changed in each build of DAHW, newest first.</p>
     <p class="tf-note">TestFlight lists these builds as version 0.42 with the build number, for example 0.42 (45), while the app shows the same build as DAHW v0.45 on its Projects screen.</p>
   </div>
 
-  <div class="releases wrap">
+  <div class="releases wrap narrow">
   <!--
     TO ADD A BUILD: copy the newest <article class="release"> and paste it just below this note, so
     the newest build stays first (the Latest tag follows the first one by itself). Then change:
       - id="v0-46" and aria-labelledby="v0-46-title", and the h2's id to match;
       - the version as the app shows it ("DAHW v0.46"), the date (datetime="2026-10-17" and the
-        words), and "Build 46";
-      - the one-line summary and the notes: short plain bullets, the most noticeable changes only.
-    Keep only the areas that changed, in this order, each with its colour and icon:
-      Sampler (t-orange, #i-sampler), Arrangement and clips (t-green, #i-arrange),
-      Drums (t-yellow, #i-drums), Sound and mix (t-teal, #i-mixer),
-      Projects and files (t-indigo, #i-folder), Everywhere (t-neutral, #i-iphone).
-    Start a note with <b>New:</b> for something new rather than fixed. No em dashes.
+        words) and "Build 46";
+      - the one-line summary, then the notes: each section is an <h3> with its <ul> of short, plain
+        bullets right below it, the most noticeable changes only.
+    Keep only the sections that changed, in this order: Sampler, Arrangement and clips, Drums,
+    Sound and mix, Projects and files, Everywhere. Start a note with <b>New:</b> for something new
+    rather than fixed. No em dashes.
   -->
   <article class="release" id="v0-45" aria-labelledby="v0-45-title">
     <header class="release-head">
@@ -631,71 +602,57 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <p class="release-meta"><time datetime="2026-10-16">October 16, 2026, midday</time> <span class="build">Build 45</span></p>
       <p class="release-sum">Changes from Max’s first day of testing, plus the fixes planned for v0.44, which ship in this build.</p>
     </header>
-    <div class="areas">
-      <section class="area t-orange">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-sampler"/></svg></span>Sampler</h3>
-        <ul role="list">
-          <li>One Undo now takes back a whole sample load or edit (Crop, Reverse, Normalize, the fades, Render, a new recording), where some took two.</li>
-          <li>The Slices page is simpler: Delete Slice sits beside Add Slice, the slice count shows under Slice By, and Pads From is gone.</li>
-          <li>The arrows beside the slice pads switch between slices 1 to 8 and 9 to 16.</li>
-          <li>Sounds with an uncertain tempo, like a spoken phrase, now load unwarped and play at their own length.</li>
-          <li>Create Clip from Loop keeps the loop’s Ping-Pong and crossfade.</li>
-        </ul>
-      </section>
-      <section class="area t-green">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>Arrangement and clips</h3>
-        <ul role="list">
-          <li>Tap a track’s name to open its instrument on Device. Return A, Return B and Master open Mix with their channel in view.</li>
-          <li>Hold Play or Stop for half a second to jump back to the start of the song.</li>
-          <li>On the Clip page, Play from a stop starts at the open clip.</li>
-          <li>A clip’s long-press menu is shorter: Split stays in the bar at the bottom, and Reverse for notes is now on the piano roll’s Transform page.</li>
-          <li>Clip View shows when a clip is muted, with an Unmute button, and dims the notes past the clip’s end.</li>
-          <li>Overdubbing past the end of a looping clip keeps every note you play.</li>
-          <li>An audio clip with Warp off keeps its length in time when you change the tempo.</li>
-          <li>The line under the song’s name counts only your tracks and shows the song’s length.</li>
-        </ul>
-      </section>
-      <section class="area t-yellow">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-drums"/></svg></span>Drums</h3>
-        <ul role="list">
-          <li>A recording started from a stop begins on the nearest sixteenth, and the new take opens in Clip View with each hit on its own step.</li>
-          <li>Setting a drum clip’s length on the Steps grid now loops that part, in the song as well.</li>
-          <li>A hit played just before the loop comes round shows on step 1, where you can remove it, and Quantize moves it to the loop’s start.</li>
-          <li>Loading a sound onto a pad from anywhere plays the whole sound, as loading from the Pad page always did.</li>
-          <li>Browse’s Drum Pad button names the pad it will replace.</li>
-        </ul>
-      </section>
-      <section class="area t-teal">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span>Sound and mix</h3>
-        <ul role="list">
-          <li>Every effect page has a menu (the round button with three dots) to duplicate, move or delete the effect, with Undo.</li>
-          <li>Unsolo All: tap the Master’s S to clear every solo at once. It is also on the Arrangement’s Master row and on Master’s Levels page.</li>
-          <li>In Mix, the Levels, Pan and Sends switch sits under the faders, right above its controls.</li>
-          <li>Holding a fader shows its value at the top while every channel’s name stays in view.</li>
-          <li>Analog’s Mod page in landscape shows the filter envelope and the LFO side by side.</li>
-        </ul>
-      </section>
-      <section class="area t-indigo">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span>Projects and files</h3>
-        <ul role="list">
-          <li>Delete recordings and imported sounds in Browse. DAHW warns you when a project still uses one.</li>
-          <li>A project saved by a newer version of DAHW now shows in Projects, marked as such, instead of disappearing.</li>
-          <li>A message no longer closes the sheet you have open, such as Export or Settings.</li>
-          <li>Settings > Storage counts your recordings correctly.</li>
-          <li>Project thumbnails sit on a grey backdrop in light mode, as they do in dark.</li>
-        </ul>
-      </section>
-      <section class="area t-neutral">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-iphone"/></svg></span>Everywhere</h3>
-        <ul role="list">
-          <li>Big songs keep up: dragging clips and moving faders follow your finger without lag.</li>
-          <li>DAHW keeps only the sounds a song plays in memory, so long recordings and undone edits use far less.</li>
-          <li>Larger text sizes: numbers stay whole in tiles, mixer names no longer break, and an empty Sampler fits.</li>
-          <li>Reduce Motion now also stops the drum step grid’s scrolling animation.</li>
-          <li>VoiceOver: Back to Start on Play, Open Device on a track’s name, and clearer slice and solo labels.</li>
-        </ul>
-      </section>
-    </div>
+    <h3>Sampler</h3>
+    <ul>
+      <li>One Undo now takes back a whole sample load or edit (Crop, Reverse, Normalize, the fades, Render, a new recording), where some took two.</li>
+      <li>The Slices page is simpler: Delete Slice sits beside Add Slice, the slice count shows under Slice By, and Pads From is gone.</li>
+      <li>The arrows beside the slice pads switch between slices 1 to 8 and 9 to 16.</li>
+      <li>Sounds with an uncertain tempo, like a spoken phrase, now load unwarped and play at their own length.</li>
+      <li>Create Clip from Loop keeps the loop’s Ping-Pong and crossfade.</li>
+    </ul>
+    <h3>Arrangement and clips</h3>
+    <ul>
+      <li>Tap a track’s name to open its instrument on Device. Return A, Return B and Master open Mix with their channel in view.</li>
+      <li>Hold Play or Stop for half a second to jump back to the start of the song.</li>
+      <li>On the Clip page, Play from a stop starts at the open clip.</li>
+      <li>A clip’s long-press menu is shorter: Split stays in the bar at the bottom, and Reverse for notes is now on the piano roll’s Transform page.</li>
+      <li>Clip View shows when a clip is muted, with an Unmute button, and dims the notes past the clip’s end.</li>
+      <li>Overdubbing past the end of a looping clip keeps every note you play.</li>
+      <li>An audio clip with Warp off keeps its length in time when you change the tempo.</li>
+      <li>The line under the song’s name counts only your tracks and shows the song’s length.</li>
+    </ul>
+    <h3>Drums</h3>
+    <ul>
+      <li>A recording started from a stop begins on the nearest sixteenth, and the new take opens in Clip View with each hit on its own step.</li>
+      <li>Setting a drum clip’s length on the Steps grid now loops that part, in the song as well.</li>
+      <li>A hit played just before the loop comes round shows on step 1, where you can remove it, and Quantize moves it to the loop’s start.</li>
+      <li>Loading a sound onto a pad from anywhere plays the whole sound, as loading from the Pad page always did.</li>
+      <li>Browse’s Drum Pad button names the pad it will replace.</li>
+    </ul>
+    <h3>Sound and mix</h3>
+    <ul>
+      <li>Every effect page has a menu (the round button with three dots) to duplicate, move or delete the effect, with Undo.</li>
+      <li>Unsolo All: tap the Master’s S to clear every solo at once. It is also on the Arrangement’s Master row and on Master’s Levels page.</li>
+      <li>In Mix, the Levels, Pan and Sends switch sits under the faders, right above its controls.</li>
+      <li>Holding a fader shows its value at the top while every channel’s name stays in view.</li>
+      <li>Analog’s Mod page in landscape shows the filter envelope and the LFO side by side.</li>
+    </ul>
+    <h3>Projects and files</h3>
+    <ul>
+      <li>Delete recordings and imported sounds in Browse. DAHW warns you when a project still uses one.</li>
+      <li>A project saved by a newer version of DAHW now shows in Projects, marked as such, instead of disappearing.</li>
+      <li>A message no longer closes the sheet you have open, such as Export or Settings.</li>
+      <li>Settings > Storage counts your recordings correctly.</li>
+      <li>Project thumbnails sit on a grey backdrop in light mode, as they do in dark.</li>
+    </ul>
+    <h3>Everywhere</h3>
+    <ul>
+      <li>Big songs keep up: dragging clips and moving faders follow your finger without lag.</li>
+      <li>DAHW keeps only the sounds a song plays in memory, so long recordings and undone edits use far less.</li>
+      <li>Larger text sizes: numbers stay whole in tiles, mixer names no longer break, and an empty Sampler fits.</li>
+      <li>Reduce Motion now also stops the drum step grid’s scrolling animation.</li>
+      <li>VoiceOver: Back to Start on Play, Open Device on a track’s name, and clearer slice and solo labels.</li>
+    </ul>
   </article>
   <article class="release" id="v0-43" aria-labelledby="v0-43-title">
     <header class="release-head">
@@ -703,74 +660,60 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <p class="release-meta"><time datetime="2026-10-16">October 16, 2026, early morning</time> <span class="build">Build 43</span></p>
       <p class="release-sum">The pre-test build: about 55 fixes found by playing through every screen, plus Mute Clip and battery savings in the background.</p>
     </header>
-    <div class="areas">
-      <section class="area t-orange">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-sampler"/></svg></span>Sampler</h3>
-        <ul role="list">
-          <li>Slicing is one Undo step, and slices made by beat follow a new tempo.</li>
-          <li>The slice pads and the landscape keys play a sample loaded on any page.</li>
-          <li>Render keeps the right tempo, and Detect no longer offers a doubled one.</li>
-          <li>A sound without a beat loads at its own length instead of being stretched.</li>
-          <li>Short loops show their length instead of 0 bars, and controls you cannot use look disabled.</li>
-          <li>A loop no longer goes silent when Start is moved past it.</li>
-        </ul>
-      </section>
-      <section class="area t-green">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>Arrangement and clips</h3>
-        <ul role="list">
-          <li><b>New:</b> Mute Clip and Unmute Clip in a clip’s More menu.</li>
-          <li>Split no longer clicks at the cut in any warp mode, and splitting while playing keeps the rest of the clip playing.</li>
-          <li>Moving, shortening or transposing a note while it sounds stops it at once instead of letting it ring.</li>
-          <li>Consolidate and Import Audio are one Undo step, and Consolidate keeps an audio clip’s fades.</li>
-          <li>A trimmed audio clip starts without a click.</li>
-          <li>Overdub keeps the track’s other clips playing while it records.</li>
-        </ul>
-      </section>
-      <section class="area t-yellow">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-drums"/></svg></span>Drums</h3>
-        <ul role="list">
-          <li>Re-rolling a rack keeps the sounds you loaded yourself.</li>
-          <li>Replace names the pad after its new sound.</li>
-          <li>A new Drums track keeps its kit after an Undo or a relaunch.</li>
-          <li>Two-finger rolls on the pad view play both pads.</li>
-          <li>The pad editor’s arrows skip empty pads.</li>
-          <li>In 7/8 the step grid shows all 14 steps, and it opens on the row you are editing.</li>
-        </ul>
-      </section>
-      <section class="area t-teal">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span>Sound and mix</h3>
-        <ul role="list">
-          <li>Soloing Return A or Return B plays that return on its own, still fed by your sends.</li>
-          <li>An Analog oscillator left out by the Osc Mix says so, with a Mix button.</li>
-          <li>Effect controls show their full names (Sidechain Filter is now HP Filter).</li>
-          <li>Long preset names no longer push the Device screen off the edge.</li>
-          <li>Save as Preset no longer suggests a name you already used.</li>
-          <li>Drums from a single-track MIDI file get a proper name instead of Channel 10.</li>
-        </ul>
-      </section>
-      <section class="area t-indigo">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span>Projects and files</h3>
-        <ul role="list">
-          <li>If a save fails, DAHW tells you once, keeps your edits and tries again.</li>
-          <li>A failed export says why on the Export sheet, and very long names export fine.</li>
-          <li>New Project and Delete stay quick with dozens of projects.</li>
-          <li>A sound that finishes loading after you switch projects lands in the right one.</li>
-          <li>A project can no longer be renamed to a blank name.</li>
-        </ul>
-      </section>
-      <section class="area t-neutral">
-        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-iphone"/></svg></span>Everywhere</h3>
-        <ul role="list">
-          <li><b>New:</b> with nothing playing, recording or exporting, DAHW pauses its audio in the background to save battery.</li>
-          <li>Leaving a page or the app while the song plays no longer cuts its notes or audio.</li>
-          <li>Calls, Siri, headphones, Control Center and the Home Screen were each checked, and a call now silences every track.</li>
-          <li>The Record button is easier to hit.</li>
-          <li>Long samples load without freezing the screen.</li>
-          <li>Larger text sizes: header pills and titles wrap cleanly.</li>
-          <li>VoiceOver reads each note’s pitch in the piano roll.</li>
-        </ul>
-      </section>
-    </div>
+    <h3>Sampler</h3>
+    <ul>
+      <li>Slicing is one Undo step, and slices made by beat follow a new tempo.</li>
+      <li>The slice pads and the landscape keys play a sample loaded on any page.</li>
+      <li>Render keeps the right tempo, and Detect no longer offers a doubled one.</li>
+      <li>A sound without a beat loads at its own length instead of being stretched.</li>
+      <li>Short loops show their length instead of 0 bars, and controls you cannot use look disabled.</li>
+      <li>A loop no longer goes silent when Start is moved past it.</li>
+    </ul>
+    <h3>Arrangement and clips</h3>
+    <ul>
+      <li><b>New:</b> Mute Clip and Unmute Clip in a clip’s More menu.</li>
+      <li>Split no longer clicks at the cut in any warp mode, and splitting while playing keeps the rest of the clip playing.</li>
+      <li>Moving, shortening or transposing a note while it sounds stops it at once instead of letting it ring.</li>
+      <li>Consolidate and Import Audio are one Undo step, and Consolidate keeps an audio clip’s fades.</li>
+      <li>A trimmed audio clip starts without a click.</li>
+      <li>Overdub keeps the track’s other clips playing while it records.</li>
+    </ul>
+    <h3>Drums</h3>
+    <ul>
+      <li>Re-rolling a rack keeps the sounds you loaded yourself.</li>
+      <li>Replace names the pad after its new sound.</li>
+      <li>A new Drums track keeps its kit after an Undo or a relaunch.</li>
+      <li>Two-finger rolls on the pad view play both pads.</li>
+      <li>The pad editor’s arrows skip empty pads.</li>
+      <li>In 7/8 the step grid shows all 14 steps, and it opens on the row you are editing.</li>
+    </ul>
+    <h3>Sound and mix</h3>
+    <ul>
+      <li>Soloing Return A or Return B plays that return on its own, still fed by your sends.</li>
+      <li>An Analog oscillator left out by the Osc Mix says so, with a Mix button.</li>
+      <li>Effect controls show their full names (Sidechain Filter is now HP Filter).</li>
+      <li>Long preset names no longer push the Device screen off the edge.</li>
+      <li>Save as Preset no longer suggests a name you already used.</li>
+      <li>Drums from a single-track MIDI file get a proper name instead of Channel 10.</li>
+    </ul>
+    <h3>Projects and files</h3>
+    <ul>
+      <li>If a save fails, DAHW tells you once, keeps your edits and tries again.</li>
+      <li>A failed export says why on the Export sheet, and very long names export fine.</li>
+      <li>New Project and Delete stay quick with dozens of projects.</li>
+      <li>A sound that finishes loading after you switch projects lands in the right one.</li>
+      <li>A project can no longer be renamed to a blank name.</li>
+    </ul>
+    <h3>Everywhere</h3>
+    <ul>
+      <li><b>New:</b> with nothing playing, recording or exporting, DAHW pauses its audio in the background to save battery.</li>
+      <li>Leaving a page or the app while the song plays no longer cuts its notes or audio.</li>
+      <li>Calls, Siri, headphones, Control Center and the Home Screen were each checked, and a call now silences every track.</li>
+      <li>The Record button is easier to hit.</li>
+      <li>Long samples load without freezing the screen.</li>
+      <li>Larger text sizes: header pills and titles wrap cleanly.</li>
+      <li>VoiceOver reads each note’s pitch in the piano roll.</li>
+    </ul>
   </article>
   </div>
 
