@@ -199,20 +199,30 @@ b, strong { font-weight: 600; }
 }
 .bar ul a:hover { background: var(--tab-on); color: inherit; }
 .bar ul a[aria-current="page"] { background: var(--tab-on); font-weight: 600; }
-@media (max-width: 440px) {
-  .brand { padding: 0 10px; }
-  .brand img { display: none; }
+/* Four links and DAHW must fit down to 320 px: the word gives way to the icon first (the link keeps
+   its name for VoiceOver), then the links tighten. */
+@media (max-width: 600px) {
   .bar ul a { padding: 0 12px; }
 }
-@media (max-width: 370px) {
+@media (max-width: 540px) {
+  .brand { padding: 0 6px; }
+  .brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .bar ul a { padding: 0 10px; }
+}
+@media (max-width: 460px) {
+  .bar ul a { padding: 0 9px; font-size: 14px; }
+}
+@media (max-width: 410px) {
   .bar { padding: 4px; gap: 0; }
   .bar ul { gap: 0; }
-  .brand { padding: 0 8px 0 10px; font-size: 15px; }
-  .bar ul a { padding: 0 8px; font-size: 14px; }
+  .brand img { width: 30px; height: 30px; }
+  .bar ul a { padding: 0 7px; }
 }
-@media (max-width: 340px) {
-  .brand { padding: 0 4px 0 8px; }
-  .bar ul a { padding: 0 6px; }
+@media (max-width: 380px) {
+  .top { padding-inline: 10px; }
+  .brand { padding: 0 3px; }
+  .brand img { width: 26px; height: 26px; }
+  .bar ul a { padding: 0 5px; font-size: 13px; letter-spacing: -.01em; }
 }
 
 /* the Features page's menu: a second glass row under the bar that scrolls sideways on a phone */
@@ -502,6 +512,58 @@ figcaption { margin-top: 16px; padding-right: 8px; }
 .facts .ic { color: var(--ink-3); }
 @media (min-width: 900px) { .support .privacy { position: sticky; top: 92px; } }
 
+/* Updates: one block per build, newest first; the notes grouped by area as cards */
+.tf-note { margin-top: 14px; max-width: 40em; font-size: 15px; color: var(--ink-2); }
+.releases { padding-bottom: var(--section); }
+.release {
+  display: grid; gap: 20px;
+  padding-block: clamp(40px, 6vw, 72px);
+  border-top: .5px solid var(--sep);
+}
+.release:first-of-type { border-top: 0; padding-top: 0; }
+@media (min-width: 900px) {
+  .release { grid-template-columns: 240px minmax(0, 1fr); column-gap: clamp(32px, 4vw, 56px); }
+  .release-head { position: sticky; top: 96px; align-self: start; }
+}
+.release h2 {
+  font-size: clamp(28px, 1.15rem + 1.6vw, 36px);
+  line-height: 1.1; letter-spacing: -.02em; font-weight: 700;
+}
+.release-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+  margin-top: 10px; font-size: 15px; color: var(--ink-2);
+}
+.build {
+  padding: 2px 10px; border-radius: 999px;
+  background: var(--well); color: var(--ink);
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.release:first-of-type .release-meta::after {
+  content: "Latest"; padding: 2px 10px; border-radius: 999px;
+  background: var(--t-green); color: #000; font-size: 13px; font-weight: 600;
+}
+.release-sum { margin-top: 12px; font-size: 16px; line-height: 1.5; color: var(--ink-2); max-width: 34em; }
+.areas { columns: 1; column-gap: 16px; }
+@media (min-width: 720px) { .areas { columns: 2; } }
+.area {
+  break-inside: avoid; display: inline-block; width: 100%;
+  margin: 0 0 16px; padding: 18px 20px 20px;
+  background: var(--card); border-radius: 18px; box-shadow: var(--elev);
+}
+.area h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; line-height: 1.3; font-weight: 600; }
+.area-ic {
+  display: grid; place-items: center; flex: none;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--fill); color: #000;
+}
+.area-ic .ic { width: 20px; height: 20px; }
+.area ul { margin-top: 12px; display: grid; gap: 8px; list-style: none; }
+.area li { position: relative; padding-left: 18px; font-size: 16px; line-height: 1.45; }
+.area li::before {
+  content: ""; position: absolute; left: 3px; top: .6em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--fill);
+}
+
 /* footer: the support address on every page */
 .foot { border-top: .5px solid var(--sep); }
 .foot .wrap {
@@ -553,6 +615,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <ul>
       <li><a href="../">Overview</a></li>
       <li><a href="./" aria-current="page">Features</a></li>
+      <li><a href="../updates/">Updates</a></li>
       <li><a href="../support/">Support</a></li>
     </ul>
   </nav>

@@ -8,6 +8,7 @@
 # check: http://api.maxharris.io/api/health
 # check: https://maxharris.io/dahw/
 # check: https://maxharris.io/dahw/features/
+# check: https://maxharris.io/dahw/updates/
 # check: https://maxharris.io/dahw/support/
 # check: https://maxharris.io/dahw/privacy/
 #   (http: the certificate covers maxharris.io and www only; the site itself calls /api on its own domain)

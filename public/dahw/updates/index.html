@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>DAHW updates</title>
+<meta name="description" content="What changed in each build of DAHW, the handheld audio workstation for iPhone, newest first.">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DAHW updates">
+<meta property="og:description" content="What changed in each build of DAHW, the handheld audio workstation for iPhone, newest first.">
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<style>
+/* DAHW pages: /dahw/, /dahw/features/ and /dahw/support/ carry this same stylesheet; keep the three
+   copies identical. Colours, type and radii are the app's own tokens (DAH/UI/DesignSystem/Tokens.swift,
+   docs/design/system/light-tokens.css): light by default on a #F2F2F7 base with white cards, the dark
+   appearance on black. System fonts only, no external requests. */
+:root {
+  color-scheme: light dark;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --well: #EEEEF3;
+  --seg-track: #E3E3E8;
+  --raised: #FFFFFF;
+  --raised-shadow: 0 1px 3px rgba(0,0,0,.14), 0 0 0 .5px rgba(0,0,0,.05);
+  --ink: #000000;
+  --ink-2: #5C5C61;
+  --ink-3: #6C6C70;
+  --sep: rgba(60,60,67,.16);
+  --sep-strong: rgba(60,60,67,.32);
+  --strong: #000000;
+  --on-strong: #FFFFFF;
+  --tab-on: rgba(60,60,67,.12);
+  --marker: #48484A;
+  --on-marker: #FFFFFF;
+  --rec: #FF3B30;
+  --elev: 0 0 0 .5px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.07);
+  --glass: rgba(255,255,255,.74);
+  --glass-solid: #FFFFFF;
+  --glass-stroke: rgba(0,0,0,.07);
+  --glass-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 8px 24px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
+  --frame: #1C1C1E;
+  --frame-ring: rgba(0,0,0,.18);
+  --frame-shadow: 0 1px 2px rgba(0,0,0,.08), 0 18px 40px -16px rgba(0,0,0,.28);
+
+  /* track colours: the fill (chips, black glyph on it) and the deep line (text) */
+  --t-orange: #FF9500; --t-orange-line: #AB5500;
+  --t-yellow: #FFCC00; --t-yellow-line: #846900;
+  --t-green: #34C759;  --t-green-line: #007E2D;
+  --t-teal: #30B0C7;   --t-teal-line: #007889;
+  --t-blue: #4995FF;   --t-blue-line: #0068DB;
+  --t-indigo: #838AFF; --t-indigo-line: #5D5CDA;
+  --t-purple: #CC69FF; --t-purple-line: #9D3FCB;
+  --t-pink: #FF588A;   --t-pink-line: #CE2061;
+  --t-neutral: #98989D; --t-neutral-line: #6C6C70;
+
+  --fill: var(--t-orange);
+  --line: var(--t-orange-line);
+
+  --max: 1120px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --section: clamp(72px, 9vw, 128px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --well: #2C2C2E;
+    --seg-track: #1C1C1E;
+    --raised: #3A3A3C;
+    --raised-shadow: 0 2px 6px rgba(0,0,0,.35);
+    --ink: #FFFFFF;
+    --ink-2: #AEAEB2;
+    --ink-3: #98989D;
+    --sep: rgba(255,255,255,.12);
+    --sep-strong: rgba(255,255,255,.24);
+    --strong: #FFFFFF;
+    --on-strong: #000000;
+    --tab-on: rgba(255,255,255,.16);
+    --marker: #E5E5EA;
+    --on-marker: #000000;
+    --rec: #FF453A;
+    --elev: none;
+    --glass: rgba(42,42,46,.62);
+    --glass-solid: #1C1C1E;
+    --glass-stroke: rgba(255,255,255,.2);
+    --glass-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.5);
+    --frame: #1A1A1D;
+    --frame-ring: #2C2C30;
+    --frame-shadow: 0 24px 48px -16px rgba(0,0,0,.7);
+
+    --t-orange: #FF9F0A; --t-orange-line: #FF9F0A;
+    --t-yellow: #FFD60A; --t-yellow-line: #FFD60A;
+    --t-green: #30D158;  --t-green-line: #30D158;
+    --t-teal: #40C8E0;   --t-teal-line: #40C8E0;
+    --t-blue: #409CFF;   --t-blue-line: #409CFF;
+    --t-indigo: #8E8CFF; --t-indigo-line: #8E8CFF;
+    --t-purple: #C77DFF; --t-purple-line: #C77DFF;
+    --t-pink: #FF6482;   --t-pink-line: #FF6482;
+    --t-neutral: #D1D1D6; --t-neutral-line: #D1D1D6;
+  }
+}
+@media (prefers-contrast: more) {
+  :root { --ink-2: #3C3C43; --ink-3: #545458; --sep: rgba(60,60,67,.32); --elev: 0 0 0 1px rgba(0,0,0,.18); }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root { --ink-2: #D1D1D6; --ink-3: #AEAEB2; --sep: rgba(255,255,255,.24); --elev: 0 0 0 1px rgba(255,255,255,.24); }
+}
+
+.t-orange { --fill: var(--t-orange); --line: var(--t-orange-line); }
+.t-yellow { --fill: var(--t-yellow); --line: var(--t-yellow-line); }
+.t-green  { --fill: var(--t-green);  --line: var(--t-green-line); }
+.t-teal   { --fill: var(--t-teal);   --line: var(--t-teal-line); }
+.t-blue   { --fill: var(--t-blue);   --line: var(--t-blue-line); }
+.t-indigo { --fill: var(--t-indigo); --line: var(--t-indigo-line); }
+.t-purple { --fill: var(--t-purple); --line: var(--t-purple-line); }
+.t-pink   { --fill: var(--t-pink);   --line: var(--t-pink-line); }
+.t-neutral { --fill: var(--t-neutral); --line: var(--t-neutral-line); }
+
+/* ---- base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--bg); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+img, svg, picture { display: block; max-width: 100%; }
+img { height: auto; }
+h1, h2, h3, p, ol, ul, figure, fieldset { margin: 0; }
+ol, ul { padding: 0; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+a:hover { color: var(--line); }
+b, strong { font-weight: 600; }
+:focus-visible { outline: 2px solid var(--strong); outline-offset: 3px; border-radius: 6px; }
+[id] { scroll-margin-top: 84px; }
+
+.vh {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.wrap { width: min(100% - 2 * var(--gutter), var(--max)); margin-inline: auto; }
+.ic {
+  width: 24px; height: 24px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  overflow: visible;
+}
+.skip {
+  position: absolute; left: 12px; top: -60px; z-index: 20;
+  padding: 10px 16px; border-radius: 999px;
+  background: var(--strong); color: var(--on-strong); font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- the top bar: the app's glass transport, as the site's navigation ---- */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  padding: 10px var(--gutter) 0;
+  pointer-events: none;
+}
+.bar, .jump {
+  pointer-events: auto;
+  max-width: var(--max); margin-inline: auto;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: .5px solid var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .bar, .jump { background: var(--glass-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+.bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  min-height: 56px; padding: 6px;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 10px; flex: none;
+  min-height: 44px; padding: 0 12px 0 4px; border-radius: 999px;
+  font-weight: 600; text-decoration: none;
+}
+.brand img { width: 32px; height: 32px; border-radius: 22.5%; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
+.bar ul { display: flex; gap: 2px; list-style: none; min-width: 0; }
+.bar ul a {
+  display: inline-flex; align-items: center;
+  min-height: 44px; padding: 0 16px; border-radius: 999px;
+  font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap;
+}
+.bar ul a:hover { background: var(--tab-on); color: inherit; }
+.bar ul a[aria-current="page"] { background: var(--tab-on); font-weight: 600; }
+/* Four links and DAHW must fit down to 320 px: the word gives way to the icon first (the link keeps
+   its name for VoiceOver), then the links tighten. */
+@media (max-width: 600px) {
+  .bar ul a { padding: 0 12px; }
+}
+@media (max-width: 540px) {
+  .brand { padding: 0 6px; }
+  .brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .bar ul a { padding: 0 10px; }
+}
+@media (max-width: 460px) {
+  .bar ul a { padding: 0 9px; font-size: 14px; }
+}
+@media (max-width: 410px) {
+  .bar { padding: 4px; gap: 0; }
+  .bar ul { gap: 0; }
+  .brand img { width: 30px; height: 30px; }
+  .bar ul a { padding: 0 7px; }
+}
+@media (max-width: 380px) {
+  .top { padding-inline: 10px; }
+  .brand { padding: 0 3px; }
+  .brand img { width: 26px; height: 26px; }
+  .bar ul a { padding: 0 5px; font-size: 13px; letter-spacing: -.01em; }
+}
+
+/* the Features page's menu: a second glass row under the bar that scrolls sideways on a phone */
+.jump { margin-top: 8px; padding: 4px; }
+.jump ul {
+  position: relative;
+  display: flex; gap: 2px; list-style: none;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  border-radius: 999px;
+}
+.jump ul::-webkit-scrollbar { display: none; }
+.jump a {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 14px; border-radius: 999px;
+  font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap;
+}
+.jump a::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fill); flex: none; }
+.jump a:hover { background: var(--tab-on); color: inherit; }
+.jump a[aria-current="true"] { background: var(--tab-on); font-weight: 600; }
+.jump a:focus-visible { outline-offset: -2px; }
+@media (min-width: 1000px) { .jump ul { justify-content: space-between; } }
+.has-jump [id] { scroll-margin-top: 148px; }
+
+/* ---- hero (Overview) ---- */
+.hero {
+  display: grid; gap: clamp(40px, 6vw, 64px); align-items: center;
+  padding-block: clamp(28px, 5vw, 64px) var(--section);
+}
+@media (min-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr) auto; }
+}
+.app-icon {
+  width: clamp(80px, 9vw, 112px); border-radius: 22.5%;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06), 0 10px 28px -6px rgba(0,0,0,.16);
+}
+.hero h1 { margin-top: clamp(24px, 3vw, 32px); font-weight: 700; }
+.wordmark {
+  display: block;
+  font-size: clamp(76px, 2.5rem + 11vw, 168px);
+  line-height: .86; letter-spacing: -.05em;
+  margin-left: -.04em;
+}
+.fullname {
+  display: block; margin-top: clamp(14px, 2vw, 20px);
+  font-size: clamp(21px, 1.05rem + 1.1vw, 30px);
+  font-weight: 600; line-height: 1.2; letter-spacing: -.012em;
+  color: var(--ink-2);
+}
+.hero-line {
+  margin-top: clamp(20px, 2.6vw, 28px); max-width: 27em;
+  font-size: clamp(19px, 1rem + .45vw, 22px); line-height: 1.45;
+}
+.status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 28px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 36px; padding: 6px 14px 6px 12px; border-radius: 999px;
+  background: var(--card); box-shadow: var(--elev);
+  font-size: 15px; font-weight: 600; line-height: 1.25;
+}
+.badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--t-green); flex: none; }
+.status-note { font-size: 15px; color: var(--ink-2); }
+.promise { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+.hero-shot { justify-self: center; width: min(74vw, 340px); }
+@media (min-width: 900px) { .hero-shot { width: clamp(290px, 25vw, 340px); margin-right: clamp(0px, 3vw, 40px); } }
+
+/* A phone: the screenshot in a slim rim, its corners the screen's own (about 12.5% of the width). */
+.device { container-type: inline-size; }
+.frame {
+  padding: 2.3cqi; border-radius: 14.6cqi;
+  background: var(--frame);
+  box-shadow: 0 0 0 1px var(--frame-ring), var(--frame-shadow);
+}
+.frame img { width: 100%; border-radius: 12.4cqi; }
+.device.wide .frame { padding: 1.05cqi; border-radius: 6.6cqi; }
+.device.wide .frame img { border-radius: 5.7cqi; }
+
+/* ---- sections ---- */
+.section { padding-block: 0 var(--section); }
+.section h2, .feat h2 {
+  font-size: clamp(30px, 1.25rem + 2.2vw, 44px);
+  line-height: 1.08; letter-spacing: -.025em; font-weight: 700;
+}
+.lede { margin-top: 12px; max-width: 40em; color: var(--ink-2); }
+.section-head { margin-bottom: clamp(24px, 3.5vw, 40px); }
+.more-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 600; }
+.more-link .ic { width: 18px; height: 18px; }
+
+/* the Features and Support pages' title */
+.page-head { padding-block: clamp(36px, 6vw, 72px) clamp(32px, 4vw, 48px); }
+.page-head h1 {
+  font-size: clamp(44px, 1.5rem + 5vw, 80px);
+  line-height: .95; letter-spacing: -.04em; font-weight: 700;
+}
+.page-head .lede { font-size: clamp(19px, 1rem + .45vw, 22px); line-height: 1.45; color: var(--ink); margin-top: 18px; max-width: 32em; }
+
+/* Overview: Max's own words, set large */
+.overview { display: grid; gap: 20px; }
+@media (min-width: 900px) { .overview { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; } }
+.says {
+  font-size: clamp(21px, 1rem + 1.1vw, 28px); line-height: 1.42; letter-spacing: -.01em;
+  max-width: 32em;
+}
+.by { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+
+/* Overview: the tour, light by default; Light | Dark (the app's segmented control) sits under it */
+.look-row { margin-top: 2px; }
+.look { border: 0; padding: 0; min-inline-size: 0; }
+.seg {
+  display: inline-flex; padding: 0 4px; border-radius: 999px;
+  background: var(--seg-track);
+}
+.seg label { position: relative; display: block; padding: 4px 0; cursor: pointer; }
+.seg input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: pointer;
+}
+.seg span {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 76px; min-height: 36px; padding: 0 18px; border-radius: 999px;
+  font-size: 15px; font-weight: 500; color: var(--ink-2);
+}
+.seg input:checked + span { background: var(--raised); box-shadow: var(--raised-shadow); color: var(--ink); font-weight: 600; }
+.seg input:focus-visible + span { outline: 2px solid var(--strong); outline-offset: 1px; }
+
+.for-dark { display: none; }
+.tour:has(input[value="dark"]:checked) .for-dark { display: block; }
+.tour:has(input[value="dark"]:checked) .for-light { display: none; }
+
+.shots {
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: max(var(--gutter), (100% - var(--max)) / 2);
+  scrollbar-width: thin; scrollbar-color: var(--sep-strong) transparent;
+}
+.shots:focus-visible { outline-offset: -2px; border-radius: 0; }
+.shots ul {
+  display: flex; gap: clamp(16px, 2vw, 24px); width: max-content; list-style: none;
+  padding: 6px max(var(--gutter), (100% - var(--max)) / 2) 22px;
+}
+.shots li { width: clamp(220px, 62vw, 280px); scroll-snap-align: start; }
+@media (min-width: 1000px) {
+  .shots { overflow: visible; }
+  .shots ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; width: auto; }
+  .shots li { width: auto; }
+}
+figcaption { margin-top: 16px; padding-right: 8px; }
+.eyebrow { display: block; font-size: 15px; font-weight: 600; color: var(--line); }
+.cap { display: block; margin-top: 2px; font-size: 17px; font-weight: 600; line-height: 1.3; }
+
+/* Overview: the nine parts, each a way into the Features page */
+.ftiles { display: grid; gap: 12px; list-style: none; }
+@media (min-width: 600px) { .ftiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .ftiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+.ftile {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; column-gap: 14px;
+  min-height: 76px; padding: 14px 16px; border-radius: 18px;
+  background: var(--card); box-shadow: var(--elev);
+  text-decoration: none;
+}
+.ftile:hover { color: inherit; }
+.ftile:hover .ftile-name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.ftile .chip { grid-row: span 2; }
+.ftile-name { font-size: 17px; font-weight: 600; line-height: 1.3; }
+.ftile-line { font-size: 15px; line-height: 1.35; color: var(--ink-2); }
+.chip {
+  display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--fill); color: #000;
+}
+.more { margin-top: 16px; }
+
+/* Overview: made with DAHW. Each song is a clip; the placeholders are empty ones. */
+.songs { display: grid; gap: 16px; }
+@media (min-width: 760px) { .songs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.song, .slot { border-radius: 14px; overflow: hidden; }
+.song { background: var(--card); box-shadow: var(--elev); }
+.song h3 {
+  padding: 8px 14px; background: var(--fill); color: #000;
+  font-size: 15px; line-height: 1.35; font-weight: 600;
+}
+.song-body { padding: 14px; }
+.song-meta { font-size: 15px; color: var(--ink-2); }
+.song-len {
+  display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px;
+  background: var(--well); color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.song audio { display: block; width: 100%; margin-top: 12px; }
+.slot { border: 1.5px dashed var(--sep-strong); }
+.slot-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; background: var(--well); color: var(--ink-2);
+  font-size: 15px; font-weight: 600;
+}
+.slot-bar .ic { width: 18px; height: 18px; }
+.slot-lane { position: relative; height: 72px; }
+@media (max-width: 759px) { .slot-lane { height: 48px; } }
+.slot-lane::after {
+  content: ""; position: absolute; left: 14px; right: 14px; top: 50%;
+  border-top: 2px dotted var(--sep-strong);
+}
+
+/* Features: getting around, with the app's five tabs */
+.tabs { display: grid; gap: 10px; list-style: none; margin-top: clamp(20px, 3vw, 28px); }
+@media (min-width: 720px) { .tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.tabs li {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: start;
+  padding: 14px 16px; border-radius: 18px; background: var(--card); box-shadow: var(--elev);
+}
+@media (min-width: 720px) { .tabs li { grid-template-columns: 1fr; row-gap: 10px; padding: 16px; } .tabs .tab-ic { grid-row: auto; margin-bottom: 4px; } }
+.tab-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--well); grid-row: span 2; }
+.tab-name { font-size: 17px; font-weight: 600; line-height: 1.3; }
+.tab-text { font-size: 15px; line-height: 1.4; color: var(--ink-2); }
+@media (max-width: 719px) { .tab-name { margin-top: 2px; } }
+.basics-note { margin-top: 20px; max-width: 46em; color: var(--ink-2); }
+
+/* Features: one section per part, the how-to cards beside its screen */
+.feat {
+  display: grid; grid-template-areas: "head" "shot" "how"; gap: 28px;
+  padding-block: clamp(56px, 7vw, 88px);
+  border-top: .5px solid var(--sep);
+}
+.feat-head { grid-area: head; }
+.feat-head .chip { margin-bottom: 18px; }
+.feat-lede { margin-top: 12px; max-width: 36em; font-size: 19px; line-height: 1.45; color: var(--ink-2); }
+.feat-shot { grid-area: shot; justify-self: center; width: min(66vw, 280px); }
+.feat-how { grid-area: how; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.feat-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 3vw, 24px); }
+.feat.pair .feat-shot { width: min(100%, 480px); }
+.feat-wide { margin-top: 8px; }
+@media (min-width: 900px) {
+  .feat {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-areas: "head shot" "how shot";
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(40px, 6vw, 88px); row-gap: 28px;
+  }
+  .feat.pair { grid-template-columns: minmax(0, 1fr) 440px; }
+  .feat-shot { position: sticky; top: 156px; align-self: start; width: 100%; }
+  .feat.pair .feat-shot { width: 100%; }
+}
+
+/* how-to cards and their numbered steps */
+.howto { padding: 22px; background: var(--card); border-radius: 20px; box-shadow: var(--elev); }
+.howto h3 {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 19px; line-height: 1.3; font-weight: 600; letter-spacing: -.01em;
+}
+.howto h3 .ic { color: var(--line); }
+.steps { margin-top: 14px; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+.steps li {
+  counter-increment: step;
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px;
+  font-size: 16px; line-height: 1.5;
+}
+.steps li::before {
+  content: counter(step);
+  display: grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--well); color: var(--ink-2);
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+/* a control's glyph, drawn as it is in the app */
+.k {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.55em; height: 1.4em; padding: 0 .3em; margin: 0 .05em;
+  border-radius: .42em; background: var(--well); color: var(--ink);
+  font-weight: 600; line-height: 1; vertical-align: -.28em;
+}
+.k svg { width: 1em; height: 1em; }
+.k.grip { background: var(--t-orange); color: #000; }
+.k.grip svg { stroke-width: 3; }
+.k.pen { background: var(--marker); color: var(--on-marker); }
+.k.rec, .howto h3 .rec-ic { color: var(--rec); }
+
+/* Support: panels */
+.support { display: grid; gap: 16px; padding-bottom: var(--section); }
+@media (min-width: 900px) { .support { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; } }
+.support-col { display: grid; gap: 16px; }
+.panel { background: var(--card); border-radius: 20px; box-shadow: var(--elev); padding: clamp(22px, 3vw, 32px); }
+.panel h2 { font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; }
+.panel h2 + p, .panel p + p, .panel h2 + .steps { margin-top: 12px; }
+.panel .steps { margin-top: 14px; }
+.mail { font-weight: 600; }
+.promise-big { margin-top: 10px; font-size: 21px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; }
+.facts { margin-top: 16px; list-style: none; display: grid; gap: 10px; }
+.facts li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; font-size: 16px; }
+.facts .ic { color: var(--ink-3); }
+@media (min-width: 900px) { .support .privacy { position: sticky; top: 92px; } }
+
+/* Updates: one block per build, newest first; the notes grouped by area as cards */
+.tf-note { margin-top: 14px; max-width: 40em; font-size: 15px; color: var(--ink-2); }
+.releases { padding-bottom: var(--section); }
+.release {
+  display: grid; gap: 20px;
+  padding-block: clamp(40px, 6vw, 72px);
+  border-top: .5px solid var(--sep);
+}
+.release:first-of-type { border-top: 0; padding-top: 0; }
+@media (min-width: 900px) {
+  .release { grid-template-columns: 240px minmax(0, 1fr); column-gap: clamp(32px, 4vw, 56px); }
+  .release-head { position: sticky; top: 96px; align-self: start; }
+}
+.release h2 {
+  font-size: clamp(28px, 1.15rem + 1.6vw, 36px);
+  line-height: 1.1; letter-spacing: -.02em; font-weight: 700;
+}
+.release-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+  margin-top: 10px; font-size: 15px; color: var(--ink-2);
+}
+.build {
+  padding: 2px 10px; border-radius: 999px;
+  background: var(--well); color: var(--ink);
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.release:first-of-type .release-meta::after {
+  content: "Latest"; padding: 2px 10px; border-radius: 999px;
+  background: var(--t-green); color: #000; font-size: 13px; font-weight: 600;
+}
+.release-sum { margin-top: 12px; font-size: 16px; line-height: 1.5; color: var(--ink-2); max-width: 34em; }
+.areas { columns: 1; column-gap: 16px; }
+@media (min-width: 720px) { .areas { columns: 2; } }
+.area {
+  break-inside: avoid; display: inline-block; width: 100%;
+  margin: 0 0 16px; padding: 18px 20px 20px;
+  background: var(--card); border-radius: 18px; box-shadow: var(--elev);
+}
+.area h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; line-height: 1.3; font-weight: 600; }
+.area-ic {
+  display: grid; place-items: center; flex: none;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--fill); color: #000;
+}
+.area-ic .ic { width: 20px; height: 20px; }
+.area ul { margin-top: 12px; display: grid; gap: 8px; list-style: none; }
+.area li { position: relative; padding-left: 18px; font-size: 16px; line-height: 1.45; }
+.area li::before {
+  content: ""; position: absolute; left: 3px; top: .6em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--fill);
+}
+
+/* footer: the support address on every page */
+.foot { border-top: .5px solid var(--sep); }
+.foot .wrap {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 24px;
+  padding-block: 18px calc(28px + env(safe-area-inset-bottom));
+  font-size: 15px; color: var(--ink-2);
+}
+.foot-help { flex: 1 1 20em; }
+.foot-help a { color: var(--ink); font-weight: 600; }
+.foot ul { display: flex; flex-wrap: wrap; gap: 0 20px; list-style: none; }
+.foot ul a, .foot-help a { display: inline-flex; align-items: center; min-height: 44px; }
+.foot-copy { flex-basis: 100%; }
+</style>
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- The app's own icons (DAH/UI/DesignSystem/IconSprite.swift): 24 pt, 1.8 stroke, round caps. i-appearance is drawn here in the same style. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-sampler" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M20 4v16M20 4h-2.6M20 20h-2.6"/><path d="M8 10v4M11 6.5v11M14 9v6M17 11v2"/></symbol>
+  <symbol id="i-drums" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.8"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.8"/></symbol>
+  <symbol id="i-arrange" viewBox="0 0 24 24"><rect x="3" y="4.5" width="10" height="4" rx="1.6"/><rect x="8" y="10" width="13" height="4" rx="1.6"/><rect x="3" y="15.5" width="8" height="4" rx="1.6"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.2c0-1.2.9-2.2 2.1-2.2h3.6l2.1 2.3h7.1c1.2 0 2.1.9 2.1 2.1v7.4c0 1.2-.9 2.2-2.1 2.2H5.6c-1.2 0-2.1-1-2.1-2.2z"/></symbol>
+  <symbol id="i-mixer" viewBox="0 0 24 24"><path d="M6 4v16M12 4v16M18 4v16"/><path d="M3.6 15h4.8M9.6 8.5h4.8M15.6 12.5h4.8"/></symbol>
+  <symbol id="i-iphone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 5h3"/></symbol>
+</svg>
+
+<header class="top">
+  <nav class="bar" aria-label="DAHW">
+    <a class="brand" href="../"><img src="../assets/icon.webp" width="32" height="32" alt=""><span>DAHW</span></a>
+    <ul>
+      <li><a href="../">Overview</a></li>
+      <li><a href="../features/">Features</a></li>
+      <li><a href="./" aria-current="page">Updates</a></li>
+      <li><a href="../support/">Support</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+
+  <div class="page-head wrap">
+    <h1>Updates</h1>
+    <p class="lede">What changed in each build of DAHW, newest first.</p>
+    <p class="tf-note">TestFlight lists these builds as version 0.42 with the build number, for example 0.42 (45), while the app shows the same build as DAHW v0.45 on its Projects screen.</p>
+  </div>
+
+  <div class="releases wrap">
+  <!--
+    TO ADD A BUILD: copy the newest <article class="release"> and paste it just below this note, so
+    the newest build stays first (the Latest tag follows the first one by itself). Then change:
+      - id="v0-46" and aria-labelledby="v0-46-title", and the h2's id to match;
+      - the version as the app shows it ("DAHW v0.46"), the date (datetime="2026-10-17" and the
+        words), and "Build 46";
+      - the one-line summary and the notes: short plain bullets, the most noticeable changes only.
+    Keep only the areas that changed, in this order, each with its colour and icon:
+      Sampler (t-orange, #i-sampler), Arrangement and clips (t-green, #i-arrange),
+      Drums (t-yellow, #i-drums), Sound and mix (t-teal, #i-mixer),
+      Projects and files (t-indigo, #i-folder), Everywhere (t-neutral, #i-iphone).
+    Start a note with <b>New:</b> for something new rather than fixed. No em dashes.
+  -->
+  <article class="release" id="v0-45" aria-labelledby="v0-45-title">
+    <header class="release-head">
+      <h2 id="v0-45-title">DAHW v0.45</h2>
+      <p class="release-meta"><time datetime="2026-10-16">October 16, 2026, midday</time> <span class="build">Build 45</span></p>
+      <p class="release-sum">Changes from Max’s first day of testing, plus the fixes planned for v0.44, which ship in this build.</p>
+    </header>
+    <div class="areas">
+      <section class="area t-orange">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-sampler"/></svg></span>Sampler</h3>
+        <ul role="list">
+          <li>One Undo now takes back a whole sample load or edit (Crop, Reverse, Normalize, the fades, Render, a new recording), where some took two.</li>
+          <li>The Slices page is simpler: Delete Slice sits beside Add Slice, the slice count shows under Slice By, and Pads From is gone.</li>
+          <li>The arrows beside the slice pads switch between slices 1 to 8 and 9 to 16.</li>
+          <li>Sounds with an uncertain tempo, like a spoken phrase, now load unwarped and play at their own length.</li>
+          <li>Create Clip from Loop keeps the loop’s Ping-Pong and crossfade.</li>
+        </ul>
+      </section>
+      <section class="area t-green">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>Arrangement and clips</h3>
+        <ul role="list">
+          <li>Tap a track’s name to open its instrument on Device. Return A, Return B and Master open Mix with their channel in view.</li>
+          <li>Hold Play or Stop for half a second to jump back to the start of the song.</li>
+          <li>On the Clip page, Play from a stop starts at the open clip.</li>
+          <li>A clip’s long-press menu is shorter: Split stays in the bar at the bottom, and Reverse for notes is now on the piano roll’s Transform page.</li>
+          <li>Clip View shows when a clip is muted, with an Unmute button, and dims the notes past the clip’s end.</li>
+          <li>Overdubbing past the end of a looping clip keeps every note you play.</li>
+          <li>An audio clip with Warp off keeps its length in time when you change the tempo.</li>
+          <li>The line under the song’s name counts only your tracks and shows the song’s length.</li>
+        </ul>
+      </section>
+      <section class="area t-yellow">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-drums"/></svg></span>Drums</h3>
+        <ul role="list">
+          <li>A recording started from a stop begins on the nearest sixteenth, and the new take opens in Clip View with each hit on its own step.</li>
+          <li>Setting a drum clip’s length on the Steps grid now loops that part, in the song as well.</li>
+          <li>A hit played just before the loop comes round shows on step 1, where you can remove it, and Quantize moves it to the loop’s start.</li>
+          <li>Loading a sound onto a pad from anywhere plays the whole sound, as loading from the Pad page always did.</li>
+          <li>Browse’s Drum Pad button names the pad it will replace.</li>
+        </ul>
+      </section>
+      <section class="area t-teal">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span>Sound and mix</h3>
+        <ul role="list">
+          <li>Every effect page has a menu (the round button with three dots) to duplicate, move or delete the effect, with Undo.</li>
+          <li>Unsolo All: tap the Master’s S to clear every solo at once. It is also on the Arrangement’s Master row and on Master’s Levels page.</li>
+          <li>In Mix, the Levels, Pan and Sends switch sits under the faders, right above its controls.</li>
+          <li>Holding a fader shows its value at the top while every channel’s name stays in view.</li>
+          <li>Analog’s Mod page in landscape shows the filter envelope and the LFO side by side.</li>
+        </ul>
+      </section>
+      <section class="area t-indigo">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span>Projects and files</h3>
+        <ul role="list">
+          <li>Delete recordings and imported sounds in Browse. DAHW warns you when a project still uses one.</li>
+          <li>A project saved by a newer version of DAHW now shows in Projects, marked as such, instead of disappearing.</li>
+          <li>A message no longer closes the sheet you have open, such as Export or Settings.</li>
+          <li>Settings > Storage counts your recordings correctly.</li>
+          <li>Project thumbnails sit on a grey backdrop in light mode, as they do in dark.</li>
+        </ul>
+      </section>
+      <section class="area t-neutral">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-iphone"/></svg></span>Everywhere</h3>
+        <ul role="list">
+          <li>Big songs keep up: dragging clips and moving faders follow your finger without lag.</li>
+          <li>DAHW keeps only the sounds a song plays in memory, so long recordings and undone edits use far less.</li>
+          <li>Larger text sizes: numbers stay whole in tiles, mixer names no longer break, and an empty Sampler fits.</li>
+          <li>Reduce Motion now also stops the drum step grid’s scrolling animation.</li>
+          <li>VoiceOver: Back to Start on Play, Open Device on a track’s name, and clearer slice and solo labels.</li>
+        </ul>
+      </section>
+    </div>
+  </article>
+  <article class="release" id="v0-43" aria-labelledby="v0-43-title">
+    <header class="release-head">
+      <h2 id="v0-43-title">DAHW v0.43</h2>
+      <p class="release-meta"><time datetime="2026-10-16">October 16, 2026, early morning</time> <span class="build">Build 43</span></p>
+      <p class="release-sum">The pre-test build: about 55 fixes found by playing through every screen, plus Mute Clip and battery savings in the background.</p>
+    </header>
+    <div class="areas">
+      <section class="area t-orange">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-sampler"/></svg></span>Sampler</h3>
+        <ul role="list">
+          <li>Slicing is one Undo step, and slices made by beat follow a new tempo.</li>
+          <li>The slice pads and the landscape keys play a sample loaded on any page.</li>
+          <li>Render keeps the right tempo, and Detect no longer offers a doubled one.</li>
+          <li>A sound without a beat loads at its own length instead of being stretched.</li>
+          <li>Short loops show their length instead of 0 bars, and controls you cannot use look disabled.</li>
+          <li>A loop no longer goes silent when Start is moved past it.</li>
+        </ul>
+      </section>
+      <section class="area t-green">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>Arrangement and clips</h3>
+        <ul role="list">
+          <li><b>New:</b> Mute Clip and Unmute Clip in a clip’s More menu.</li>
+          <li>Split no longer clicks at the cut in any warp mode, and splitting while playing keeps the rest of the clip playing.</li>
+          <li>Moving, shortening or transposing a note while it sounds stops it at once instead of letting it ring.</li>
+          <li>Consolidate and Import Audio are one Undo step, and Consolidate keeps an audio clip’s fades.</li>
+          <li>A trimmed audio clip starts without a click.</li>
+          <li>Overdub keeps the track’s other clips playing while it records.</li>
+        </ul>
+      </section>
+      <section class="area t-yellow">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-drums"/></svg></span>Drums</h3>
+        <ul role="list">
+          <li>Re-rolling a rack keeps the sounds you loaded yourself.</li>
+          <li>Replace names the pad after its new sound.</li>
+          <li>A new Drums track keeps its kit after an Undo or a relaunch.</li>
+          <li>Two-finger rolls on the pad view play both pads.</li>
+          <li>The pad editor’s arrows skip empty pads.</li>
+          <li>In 7/8 the step grid shows all 14 steps, and it opens on the row you are editing.</li>
+        </ul>
+      </section>
+      <section class="area t-teal">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span>Sound and mix</h3>
+        <ul role="list">
+          <li>Soloing Return A or Return B plays that return on its own, still fed by your sends.</li>
+          <li>An Analog oscillator left out by the Osc Mix says so, with a Mix button.</li>
+          <li>Effect controls show their full names (Sidechain Filter is now HP Filter).</li>
+          <li>Long preset names no longer push the Device screen off the edge.</li>
+          <li>Save as Preset no longer suggests a name you already used.</li>
+          <li>Drums from a single-track MIDI file get a proper name instead of Channel 10.</li>
+        </ul>
+      </section>
+      <section class="area t-indigo">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span>Projects and files</h3>
+        <ul role="list">
+          <li>If a save fails, DAHW tells you once, keeps your edits and tries again.</li>
+          <li>A failed export says why on the Export sheet, and very long names export fine.</li>
+          <li>New Project and Delete stay quick with dozens of projects.</li>
+          <li>A sound that finishes loading after you switch projects lands in the right one.</li>
+          <li>A project can no longer be renamed to a blank name.</li>
+        </ul>
+      </section>
+      <section class="area t-neutral">
+        <h3><span class="area-ic"><svg class="ic" aria-hidden="true"><use href="#i-iphone"/></svg></span>Everywhere</h3>
+        <ul role="list">
+          <li><b>New:</b> with nothing playing, recording or exporting, DAHW pauses its audio in the background to save battery.</li>
+          <li>Leaving a page or the app while the song plays no longer cuts its notes or audio.</li>
+          <li>Calls, Siri, headphones, Control Center and the Home Screen were each checked, and a call now silences every track.</li>
+          <li>The Record button is easier to hit.</li>
+          <li>Long samples load without freezing the screen.</li>
+          <li>Larger text sizes: header pills and titles wrap cleanly.</li>
+          <li>VoiceOver reads each note’s pitch in the piano roll.</li>
+        </ul>
+      </section>
+    </div>
+  </article>
+  </div>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="foot-help">Questions or problems? Email <a href="mailto:maxwilliamharris@gmail.com">maxwilliamharris@gmail.com</a></p>
+    <ul role="list">
+      <li><a href="../support/">Support</a></li>
+      <li><a href="../privacy/">Privacy policy</a></li>
+      <li><a href="../../">maxharris.io</a></li>
+    </ul>
+    <p class="foot-copy">© 2026 Max Harris</p>
+  </div>
+</footer>
+</body>
+</html>
