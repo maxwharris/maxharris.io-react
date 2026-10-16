@@ -594,15 +594,56 @@ figcaption { margin-top: 16px; padding-right: 8px; }
   <!--
     TO ADD A BUILD: copy the newest <article class="release"> and paste it just below this note, so
     the newest build stays first (the Latest tag follows the first one by itself). Then change:
-      - id="v0-48" and aria-labelledby="v0-48-title", and the h2's id to match;
-      - the version as the app shows it ("DAHW v0.48"), the date (datetime="2026-10-17" and the
-        words) and "Build 48";
+      - id="v0-49" and aria-labelledby="v0-49-title", and the h2's id to match;
+      - the version as the app shows it ("DAHW v0.49"), the date (datetime="2026-10-17" and the
+        words) and "Build 49";
       - the notes: each section is an <h3> with its <ul> of short, plain bullets right below it,
         the most noticeable changes only.
     Keep only the sections that changed, in this order: Sampler, Arrangement and clips, Drums,
     Sound and mix, Projects and files, Everywhere. Start a note with <b>New:</b> for something new
     rather than fixed. No em dashes.
   -->
+  <article class="release" id="v0-48" aria-labelledby="v0-48-title">
+    <header class="release-head">
+      <h2 id="v0-48-title">DAHW v0.48</h2>
+      <p class="release-meta"><time datetime="2026-10-16">October 16, 2026, evening</time> <span class="build">Build 48</span></p>
+    </header>
+    <h3>Sampler</h3>
+    <ul>
+      <li>With Warp set to Complex, a short reminder under Warp suggests flattening finished parts to audio, since Complex uses the most power.</li>
+      <li>Slice numbers on the waveform no longer touch or get crossed by slice lines at any text size, and a number is never cut off at the end of the waveform. Where slices sit close together, fewer numbers are shown.</li>
+      <li>With Glide on, starting playback in the middle of a note now plays it at the pitch the song has there, instead of sliding in from the last key you played.</li>
+      <li>A Sampler track whose sample finishes loading after playback has started now sounds right away, instead of staying silent until its next note.</li>
+    </ul>
+    <h3>Arrangement and clips</h3>
+    <ul>
+      <li>The playhead in Clip View no longer freezes while the song plays: it moves smoothly in the piano roll, in portrait and landscape, on the ruler’s marker and across a drum pad’s waveform.</li>
+      <li>Consolidate keeps an audio clip’s loop crossfades, so the consolidated clip sounds the same as the original at every loop seam, with no clicks.</li>
+      <li>If the phone falls behind for a moment while you record (an audio dropout), the rest of the take now stays on the beat instead of landing late.</li>
+    </ul>
+    <h3>Drums</h3>
+    <ul>
+      <li>Switching a Drum Rack pad to Complex warp while the beat plays no longer plays its next hit at the wrong pitch.</li>
+      <li>The same holds when you raise a Complex pad’s voices or drop a new sample on a pad set to Complex.</li>
+    </ul>
+    <h3>Sound and mix</h3>
+    <ul>
+      <li>New effect: Auto Pan. It moves a track between left and right, or pulses its volume like a tremolo when Phase is set to 0. Find it in Add Effect, right after Auto Filter.</li>
+      <li>Auto Pan has Amount, Rate (in Hz or synced to the song), Phase, Offset, Wave (sine, triangle, saw up, saw down or random), Shape and Invert. Its page draws what the left and right sides hear, with a playhead that follows the sound.</li>
+      <li>Effects synced to the song, like Auto Pan and Auto Filter’s LFO, now restart exactly at Loop Start when the arrangement loop jumps back, so every pass of the loop sounds the same.</li>
+      <li>Turning on Solo for a muted track or return now unmutes it, and one Undo puts both back. This works from every Solo button: the mixer, the Levels page, the Arrangement’s track headers and the landscape piano roll.</li>
+      <li>Complex warp keeps a sound panned to one side at a steady level around drum hits. Before, it could dip by up to 4 dB right after each hit.</li>
+    </ul>
+    <h3>Everywhere</h3>
+    <ul>
+      <li>Settings > About now links to the DAHW website and the Support page.</li>
+      <li>Projects and racks with damaged or out-of-range effect settings now open safely instead of closing the app.</li>
+      <li>Play DAHW from a hardware keyboard, the way a desktop DAW’s computer MIDI keyboard works: A S D F G H J K L ; ' are the white keys and W E T Y U O P the black keys, played on the selected track. Works with an iPad Magic Keyboard and with a Bluetooth or USB keyboard on iPhone.</li>
+      <li>On a hardware keyboard, Z and X move the octave and C and V change the velocity, with a short readout at the top of the screen. Keys are read by their position, so other keyboard layouts work the same way.</li>
+      <li>Space plays and stops the song, Cmd+Z undoes and Shift+Cmd+Z redoes.</li>
+      <li>Hold the Device tab for half a second to open the selected track’s device chain on top of the page you are on. A quick tap still opens the Device page. With VoiceOver, use the Show Device Chain action on the Device tab.</li>
+    </ul>
+  </article>
   <article class="release" id="v0-47" aria-labelledby="v0-47-title">
     <header class="release-head">
       <h2 id="v0-47-title">DAHW v0.47</h2>
