@@ -586,15 +586,69 @@ figcaption { margin-top: 16px; padding-right: 8px; }
   <!--
     TO ADD A BUILD: copy the newest <article class="release"> and paste it just below this note, so
     the newest build stays first (the Latest tag follows the first one by itself). Then change:
-      - id="v0-46" and aria-labelledby="v0-46-title", and the h2's id to match;
-      - the version as the app shows it ("DAHW v0.46"), the date (datetime="2026-10-17" and the
-        words) and "Build 46";
+      - id="v0-48" and aria-labelledby="v0-48-title", and the h2's id to match;
+      - the version as the app shows it ("DAHW v0.48"), the date (datetime="2026-10-17" and the
+        words) and "Build 48";
       - the notes: each section is an <h3> with its <ul> of short, plain bullets right below it,
         the most noticeable changes only.
     Keep only the sections that changed, in this order: Sampler, Arrangement and clips, Drums,
     Sound and mix, Projects and files, Everywhere. Start a note with <b>New:</b> for something new
     rather than fixed. No em dashes.
   -->
+  <article class="release" id="v0-47" aria-labelledby="v0-47-title">
+    <header class="release-head">
+      <h2 id="v0-47-title">DAHW v0.47</h2>
+      <p class="release-meta"><time datetime="2026-10-16">October 16, 2026, afternoon</time> <span class="build">Build 47</span></p>
+    </header>
+    <h3>Sampler</h3>
+    <ul>
+      <li>Fades on the waveform now sit where you hear them, also when a sample is transposed in Re‑Pitch or plays with Warp off.</li>
+      <li>A reversed sample draws its fades at the end it plays from.</li>
+      <li>Starting the song in the middle of a note or a clip picks the sample up exactly where it would be: a Ping-Pong loop runs backwards on its way back, and Repeats count right.</li>
+      <li>Switching Warp to Complex while notes play no longer lets a note slip out in Re‑Pitch.</li>
+      <li>Opening a project keeps each slice’s settings on its own slice.</li>
+      <li>Slice numbers stay apart at large text sizes.</li>
+    </ul>
+    <h3>Arrangement and clips</h3>
+    <ul>
+      <li>Select several clips: choose Select in a clip’s menu, then tap clips or drag a box across empty lanes.</li>
+      <li>Drag any selected clip to move them all; the bar below duplicates, copies, mutes or deletes them together.</li>
+      <li>Copy and paste several clips across tracks: long press an empty bar to see where each one will land.</li>
+      <li>The clip menu has Paste After, and the loop menu has Select Clips in Loop.</li>
+      <li>Piano roll, Select mode: a tap adds or removes a note, a box adds more, and dragging any chosen note moves them all.</li>
+      <li>Piano roll Transform page: Select All, Copy and Cut. Long press an empty spot to paste, in this clip or another.</li>
+      <li>Quantize opens a panel with Quantize To, Amount, Start and End, and shows the result before you apply it.</li>
+      <li>An audio take is drawn in its lane while it records.</li>
+    </ul>
+    <h3>Drums</h3>
+    <ul>
+      <li>The Steps grid marks each hit played early or late with a small tick, and VoiceOver says by how much.</li>
+      <li>Quantize is in the drum clip’s menu, with the result previewed on the steps.</li>
+      <li>Notes pasted into a drum clip stay on their pads.</li>
+      <li>Drag a sample from Browse onto a pad: long press the row, rest on the Device tab, then drop it on a pad.</li>
+      <li>The Kit page’s rows fit at the largest text sizes.</li>
+    </ul>
+    <h3>Sound and mix</h3>
+    <ul>
+      <li>Settings > Audio > Recording Latency: Check measures your headphones or speakers with eight clicks, or set it by hand, so takes land on the beat (useful with AirPods).</li>
+      <li>Input Quantize adds 1/4 and triplets (1/8T, 1/16T), in the transport sheet and the pad view.</li>
+      <li>After an audio hiccup, held sounds stay in time with the rest of the song.</li>
+      <li>The filter’s Velocity and the LFO’s Amount have octave steps.</li>
+    </ul>
+    <h3>Projects and files</h3>
+    <ul>
+      <li>Imports keep going when you switch to another app: files, videos, MIDI files, pads and racks.</li>
+      <li>Autosave never saves an older version of a project over a newer one.</li>
+      <li>Loading two Drum Racks at the same time no longer leaves pads empty.</li>
+    </ul>
+    <h3>Everywhere</h3>
+    <ul>
+      <li>Notices say what was copied or pasted, with Undo whenever there is something to take back.</li>
+      <li>Light mode: the split dividers’ grips and the octave stepper stand out better.</li>
+      <li>The Device Chain’s title wraps at the largest text sizes instead of being cut off.</li>
+      <li>With VoiceOver, switches on tiles now turn on and off with a double tap.</li>
+    </ul>
+  </article>
   <article class="release" id="v0-45" aria-labelledby="v0-45-title">
     <header class="release-head">
       <h2 id="v0-45-title">DAHW v0.45</h2>
