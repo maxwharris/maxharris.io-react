@@ -594,15 +594,42 @@ figcaption { margin-top: 16px; padding-right: 8px; }
   <!--
     TO ADD A BUILD: copy the newest <article class="release"> and paste it just below this note, so
     the newest build stays first (the Latest tag follows the first one by itself). Then change:
-      - id="v0-50" and aria-labelledby="v0-50-title", and the h2's id to match;
-      - the version as the app shows it ("DAHW v0.50"), the date (datetime="2026-10-18" and the
-        words) and "Build 50";
+      - id="v0-51" and aria-labelledby="v0-51-title", and the h2's id to match;
+      - the version as the app shows it ("DAHW v0.51"), the date (datetime="2026-10-18" and the
+        words) and "Build 51";
       - the notes: each section is an <h3> with its <ul> of short, plain bullets right below it,
         the most noticeable changes only.
     Keep only the sections that changed, in this order: Sampler, Arrangement and clips, Drums,
     Sound and mix, Projects and files, Everywhere. Start a note with <b>New:</b> for something new
     rather than fixed. No em dashes.
   -->
+  <article class="release" id="v0-50" aria-labelledby="v0-50-title">
+    <header class="release-head">
+      <h2 id="v0-50-title">DAHW v0.50</h2>
+      <p class="release-meta"><time datetime="2026-10-17">October 17, 2026, early morning</time> <span class="build">Build 50</span></p>
+    </header>
+    <h3>Sampler</h3>
+    <ul>
+      <li>The waveform in the record sheet now draws as you record. Before, it could stay still until the take ended.</li>
+      <li>When you import a file or a video, its waveform fills in smoothly as the audio is read, and stops redrawing once the import is done.</li>
+      <li>An import’s waveform fills in as it is read in its Browse row too.</li>
+      <li>In Browse, the playhead now moves across the waveform while a sample previews.</li>
+    </ul>
+    <h3>Sound and mix</h3>
+    <ul>
+      <li>Effects with nothing to play now rest and use almost no processing power: Return A’s Reverb and Return B’s Delay while nothing is sent to them, a silent track’s effects once their tail has faded, and the master Limiter once the song stops.</li>
+      <li>A resting effect wakes on the very first sound, so no note or tail is cut short, and an export sounds exactly as it would without resting.</li>
+      <li>Songs that leave the returns unused now need noticeably less processing power while they play.</li>
+      <li>Complex warp keeps a sound panned to one side even steadier around drum hits when the sample plays much slower or faster than its own tempo. The small dip that was left is now about half as deep.</li>
+    </ul>
+    <h3>Projects and files</h3>
+    <ul>
+      <li>Samples a project no longer uses are now removed when the project opens or closes, freeing storage: old versions left behind by edits, renders, re-rolled drum pads and replaced takes.</li>
+      <li>Anything a Sampler, a drum pad or an audio clip plays is always kept, and so is audio saved with Flatten’s Keep in Samples.</li>
+      <li>Nothing is removed while a project is open, so Undo and Redo always find their audio.</li>
+      <li>Settings > Remove Unused Samples follows the same rule, and now also lists samples a project still holds but no longer plays, by the names the project gives them.</li>
+    </ul>
+  </article>
   <article class="release" id="v0-49" aria-labelledby="v0-49-title">
     <header class="release-head">
       <h2 id="v0-49-title">DAHW v0.49</h2>
