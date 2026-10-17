@@ -594,15 +594,44 @@ figcaption { margin-top: 16px; padding-right: 8px; }
   <!--
     TO ADD A BUILD: copy the newest <article class="release"> and paste it just below this note, so
     the newest build stays first (the Latest tag follows the first one by itself). Then change:
-      - id="v0-49" and aria-labelledby="v0-49-title", and the h2's id to match;
-      - the version as the app shows it ("DAHW v0.49"), the date (datetime="2026-10-17" and the
-        words) and "Build 49";
+      - id="v0-50" and aria-labelledby="v0-50-title", and the h2's id to match;
+      - the version as the app shows it ("DAHW v0.50"), the date (datetime="2026-10-18" and the
+        words) and "Build 50";
       - the notes: each section is an <h3> with its <ul> of short, plain bullets right below it,
         the most noticeable changes only.
     Keep only the sections that changed, in this order: Sampler, Arrangement and clips, Drums,
     Sound and mix, Projects and files, Everywhere. Start a note with <b>New:</b> for something new
     rather than fixed. No em dashes.
   -->
+  <article class="release" id="v0-49" aria-labelledby="v0-49-title">
+    <header class="release-head">
+      <h2 id="v0-49-title">DAHW v0.49</h2>
+      <p class="release-meta"><time datetime="2026-10-17">October 17, 2026, early morning</time> <span class="build">Build 49</span></p>
+    </header>
+    <h3>Sampler</h3>
+    <ul>
+      <li>Fit to Bars, on the Tempo page: mark a loop on the beat, say how many bars it is, and tap Fit. The sample’s tempo comes from the loop, so the whole sample plays in time with your song, not only the loop.</li>
+      <li>The first Fit puts bar 1 on the loop’s start, shown as an orange 1 flag on the ruler, and moves Start to the first downbeat. Silence or crackle at the beginning of the file is skipped, and a pickup before the downbeat keeps its beat.</li>
+      <li>Fit again over a longer loop, such as 16 bars, to fine-tune: bar 1 stays where it is and only the tempo changes.</li>
+      <li>If Warp is off, Fit turns it on: Complex the first time, then whichever mode you used last.</li>
+      <li>Each Fit is a single undo step, and a short notice says what changed, with an Undo button.</li>
+      <li>On the Tempo page the loop bar shows its length in bars. Tap it to pick 1 beat, 2 beats or 1 to 16 bars, each listed with the tempo it gives, or tap Other to type any count.</li>
+      <li>In Time, a new button on the Sample BPM tile, plays the loop on the song’s bars with only the metronome click, so every change is heard against the beat right away. Tap it again, press Stop, or leave the Sampler to end it; the playhead goes back to where it was.</li>
+      <li>Sample BPM: the minus and plus buttons now step by 0.01, and while you adjust it the display says how far the last bar moves. Tap tempo moved into the Sample BPM control.</li>
+      <li>With Sample BPM open, drag any bar line after bar 1 onto its drum hit: the tempo follows as you drag and bar 1 stays put. The whole drag is one undo step.</li>
+      <li>New Hit snap: markers land on the start of the nearest hit, and the arrow buttons step from hit to hit.</li>
+      <li>Hold the Loop Start handle on the Tempo page for Set Bar 1 Here, Move Start Here and Zoom to Loop.</li>
+      <li>Snap moved into the panel that opens when you select a handle, as on the Loop and Region pages. On the Tempo page, Loop End’s panel adds To End, which moves Loop End to the last bar line.</li>
+      <li>The waveform’s zoom button that shows the whole sample is now called All.</li>
+      <li>Bars before bar 1 are numbered 0 and −1.</li>
+      <li>In landscape, action buttons such as Add Slice now match the height of the controls beside them.</li>
+    </ul>
+    <h3>Everywhere</h3>
+    <ul>
+      <li>At the largest text sizes, a control’s top row keeps its value whole, and notices wrap onto a second line instead of being cut off.</li>
+      <li>Fit, In Time, the bar 1 flag, the loop bar’s lengths and moving a bar line onto its hit all work with VoiceOver.</li>
+    </ul>
+  </article>
   <article class="release" id="v0-48" aria-labelledby="v0-48-title">
     <header class="release-head">
       <h2 id="v0-48-title">DAHW v0.48</h2>
