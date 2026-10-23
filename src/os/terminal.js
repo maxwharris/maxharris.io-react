@@ -7,6 +7,8 @@ export const PROMPT = '<span class="c1">max@maxos ~ %</span>';
 // EUNO, Max's command center, answers only devices on his tailnet (and then asks for its password)
 const EUNO_URL = 'https://ebsposs-mac-mini.tail5e44e6.ts.net/';
 const EUNO_LINK = `<a href="${EUNO_URL}" target="_blank" rel="noopener noreferrer">open euno ↗</a>`;
+// Max's music library, behind his passkey; same server as this site, so it is a plain link
+const CATALOG_URL = 'https://maxharris.io/catalog/';
 // any HTTP answer, even a sign-in wall, means the device can reach it; no answer means no route.
 // Chrome asks the visitor before a public page may reach a private address, so the wait is long
 // enough to click Allow; a device off the tailnet cannot even resolve the name and fails at once.
@@ -159,6 +161,13 @@ export function runCommand(raw, ctx) {
         if (ok) out(`<span class="c3">connected.</span> ${EUNO_LINK}`);
         else out('no answer.\n<span class="c2">some doors only open from the inside.</span>');
       });
+      break;
+    case 'catalog':
+      // also unlisted: the library is private, so only someone who knows to type it gets the door
+      say('opening the catalog...', 'c2');
+      // a command runs inside the keypress or tap, so the browser lets it open the tab
+      window.open(CATALOG_URL, '_blank', 'noopener');
+      out(`<a href="${CATALOG_URL}" target="_blank" rel="noopener noreferrer">open catalog ↗</a>`);
       break;
     case 'ping': say('64 bytes from the board: icmp_seq=1 ttl=64 time=0.26 ms'); break;
     case 'hi': case 'hello': case 'hey': say("hi. most people never open the terminal. you're one of the good ones."); break;
