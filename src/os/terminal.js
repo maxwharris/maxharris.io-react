@@ -7,7 +7,9 @@ export const PROMPT = '<span class="c1">max@maxos ~ %</span>';
 // EUNO, Max's command center, answers only devices on his tailnet (and then asks for its password)
 const EUNO_URL = 'https://ebsposs-mac-mini.tail5e44e6.ts.net/';
 const EUNO_LINK = `<a href="${EUNO_URL}" target="_blank" rel="noopener noreferrer">open euno ↗</a>`;
-// any HTTP answer, even a sign-in wall, means the device can reach it; no answer means no route
+// any HTTP answer, even a sign-in wall, means the device can reach it; no answer means no route.
+// Chrome asks the visitor before a public page may reach a private address, so the wait is long
+// enough to click Allow; a device off the tailnet cannot even resolve the name and fails at once.
 function reachable(url, ms) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
@@ -151,10 +153,11 @@ export function runCommand(raw, ctx) {
     case 'euno': case 'ssh': case 'connect':
       // the secret one: not in help, not in tab completion
       if (c !== 'euno' && a !== 'euno') { say(`${c}: usage: ${c} <host>`); break; }
-      say('dialing euno over the tailnet...', 'c2');
-      reachable(EUNO_URL, 4000).then((ok) => {
+      say('dialing euno...', 'c2');
+      reachable(EUNO_URL, 20000).then((ok) => {
+        // off the network it says nothing about how to get on it
         if (ok) out(`<span class="c3">connected.</span> ${EUNO_LINK}`);
-        else out(`no route to euno. it only answers devices on max's tailnet.\n<span class="c2">on it anyway? ${EUNO_LINK}</span>`);
+        else out('no answer.\n<span class="c2">some doors only open from the inside.</span>');
       });
       break;
     case 'ping': say('64 bytes from the board: icmp_seq=1 ttl=64 time=0.26 ms'); break;
