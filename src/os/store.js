@@ -7,8 +7,9 @@ export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 export const host = (u) => String(u || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
 export const store = {
-  get(k) { try { return window.localStorage.getItem(k); } catch { return null; } },
-  set(k, v) { try { window.localStorage.setItem(k, v); } catch { /* private mode */ } },
+  // choices (board, glass) last for the visit only, so every new visit opens on the default board
+  get(k) { try { return window.sessionStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { window.sessionStorage.setItem(k, v); } catch { /* private mode */ } },
 };
 export const MOD = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘' : 'ctrl ';
 export const EASE = 'cubic-bezier(.2,.9,.25,1)';

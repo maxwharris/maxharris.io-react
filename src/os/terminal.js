@@ -4,6 +4,18 @@ import { SCENES } from './board';
 import { APPS, APP, esc, host, stackTop } from './store';
 
 export const PROMPT = '<span class="c1">max@maxos ~ %</span>';
+// EUNO, Max's command center, answers only devices on his tailnet (and then asks for its password)
+const EUNO_URL = 'https://ebsposs-mac-mini.tail5e44e6.ts.net/';
+const EUNO_LINK = `<a href="${EUNO_URL}" target="_blank" rel="noopener noreferrer">open euno ↗</a>`;
+// any HTTP answer, even a sign-in wall, means the device can reach it; no answer means no route
+function reachable(url, ms) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, { mode: 'no-cors', cache: 'no-store', signal: ctl.signal })
+    .then(() => true, () => false)
+    .finally(() => clearTimeout(timer));
+}
+
 const VISIBLE = ['help', 'ls', 'open', 'whoami', 'about', 'contact', 'neofetch', 'theme', 'scene', 'history', 'clear', 'sudo', 'exit'];
 const OPENABLE = () => [...work.map((p) => p.key), ...APPS.map((a) => a.id), ...personal.map((p) => p.key), ...concepts.map((p) => p.key)];
 const pad = (s, n) => (s + ' '.repeat(n)).slice(0, Math.max(n, s.length + 1));
@@ -67,7 +79,7 @@ export function runCommand(raw, ctx) {
   const [c0, ...args] = cmd.split(/\s+/), c = c0.toLowerCase(), a = args.join(' ').toLowerCase();
   const s = ctx.get();
   switch (c) {
-    case 'help':
+    case 'help': case '?':
       out('<span class="c3">commands</span>\n' + [
         ['help', 'this list'], ['ls [work|personal]', 'see what is here'], ['open <name>', 'open a project or app'],
         ['whoami', 'who is at the keyboard'], ['about', 'the short version'], ['contact', 'how to reach max'],
@@ -136,6 +148,15 @@ export function runCommand(raw, ctx) {
       else { say('pushing 3.3v through everything. look behind the windows.', 'c2'); actions.fireworks(); }
       break;
     case 'solder': say('careful, that iron is 350°c. nothing here needs fixing. probably.'); break;
+    case 'euno': case 'ssh': case 'connect':
+      // the secret one: not in help, not in tab completion
+      if (c !== 'euno' && a !== 'euno') { say(`${c}: usage: ${c} <host>`); break; }
+      say('dialing euno over the tailnet...', 'c2');
+      reachable(EUNO_URL, 4000).then((ok) => {
+        if (ok) out(`<span class="c3">connected.</span> ${EUNO_LINK}`);
+        else out(`no route to euno. it only answers devices on max's tailnet.\n<span class="c2">on it anyway? ${EUNO_LINK}</span>`);
+      });
+      break;
     case 'ping': say('64 bytes from the board: icmp_seq=1 ttl=64 time=0.26 ms'); break;
     case 'hi': case 'hello': case 'hey': say("hi. most people never open the terminal. you're one of the good ones."); break;
     case 'pwd': say('/users/guest/desktop'); break;
