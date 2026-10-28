@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>DAHW features and how to use them</title>
-<meta name="description" content="Everything in DAHW, the handheld audio workstation for iPhone, and how to use it: the Sampler, pads, the Drum Rack, the Arrangement, the piano roll, Analog and FM, effects and the mixer, and export.">
+<meta name="description" content="Everything in DAHW, the handheld audio workstation for iPhone, and how to use it: the Sampler, pads, the Drum Rack, the Arrangement and the Visualizer, the piano roll, Analog and FM, effects and the mixer, and export.">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:title" content="DAHW features and how to use them">
-<meta property="og:description" content="Everything in DAHW, the handheld audio workstation for iPhone, and how to use it: the Sampler, pads, the Drum Rack, the Arrangement, the piano roll, Analog and FM, effects and the mixer, and export.">
+<meta property="og:description" content="Everything in DAHW, the handheld audio workstation for iPhone, and how to use it: the Sampler, pads, the Drum Rack, the Arrangement and the Visualizer, the piano roll, Analog and FM, effects and the mixer, and export.">
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <style>
@@ -594,6 +594,8 @@ figcaption { margin-top: 16px; padding-right: 8px; }
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.8" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-loop" viewBox="0 0 24 24"><path d="M16.5 3.5 20 7l-3.5 3.5"/><path d="M4 12v-2a3 3 0 0 1 3-3h13"/><path d="M7.5 20.5 4 17l3.5-3.5"/><path d="M20 12v2a3 3 0 0 1-3 3H4"/></symbol>
+  <symbol id="i-visualizer" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M8.7 13.6v-3.2M12 15.8V8.2M15.3 14.4v-4.8"/></symbol>
+  <symbol id="i-gyro" viewBox="0 0 24 24"><path d="M14.89 2.96L18.54 4.01A2.2 2.2 0 0 1 20.05 6.73L17.24 16.53A2.2 2.2 0 0 1 14.51 18.04L10.86 16.99A2.2 2.2 0 0 1 9.35 14.27L12.16 4.47A2.2 2.2 0 0 1 14.89 2.96Z"/><path d="M7.4 19.6a8.6 8.6 0 0 1-2.5-6.4"/><path d="M4.3 21.4a12 12 0 0 1-3-8.6"/></symbol>
 </svg>
 
 <header class="top">
@@ -625,7 +627,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
 
   <div class="page-head wrap">
     <h1>Features</h1>
-    <p class="lede">What each part of DAHW does, and how to use it. DAHW opens on a demo song, Late Night Flip, so there is something to play right away.</p>
+    <p class="lede">What each part of DAHW does, and how to use it. The first time you open DAHW, it starts on Late Night Flip, a project with one Sampler track looping a drum break, so Play plays something right away.</p>
   </div>
 
   <section class="section wrap" id="basics" aria-labelledby="basics-title">
@@ -636,22 +638,23 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <li><span class="tab-ic"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></span><span class="tab-name">Clip</span><span class="tab-text">The selected clip: notes in the piano roll, steps for drums, or audio.</span></li>
       <li><span class="tab-ic"><svg class="ic" aria-hidden="true"><use href="#i-device"/></svg></span><span class="tab-name">Device</span><span class="tab-text">The selected track’s instrument, with its effects one tap away.</span></li>
       <li><span class="tab-ic"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span><span class="tab-name">Mix</span><span class="tab-text">Levels, pan and sends for every track, the returns and the master.</span></li>
-      <li><span class="tab-ic"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="tab-name">Browse</span><span class="tab-text">Files, videos, recordings, samples and MIDI files.</span></li>
+      <li><span class="tab-ic"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="tab-name">Browse</span><span class="tab-text">Files, videos, recordings, every sample you have loaded, and MIDI files.</span></li>
     </ul>
-    <p class="basics-note">Select a track or a clip in Arrange, and Clip and Device show it. Every value is a tile: tap it to open it, drag sideways to change it, tap the number to type one, and double-tap to reset it.</p>
+    <p class="basics-note">Select a track or a clip in Arrange, and Clip and Device show it. Tap a track’s name to open its device, and hold the Device tab to open the selected track’s Device Chain. Every value is a tile: tap it to open it, drag sideways to change it, tap the number to type one, and double-tap to reset it.</p>
+    <p class="basics-note">With a hardware keyboard, <b>A&nbsp;S&nbsp;D&nbsp;F&nbsp;G&nbsp;H&nbsp;J&nbsp;K&nbsp;L&nbsp;;&nbsp;'</b> play the white keys and <b>W&nbsp;E&nbsp;T&nbsp;Y&nbsp;U&nbsp;O&nbsp;P</b> the black keys on the selected track. <b>Z</b> and <b>X</b> change the octave, <b>C</b> and <b>V</b> the velocity, <b>Space</b> plays and stops, and <b>Cmd+Z</b> and <b>Shift+Cmd+Z</b> undo and redo.</p>
   </section>
 
   <section class="feat wrap t-orange" id="sampler" aria-labelledby="sampler-title">
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-sampler"/></svg></span>
       <h2 id="sampler-title">Sampler</h2>
-      <p class="feat-lede">Record with the mic, import any audio file, or take the sound from a video. Set markers and the loop, zoom in to a single cycle, detect the BPM, warp it in Re‑Pitch or Complex, transpose it, slice it, and play it on a chromatic keyboard.</p>
+      <p class="feat-lede">Record with the mic, import any audio file, or take the sound from a video. Set markers and the loop, zoom in to a single cycle, fit the tempo to the bars, warp it in Re‑Pitch or Complex, find its key, transpose it, slice it, and play it on a chromatic keyboard. Every sample you load is kept, ready for any project.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/01-sampler.webp">
-            <img src="../assets/screens/light/01-sampler.webp" width="720" height="1564" loading="lazy" alt="The Sampler’s Pitch page: a drum break’s two-bar loop between its handles, warped in Complex from 92 to 120 BPM and transposed up 7 semitones, with a chord held on the keyboard.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/01-sampler-v57.webp">
+            <img src="../assets/screens/light/01-sampler-v57.webp" width="720" height="1564" loading="lazy" alt="The Sampler’s Pitch page: a drum break’s two-bar loop between its handles, warped in Complex from 92 to 120 BPM and transposed up 7 semitones, with a chord held on the keyboard.">
           </picture>
         </div></div>
       </figure>
@@ -660,28 +663,39 @@ figcaption { margin-top: 16px; padding-right: 8px; }
           <h3><svg class="ic" aria-hidden="true"><use href="#i-import"/></svg>Get a sound in</h3>
           <ol class="steps" role="list">
             <li><span>Select a Sampler track and open <b>Device</b>. For a new one, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vh">Add</span></span> in Arrange and choose <b>Sampler</b>.</span></li>
-            <li><span>Tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span>, then <b>Load Sample…</b> (<b>Replace Sample…</b> once there is one). Choose <b>Files</b>, <b>Photos &amp; Videos</b> to use the sound of a video, or <b>Recordings</b>.</span></li>
-            <li><span>To record, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span>, then <b>Record…</b> (or <b>Record Over…</b>), and press <b>Record</b>.</span></li>
-            <li><span>DAHW detects the tempo as the sound loads. You can also start from <b>Browse</b>: pick a file, a video or a recording, then where it goes.</span></li>
+            <li><span>An empty Sampler offers two ways in. <b>New Sample</b> records, or imports from <b>Files</b> or <b>Photos &amp; Videos</b> to use the sound of a video. <b>From Samples</b> lists every sample you have loaded, in any project, to preview and load.</span></li>
+            <li><span>To record, choose <b>New Sample</b>, then <b>Record</b>. Before a take, the Record card is a tuner: it shows the note you play, how far off it is and which way to turn. Press <b>Record</b> to start.</span></li>
+            <li><span>With a sample loaded, <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span> has <b>Replace Sample…</b>, <b>Replace from Samples…</b> and <b>Record Over…</b>. You can also start from <b>Browse</b>: pick a file, a video, a recording or a sample, then where it goes.</span></li>
+            <li><span>DAHW finds the tempo and the key as the sound loads. A sample you have fitted before comes in on bar 1, looped on its bars and warped.</span></li>
           </ol>
         </article>
         <article class="howto">
           <h3><svg class="ic" aria-hidden="true"><use href="#i-warp"/></svg>Set the loop and warp it</h3>
           <ol class="steps" role="list">
-            <li><span>On the <b>Loop</b> page, drag the <span class="k grip"><svg class="ic" viewBox="0 0 18 24" aria-hidden="true"><use href="#b-open"/></svg><span class="vh">Loop Start</span></span> and <span class="k grip"><svg class="ic" viewBox="0 0 18 24" aria-hidden="true"><use href="#b-close"/></svg><span class="vh">Loop End</span></span> handles under the waveform, or the bar between them to move the loop. <span class="k pen">S</span> and <span class="k pen">E</span> set where the sound starts and ends.</span></li>
+            <li><span>The first page tab shows the play mode (<b>Classic</b> at first): tap it for the Loop page. Drag the <span class="k grip"><svg class="ic" viewBox="0 0 18 24" aria-hidden="true"><use href="#b-open"/></svg><span class="vh">Loop Start</span></span> and <span class="k grip"><svg class="ic" viewBox="0 0 18 24" aria-hidden="true"><use href="#b-close"/></svg><span class="vh">Loop End</span></span> handles under the waveform, or the bar between them to move the loop. <span class="k pen">S</span> and <span class="k pen">E</span> set where the sound starts and ends.</span></li>
             <li><span>Pinch to zoom, down to a single cycle. A double tap jumps between the whole sample and the loop.</span></li>
-            <li><span>On <b>Tempo</b>, tap <b>Detect</b> or <b>Tap</b>, or set <b>Loop Is</b> to the number of bars the loop should be.</span></li>
-            <li><span>On <b>Pitch</b>, set <b>Warp</b> to <b>Re‑Pitch</b> (speed and pitch together, like tape) or <b>Complex</b> (tempo and pitch apart). The sample now follows the song’s tempo. <b>Transpose</b> and <b>Detune</b> sit beside it, and <b>Render</b> bakes it all into a new sample.</span></li>
+            <li><span>On <b>Tempo</b>, set the loop on the beat, open <b>Loop Is</b> to say how many bars it is, and tap <b>Fit</b>. The tempo comes from the loop, Warp turns on, and the first Fit puts bar 1 on Loop Start. <b>Sample BPM</b> has <b>Detect</b>, <b>In Time</b> (the loop against the click) and, when open, <b>Tap</b>.</span></li>
+            <li><span>On <b>Pitch</b>, set <b>Warp</b> to <b>Re‑Pitch</b> (speed and pitch together, like tape) or <b>Complex</b> (tempo and pitch apart). The sample now follows the song’s tempo. <b>Render</b> bakes it all into a new sample.</span></li>
+            <li><span><b>Transpose</b> names the sample’s key, or a single note’s pitch. Open it and tap <b>Key</b> for <b>To Song Key</b>, which moves the sample into the song’s key and in tune, and <b>Use as Song Key</b>. <b>Detune</b> sits beside it.</span></li>
           </ol>
         </article>
         <article class="howto">
           <h3><svg class="ic" aria-hidden="true"><use href="#i-keys"/></svg>Play it on the keys</h3>
           <ol class="steps" role="list">
             <li><span>Play the keyboard at the bottom. The diamond marks the root key (C3 at first), and the arrows beside the keys change octave.</span></li>
-            <li><span>Tap <b>Classic</b> at the top right to choose how it plays: <b>Classic</b> sustains and loops while a key is held, <b>One-Shot</b> plays to the end, and <b>Slice</b> puts slices on pads.</span></li>
+            <li><span>Hold the first page tab for a moment to choose how it plays: <b>Classic</b> sustains and loops while a key is held, <b>One-Shot</b> plays to the end, and <b>Slice</b> puts slices on pads.</span></li>
+            <li><span>In Classic and One-Shot, <b>Keys View</b> at the top right turns DAHW sideways and fills the screen with keys. Play with several fingers, slide across the keys, and pick <b>Touch</b> or <b>Fixed</b> velocity. <b>Record</b> records what you play into a clip, and the filled Keys View goes back.</span></li>
             <li><span>The <b>Sound</b> page holds the amp envelope, the filter and its envelope, and the voice settings.</span></li>
           </ol>
         </article>
+        <figure class="feat-wide">
+          <div class="device wide"><div class="frame">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/11-keys-landscape.webp">
+            <img src="../assets/screens/light/11-keys-landscape.webp" width="1200" height="552" loading="lazy" alt="Keys View: the Sampler’s keyboard across the whole screen in landscape, twelve white keys from C3, a C minor chord held, with Fixed and Touch, the take strip and Undo Take above.">
+          </picture>
+        </div></div>
+        </figure>
         <p class="tip"><b>Tip:</b> Slices in Complex warp, especially transposed ones, use the most of your iPhone’s power. When a part is finished, long‑press its clip and choose <b>Flatten to Audio</b>, then <b>New Audio Track</b>: the original clip is muted, so the Sampler stops working for it. Delete the Sampler track as well if you no longer need it, to free its memory.</p>
     </div>
   </section>
@@ -694,8 +708,8 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/02-pads.webp">
-            <img src="../assets/screens/light/02-pads.webp" width="720" height="1564" loading="lazy" alt="The pad view: sixteen pads, each a named slice of the break with its own small waveform, two of them lit as they sound, with banks A to D, Touch velocity and note repeat at 1/16.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/02-pads-v57.webp">
+            <img src="../assets/screens/light/02-pads-v57.webp" width="720" height="1564" loading="lazy" alt="The pad view: sixteen pads, each a named slice of the break with its own small waveform, two of them lit as they sound, with banks A to D, Touch velocity and note repeat at 1/16.">
           </picture>
         </div></div>
       </figure>
@@ -703,18 +717,18 @@ figcaption { margin-top: 16px; padding-right: 8px; }
         <article class="howto">
           <h3><svg class="ic" aria-hidden="true"><use href="#i-tap"/></svg>Play and record on pads</h3>
           <ol class="steps" role="list">
-            <li><span>On a Sampler, tap <b>Classic</b> at the top right and choose <b>Slice</b>. The <b>Slices</b> page slices by <b>Transients</b>, <b>Beats</b> or <b>Manual</b>, and the keyboard turns into slice pads.</span></li>
-            <li><span>Tap <b>Pads</b> beside them for the full-screen view (on a Drums track, <b>Pads</b> is at the top). <b>Keys</b>, or <b>Device</b> on Drums, goes back.</span></li>
+            <li><span>On a Sampler, hold the first page tab (it reads <b>Classic</b>) and choose <b>Slice</b>. The <b>Slices</b> page slices by <b>Transients</b>, <b>Beats</b> or <b>Manual</b>, and the keyboard turns into slice pads.</span></li>
+            <li><span>Tap <b>Pad View</b> at the top right for the full screen (on a Drums track, the pads button at the top). <b>Pad View</b>, filled, in the same place, goes back.</span></li>
             <li><span>Banks <b>A</b> to <b>D</b> hold 64 slices. <b>Fixed</b> or <b>Touch</b> sets the velocity, and <b>Repeat</b> (1/4 to 1/32, <b>T</b> for triplets) repeats a held pad in time.</span></li>
             <li><span>Press <span class="k rec"><svg class="ic" aria-hidden="true"><use href="#i-record"/></svg><span class="vh">Record</span></span> in the transport to record your hits into a clip, with a count-in. <b>Undo Take</b> removes the last take.</span></li>
-            <li><span>With Repeat off, long-press a pad to edit its slice: start, end, tune, gain, reverse and choke.</span></li>
+            <li><span>Turn on <b>Edit</b>, next to Pad View, and tap a pad to edit it: start, end, tune, gain, reverse and choke. Turn Edit off to play again.</span></li>
           </ol>
         </article>
         <figure class="feat-wide">
           <div class="device wide"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/09-pads-landscape.webp">
-            <img src="../assets/screens/light/09-pads-landscape.webp" width="1200" height="552" loading="lazy" alt="The pad view in landscape: sixteen pads of the break’s slices in two rows of eight, two of them lit.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/09-pads-landscape-v57.webp">
+            <img src="../assets/screens/light/09-pads-landscape-v57.webp" width="1200" height="552" loading="lazy" alt="The pad view in landscape: sixteen pads of the break’s slices in two rows of eight, two of them lit.">
           </picture>
         </div></div>
         </figure>
@@ -729,8 +743,8 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/04-drum-rack.webp">
-            <img src="../assets/screens/light/04-drum-rack.webp" width="720" height="1564" loading="lazy" alt="The Drum Rack: sixteen pads of kicks, snares, claps, hats, crashes and percussion, one snare lit as it plays, with its Tune, Tone, Level and Decay below.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/04-drum-rack-v57.webp">
+            <img src="../assets/screens/light/04-drum-rack-v57.webp" width="720" height="1564" loading="lazy" alt="The Drum Rack: sixteen pads of kicks, snares, claps, hats, crashes and percussion, one snare lit as it plays, with its Tune, Tone, Level and Decay below.">
           </picture>
         </div></div>
       </figure>
@@ -740,8 +754,9 @@ figcaption { margin-top: 16px; padding-right: 8px; }
           <ol class="steps" role="list">
             <li><span>In Arrange, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vh">Add</span></span> and choose <b>Drums</b>. The new track starts with a random kit, ready to play.</span></li>
             <li><span>Open <b>Device</b> and tap the pads. The <b>Kit</b> page deals a <b>New Random Rack</b> or re-rolls every pad or one kind of sound, and <b>Save This Rack…</b> keeps one you like.</span></li>
-            <li><span>On <b>Steps</b>, make a <b>New Clip</b> if there is none, then tap steps to program the selected pad, with <b>Step Velocity</b> and <b>Swing</b>.</span></li>
-            <li><span>On <b>Pad</b>, <b>Replace</b> loads your own sound from Files, a video or Browse, <b>Record</b> records one, and <b>Sampler</b> opens the pad’s own Sampler.</span></li>
+            <li><span>On <b>Steps</b>, make a <b>New Clip</b> if there is none, then tap steps to program the selected pad, with <b>Step Velocity</b> and <b>Swing</b>. A small tick marks a hit you played early or late.</span></li>
+            <li><span>On <b>Pad</b>, <b>Replace</b> loads your own sound from Files, a video or Browse, <b>Record</b> records one, and <b>Sampler</b> opens the pad’s own Sampler, whose Pitch page names the hit’s note and can tune it to the song’s key (<b>To Song Key</b>). You can also drag a sample from Browse: hold its row, rest on the Device tab, then drop it on a pad.</span></li>
+            <li><span>To play by moving the phone, open <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span> and pick <b>Gyrosynth</b> (see Analog and FM): four drums sit around you, the snare straight ahead. Point at one and flick to hit it.</span></li>
           </ol>
         </article>
     </div>
@@ -750,13 +765,13 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>
       <h2 id="arrangement-title">Arrangement</h2>
-      <p class="feat-lede">MIDI and audio tracks, clips you trim, split, duplicate, loop and consolidate, a loop brace on the ruler, and recording with a count-in. Flatten any clip to audio, and undo every edit.</p>
+      <p class="feat-lede">MIDI and audio tracks, clips you move, trim, stretch, split, duplicate, loop and consolidate, a loop brace on the ruler, and recording with a count-in. Flatten any clip to audio, undo every edit, and watch the song play in the Visualizer.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/03-arrangement.webp">
-            <img src="../assets/screens/light/03-arrangement.webp" width="720" height="1564" loading="lazy" alt="The Arrangement of Late Night Flip: tracks for the break, drums, Rhodes chords, an 808 sub, a pad and a vocal chop, their clips in colour, a four-bar loop on the ruler and a Rhodes clip selected.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/03-arrangement-v57.webp">
+            <img src="../assets/screens/light/03-arrangement-v57.webp" width="720" height="1564" loading="lazy" alt="The Arrangement of an example song: tracks for the break, drums, Rhodes chords, an 808 sub, a pad and a vocal chop, their clips in colour, a four-bar loop on the ruler and a Rhodes clip selected.">
           </picture>
         </div></div>
       </figure>
@@ -764,9 +779,9 @@ figcaption { margin-top: 16px; padding-right: 8px; }
         <article class="howto">
           <h3><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg>Arrange clips and the loop</h3>
           <ol class="steps" role="list">
-            <li><span>Tap a clip to select it, drag it to move it, and drag its edges to trim it. The bar at the bottom has <b>Split</b>, <b>Duplicate</b>, <b>Loop</b>, <b>Open</b> and <b>More</b>.</span></li>
-            <li><span>Long-press a clip for <b>Rename</b>, <b>Color</b>, <b>Consolidate</b>, <b>Reverse</b>, <b>Open in Sampler</b>, <b>Flatten to Audio</b> and the rest. Tap an empty part of a MIDI track’s lane for a new clip.</span></li>
-            <li><span>The loop is the bar along the top of the ruler: drag its ends or its middle, or long-press it for <b>Double Loop</b>, <b>Halve Loop</b> and <b>Loop to Selected Clip</b>. Turn it on and off with <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-loop"/></svg><span class="vh">Loop</span></span> in the transport; with it off, drag across the ruler to draw a new one.</span></li>
+            <li><span>Tap a clip to select it. Drag it along the song, or up or down onto another track of its kind, and drag its edges to trim it. On an audio clip, drag the square grip at the bottom-right corner to stretch the clip and its audio. The bar at the bottom has <b>Split</b>, <b>Duplicate</b>, <b>Loop</b>, <b>Open</b> and <b>More</b>.</span></li>
+            <li><span>Long-press a clip for <b>Rename</b>, <b>Color</b>, <b>Consolidate</b>, <b>Flatten to Audio</b>, <b>Open in Sampler</b> and the rest. <b>Select</b> there picks several clips (tap them, or drag a box across empty lanes) to move, duplicate, copy, mute or delete together; long-press an empty bar to paste. Tap an empty part of a MIDI track’s lane for a new clip.</span></li>
+            <li><span>The loop is the bar along the top of the ruler: drag its ends or its middle, or long-press it for <b>Select Clips in Loop</b>, <b>Double Loop</b>, <b>Halve Loop</b> and <b>Loop to Selected Clip</b>. Turn it on and off with <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-loop"/></svg><span class="vh">Loop</span></span> in the transport; with it off, drag across the ruler to draw a new one.</span></li>
             <li><span>Pinch to zoom, and scroll with two fingers.</span></li>
           </ol>
         </article>
@@ -776,14 +791,31 @@ figcaption { margin-top: 16px; padding-right: 8px; }
             <li><span>Arm a track with the round <b>Arm</b> button beside <b>M</b> and <b>S</b> in its header. With nothing armed, Record arms the selected track.</span></li>
             <li><span>Press <span class="k rec"><svg class="ic" aria-hidden="true"><use href="#i-record"/></svg><span class="vh">Record</span></span> in the transport. DAHW counts in, then records from the playhead: the mic on an audio track, the keys or pads on a MIDI track.</span></li>
             <li><span>Press Record again to punch out and keep playing, or Stop to end. With the loop on, every pass is a take, and <b>Undo</b> removes the newest.</span></li>
-            <li><span>Tap the position readout in the transport for the count-in, the metronome and <b>Input Quantize</b>.</span></li>
+            <li><span>Tap the position readout in the transport for the tempo, the song’s <b>Key</b> (the first sample with a clear key sets it), the count-in, the metronome and <b>Input Quantize</b>. With headphones such as AirPods, <b>Settings</b> &gt; <b>Audio</b> &gt; <b>Recording Latency</b> measures the delay with eight clicks (<b>Check</b>), so takes land on the beat.</span></li>
           </ol>
         </article>
         <figure class="feat-wide">
           <div class="device wide"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/10-arrangement-landscape.webp">
-            <img src="../assets/screens/light/10-arrangement-landscape.webp" width="1200" height="552" loading="lazy" alt="The Arrangement in landscape: track headers with mute, solo and arm beside twelve bars of clips.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/10-arrangement-landscape-v57.webp">
+            <img src="../assets/screens/light/10-arrangement-landscape-v57.webp" width="1200" height="552" loading="lazy" alt="The Arrangement in landscape: track headers with mute, solo and arm beside the clips, and the Visualizer, grid and add buttons at the bottom right.">
+          </picture>
+        </div></div>
+        </figure>
+        <article class="howto">
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg>Watch it in the Visualizer</h3>
+          <ol class="steps" role="list">
+            <li><span>Tap the round <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg><span class="vh">Visualizer</span></span> button left of the grid in the Arrangement’s header (in landscape, in the floating buttons at the bottom right). The song is drawn full screen as it plays, with the transport on top. The same button, filled, goes back.</span></li>
+            <li><span>There are two looks. <b>Lens</b>, the default, runs the notes and hits past a line under the chord, with the whole song in a strip and a magnifier on the beat. <b>Stage</b> puts the song’s key on an arc with the chord in big type, and a wheel for each track.</span></li>
+            <li><span>Tap the picture for the clean view, and again to bring the controls back.</span></li>
+            <li><span><b>Customize</b>, beside the button, picks the look, one of eight colour palettes (<b>Tracks</b> uses your tracks’ colours, <b>Custom</b> your own), light or dark paper, full or calm motion, and the song’s title, an artist line and the readouts. It is saved with the song, and Export turns it into a video.</span></li>
+          </ol>
+        </article>
+        <figure class="feat-wide">
+          <div class="device wide"><div class="frame">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/12-visualizer-landscape.webp">
+            <img src="../assets/screens/light/12-visualizer-landscape.webp" width="1200" height="552" loading="lazy" alt="The Visualizer in landscape, in the Lens look: the chord in large type, the whole song in a strip, the tracks’ notes and hits flowing past the playhead, and a magnifier on the drums, with the Visualizer button and Customize at the bottom right.">
           </picture>
         </div></div>
         </figure>
@@ -793,13 +825,13 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-midi"/></svg></span>
       <h2 id="piano-roll-title">Piano roll</h2>
-      <p class="feat-lede">Tap to draw a note and drag to stretch it, select and move notes, shape velocity, quantize, and transpose by a step or an octave, in portrait or landscape.</p>
+      <p class="feat-lede">Tap to draw a note and drag to stretch it, select, move, copy and paste notes, shape velocity, quantize with a preview, transpose by a step or an octave, and fold the keys to the song’s scale, in portrait or landscape.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/05-piano-roll.webp">
-            <img src="../assets/screens/light/05-piano-roll.webp" width="720" height="1564" loading="lazy" alt="The piano roll: Rhodes chords and a melody as purple notes from C3 to E4, a chord selected, on the Transform page with transpose, quantize and duplicate.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/05-piano-roll-v57.webp">
+            <img src="../assets/screens/light/05-piano-roll-v57.webp" width="720" height="1564" loading="lazy" alt="The piano roll: Rhodes chords and a melody as purple notes, a chord selected, on the Transform page with Transpose, Quantize, Duplicate, Legato and Delete, then Select All, Copy and Cut.">
           </picture>
         </div></div>
       </figure>
@@ -809,8 +841,9 @@ figcaption { margin-top: 16px; padding-right: 8px; }
           <ol class="steps" role="list">
             <li><span>In Arrange, tap an empty part of a MIDI track’s lane to make a one-bar clip (drag its end to make it longer), then open <b>Clip</b>.</span></li>
             <li><span>In <b>Draw</b> mode <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></span>, tap the grid to add a note and drag right to stretch it. Tap a note to delete it.</span></li>
-            <li><span>In <b>Select</b> mode <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-select"/></svg></span>, tap notes or drag across the grid to select them, then drag them where they go.</span></li>
-            <li><span>The <b>Velocity</b>, <b>Loop</b> and <b>Transform</b> pages set velocity, the clip’s loop, quantize and transpose. <b>Fold</b> shows only the notes in use.</span></li>
+            <li><span>In <b>Select</b> mode <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-select"/></svg></span>, tap notes to add or remove them, or drag a box across the grid, then drag any chosen note to move them all. Long-press an empty spot to paste.</span></li>
+            <li><span><b>Notes</b> sets the chosen notes’ start, pitch, velocity and length, <b>Velocity</b> draws velocity, and <b>Loop</b> sets the clip’s loop. <b>Transform</b> has Transpose, <b>Quantize</b> (it shows the result before you apply it), Duplicate, <b>Legato</b> and Delete, then Select All, Copy and Cut.</span></li>
+            <li><span><b>Fold</b>, in the corner, shows only the notes in use, or the notes of a scale, which starts at the song’s key.</span></li>
           </ol>
         </article>
     </div>
@@ -819,13 +852,13 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-analog"/></svg></span>
       <h2 id="synths-title">Analog and FM</h2>
-      <p class="feat-lede">Analog has two oscillators, unison, a 12 or 24 dB filter, two envelopes and an LFO. FM has four operators and 11 algorithms, each drawn as a diagram. Both come with presets, and you can save your own.</p>
+      <p class="feat-lede">Analog has two oscillators, unison, a 12 or 24 dB filter, two envelopes and an LFO. FM has four operators and 11 algorithms, each drawn as a diagram. Both come with presets and you can save your own. Play them on a keyboard the size of the screen, or by moving the phone.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/06-fm-synth.webp">
-            <img src="../assets/screens/light/06-fm-synth.webp" width="720" height="1564" loading="lazy" alt="The FM synth: its algorithm drawn as a diagram of four operators, the Electric Piano preset loaded, with a chord held on the keyboard.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/06-fm-synth-v57.webp">
+            <img src="../assets/screens/light/06-fm-synth-v57.webp" width="720" height="1564" loading="lazy" alt="The FM synth: its algorithm drawn as a diagram of four operators, the Electric Piano preset named under the title beside Keys View, with a chord held on the keyboard.">
           </picture>
         </div></div>
       </figure>
@@ -836,7 +869,17 @@ figcaption { margin-top: 16px; padding-right: 8px; }
             <li><span>In Arrange, tap <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vh">Add</span></span> and choose <b>Analog</b> or <b>FM</b>. <b>Device</b> shows the synth, with the keyboard at the bottom.</span></li>
             <li><span>Analog’s pages are <b>Osc</b>, <b>Filter</b>, <b>Amp</b>, <b>Mod</b> and <b>Voice</b>. FM’s are <b>Algorithm</b>, <b>Operators</b>, <b>Envelopes</b> and <b>Voice</b>.</span></li>
             <li><span>Tap a tile to open it, then drag sideways to change the value, or tap the number to type one. A double tap resets it.</span></li>
-            <li><span>Tap the preset name at the top for the presets. To keep your own sound, choose <b>Save as Preset…</b> from the <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span> menu.</span></li>
+            <li><span>The preset’s name follows the track’s under the title, as in Rhodes · Electric Piano. <b>Browse Presets</b> and <b>Save as Preset…</b> are in the <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span> menu.</span></li>
+            <li><span><b>Keys View</b>, at the top right, turns DAHW sideways and fills the screen with keys, as on the Sampler. The filled Keys View goes back.</span></li>
+          </ol>
+        </article>
+        <article class="howto">
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-gyro"/></svg>Play by moving the phone</h3>
+          <ol class="steps" role="list">
+            <li><span>On an Analog, FM, Sampler or Drums device page, open <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span class="vh">More</span></span> and pick <b>Gyrosynth</b>. The first time, hold the phone out in front of you and tap: that way becomes the middle.</span></li>
+            <li><span>Turn left and right to point at a note of the song’s key, low on the left. With <b>Thumb Hold</b> on, the note plays while your thumb is on the bottom of the screen; with it off, a flick of the phone plays it.</span></li>
+            <li><span>A harder move plays louder, and a twist of the wrist makes the sound brighter or darker. The gear sets <b>Range</b> (1 to 3 octaves), <b>Twist</b> and Thumb Hold for each track.</span></li>
+            <li><span>Press <span class="k rec"><svg class="ic" aria-hidden="true"><use href="#i-record"/></svg><span class="vh">Record</span></span> to record what you play as notes into a clip.</span></li>
           </ol>
         </article>
     </div>
@@ -845,13 +888,13 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-mixer"/></svg></span>
       <h2 id="effects-title">Effects and mixer</h2>
-      <p class="feat-lede">Eight effects on any track, return or the master: EQ Three, Auto Filter, Compressor, Saturator, Chorus, Delay, Reverb and Limiter. Two sends, two returns, and a mixer with delay compensation, so every track stays in time.</p>
+      <p class="feat-lede">Eleven effects on any track, return or the master: Vocal Tune, EQ Three, Auto Filter, Auto Pan, Compressor, Saturator, Chorus, Delay, Reverb, Limiter and Key Detect. Two sends, two returns, and a mixer with delay compensation, so every track stays in time.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/07-mixer.webp">
-            <img src="../assets/screens/light/07-mixer.webp" width="720" height="1564" loading="lazy" alt="The mixer’s Levels page: channel strips with faders, meters, pan, and mute and solo buttons, the break’s strip selected.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/07-mixer-v57.webp">
+            <img src="../assets/screens/light/07-mixer-v57.webp" width="720" height="1564" loading="lazy" alt="The mixer’s Levels page: channel strips with faders, meters, pan, and mute and solo buttons, the break’s strip selected.">
           </picture>
         </div></div>
       </figure>
@@ -859,10 +902,11 @@ figcaption { margin-top: 16px; padding-right: 8px; }
         <article class="howto">
           <h3><svg class="ic" aria-hidden="true"><use href="#i-fx"/></svg>Add effects and sends</h3>
           <ol class="steps" role="list">
-            <li><span>On <b>Device</b>, tap the device’s name at the top (<b>Sampler</b>, for example) to open the <b>Device Chain</b>, then tap <b>Add Effect</b>.</span></li>
-            <li><span>Pick EQ Three, Auto Filter, Compressor, Saturator, Chorus, Delay, Reverb or Limiter. Drag the handle to reorder, and use the switch to turn one off.</span></li>
+            <li><span>On <b>Device</b>, tap the device’s name at the top (<b>Sampler</b>, for example), or hold the Device tab from anywhere, to open the <b>Device Chain</b>, then tap <b>Add Effect</b>.</span></li>
+            <li><span>Pick an effect. Drag the handle to reorder, and use the switch to turn one off.</span></li>
+            <li><span><b>Vocal Tune</b> pulls a voice onto the song’s key or a key you pick, with <b>Speed</b>, <b>Flex</b>, <b>Vibrato</b> and <b>Humanize</b>; you hear it on playback and in exports, not yet while you record. <b>Key Detect</b> listens while its page is open, names the key of what plays through it, and offers <b>Use as Song Key</b>.</span></li>
             <li><span>In <b>Mix</b>, <b>Levels</b> has the faders and meters, <b>Pan</b> the stereo position, and <b>Sends</b> sends a track to <b>Return A</b> (a Reverb) and <b>Return B</b> (a Delay), before or after the fader.</span></li>
-            <li><span><b>Chain</b> on a mixer strip opens that strip’s effects, the returns and the master included.</span></li>
+            <li><span><b>Chain</b>, at the top of Mix, opens the selected channel’s effects, the returns and the master included.</span></li>
           </ol>
         </article>
     </div>
@@ -871,23 +915,24 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-export"/></svg></span>
       <h2 id="export-title">Export</h2>
-      <p class="feat-lede">Mix the song down to a 24-bit WAV or an M4A, or export stems: a WAV for every track and return, all the same length, so they line up in any DAW.</p>
+      <p class="feat-lede">Mix the song down to a 24-bit WAV, an M4A or a video of the Visualizer, or export stems: a WAV for every track and return, all the same length, so they line up in any DAW.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/08-export.webp">
-            <img src="../assets/screens/light/08-export.webp" width="720" height="1564" loading="lazy" alt="The Export sheet on its Stems page: the song’s tracks listed with a switch each, a picture of the song, and the size of the stems.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/08-export-video.webp">
+            <img src="../assets/screens/light/08-export-video.webp" width="720" height="1564" loading="lazy" alt="The Export sheet’s Mixdown page with Video chosen: a frame of the video in the Lens look, its size, 1080 by 1920 at 30 fps, and the three shapes, 9:16, 1:1 and 16:9.">
           </picture>
         </div></div>
       </figure>
     <div class="feat-how">
         <article class="howto">
-          <h3><svg class="ic" aria-hidden="true"><use href="#i-export"/></svg>Export a song or stems</h3>
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-export"/></svg>Export a song, stems or a video</h3>
           <ol class="steps" role="list">
             <li><span>Tap the project’s name at the top left of Arrange, then <b>Export</b>.</span></li>
-            <li><span><b>Mixdown</b> makes one file of the whole song: choose <b>WAV</b> (24-bit) or <b>M4A</b>. <b>Stems</b> makes a WAV for every track and return; switch off the ones you don’t need. <b>Sample</b> exports one of the project’s samples.</span></li>
-            <li><span>DAHW renders on your iPhone, from the first clip to the end of the last reverb and delay tails, then the share sheet opens: save to Files, AirDrop, or send it anywhere.</span></li>
+            <li><span><b>Mixdown</b> makes one file of the whole song: choose <b>WAV</b> (24-bit), <b>M4A</b> or <b>Video</b>. <b>Stems</b> makes a WAV for every track and return; switch off the ones you don’t need. <b>Sample</b> exports one of the project’s samples.</span></li>
+            <li><span>DAHW renders on your iPhone, from the first clip to the end of the last reverb and delay tails. For audio, the share sheet opens: save to Files, AirDrop, or send it anywhere.</span></li>
+            <li><span><b>Video</b> draws the Visualizer, in the song’s look and colours, over the same mix, at 1080p and 30 frames a second. Pick a shape (<b>9:16</b>, <b>1:1</b> or <b>16:9</b>) and keep DAHW open while the frames draw. Then <b>Save to Photos</b> or <b>Share</b>.</span></li>
           </ol>
         </article>
     </div>
@@ -901,10 +946,10 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <figure class="feat-shot">
         <div class="feat-pair">
           <div class="device"><div class="frame">
-            <img src="../assets/screens/light/05-piano-roll.webp" width="720" height="1564" loading="lazy" alt="The piano roll in the light appearance: purple notes on white.">
+            <img src="../assets/screens/light/05-piano-roll-v57.webp" width="720" height="1564" loading="lazy" alt="The piano roll in the light appearance: purple notes on white.">
           </div></div>
           <div class="device"><div class="frame">
-            <img src="../assets/screens/dark/05-piano-roll.webp" width="720" height="1564" loading="lazy" alt="The same piano roll in the dark appearance: purple notes on black.">
+            <img src="../assets/screens/dark/05-piano-roll-v57.webp" width="720" height="1564" loading="lazy" alt="The same piano roll in the dark appearance: purple notes on black.">
           </div></div>
         </div>
         <figcaption><span class="cap">The same screen in Light and Dark</span></figcaption>
@@ -913,7 +958,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
         <article class="howto">
           <h3><svg class="ic" aria-hidden="true"><use href="#i-appearance"/></svg>Change the appearance</h3>
           <ol class="steps" role="list">
-            <li><span>Tap the project’s name at the top left of Arrange, then <b>Settings</b>.</span></li>
+            <li><span>Tap the project’s name at the top left of Arrange, then <b>Settings</b>, or tap the gear on the Projects screen.</span></li>
             <li><span>Under <b>Appearance</b>, choose <b>Light</b>, <b>Dark</b> or <b>Match iPhone</b>. Every screen changes at once.</span></li>
           </ol>
         </article>
