@@ -9,6 +9,8 @@ const EUNO_URL = 'https://ebsposs-mac-mini.tail5e44e6.ts.net/';
 const EUNO_LINK = `<a href="${EUNO_URL}" target="_blank" rel="noopener noreferrer">open euno ↗</a>`;
 // Max's music library, behind his passkey; same server as this site, so it is a plain link
 const CATALOG_URL = 'https://maxharris.io/catalog/';
+// 3D renovation models; a public page, so the command is the lock: only `reno -g` opens it
+const RENO_URL = 'https://maxharris.io/reno/';
 // any HTTP answer, even a sign-in wall, means the device can reach it; no answer means no route.
 // Chrome asks the visitor before a public page may reach a private address, so the wait is long
 // enough to click Allow; a device off the tailnet cannot even resolve the name and fails at once.
@@ -168,6 +170,13 @@ export function runCommand(raw, ctx) {
       // a command runs inside the keypress or tap, so the browser lets it open the tab
       window.open(CATALOG_URL, '_blank', 'noopener');
       out(`<a href="${CATALOG_URL}" target="_blank" rel="noopener noreferrer">open catalog ↗</a>`);
+      break;
+    case 'reno':
+      // unlisted, and anything but exactly `reno -g` gets the same answer as a command that does not exist
+      if (args.length !== 1 || args[0] !== '-g') { say(`msh: command not found: ${c0}. try help.`); break; }
+      say('opening reno...', 'c2');
+      window.open(RENO_URL, '_blank', 'noopener');
+      out(`<a href="${RENO_URL}" target="_blank" rel="noopener noreferrer">open reno ↗</a>`);
       break;
     case 'ping': say('64 bytes from the board: icmp_seq=1 ttl=64 time=0.26 ms'); break;
     case 'hi': case 'hello': case 'hey': say("hi. most people never open the terminal. you're one of the good ones."); break;
