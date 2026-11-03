@@ -614,6 +614,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
       <li class="t-pink"><a href="#pads">Pads</a></li>
       <li class="t-yellow"><a href="#drum-rack">Drum Rack</a></li>
       <li class="t-green"><a href="#arrangement">Arrangement</a></li>
+      <li class="t-orange"><a href="#visualizer">Visualizer</a></li>
       <li class="t-purple"><a href="#piano-roll">Piano roll</a></li>
       <li class="t-blue"><a href="#synths">Analog and FM</a></li>
       <li class="t-teal"><a href="#effects">Effects and mixer</a></li>
@@ -765,7 +766,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
     <div class="feat-head">
       <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-arrange"/></svg></span>
       <h2 id="arrangement-title">Arrangement</h2>
-      <p class="feat-lede">MIDI and audio tracks, clips you move, trim, stretch, split, duplicate, loop and consolidate, a loop brace on the ruler, and recording with a count-in. Flatten any clip to audio, undo every edit, and watch the song play in the Visualizer.</p>
+      <p class="feat-lede">MIDI and audio tracks, clips you move, trim, stretch, split, duplicate, loop and consolidate, a loop brace on the ruler, and recording with a count-in. Flatten any clip to audio, undo every edit, and watch the song play in the <a href="#visualizer">Visualizer</a>.</p>
     </div>
       <figure class="feat-shot">
         <div class="device"><div class="frame">
@@ -802,23 +803,49 @@ figcaption { margin-top: 16px; padding-right: 8px; }
           </picture>
         </div></div>
         </figure>
+    </div>
+  </section>
+  <section class="feat wrap t-orange" id="visualizer" aria-labelledby="visualizer-title">
+    <div class="feat-head">
+      <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg></span>
+      <h2 id="visualizer-title">Visualizer</h2>
+      <p class="feat-lede">Watch the song as it plays, drawn from its notes and its sound in one of three looks, then turn it into a video for Reels, TikTok or YouTube. Everything is made on your iPhone.</p>
+    </div>
+      <figure class="feat-shot">
+        <div class="device"><div class="frame">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/14-visualizer-stage-v58.webp">
+            <img src="../assets/screens/light/14-visualizer-stage-v58.webp" width="720" height="1564" loading="lazy" alt="The Visualizer in the Stage look: an arc of bars that fills with what plays, the loops turning as rings around its middle, under the transport and the Customize button.">
+          </picture>
+        </div></div>
+      </figure>
+    <div class="feat-how">
         <article class="howto">
-          <h3><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg>Watch it in the Visualizer</h3>
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg>Watch the song</h3>
           <ol class="steps" role="list">
-            <li><span>Tap the round <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg><span class="vh">Visualizer</span></span> button left of the grid in the Arrangement’s header (in landscape, in the floating buttons at the bottom right). The song is drawn full screen as it plays, with the transport on top. The same button, filled, goes back.</span></li>
-            <li><span>There are two looks. <b>Lens</b>, the default, runs the notes and hits past a line under the chord, with the whole song in a strip and a magnifier on the beat. <b>Stage</b> puts the song’s key on an arc with the chord in big type, and a wheel for each track.</span></li>
-            <li><span>Tap the picture for the clean view, and again to bring the controls back.</span></li>
-            <li><span><b>Customize</b>, beside the button, picks the look, one of eight colour palettes (<b>Tracks</b> uses your tracks’ colours, <b>Custom</b> your own), light or dark paper, full or calm motion, and the song’s title, an artist line and the readouts. It is saved with the song, and Export turns it into a video.</span></li>
+            <li><span>Tap the round <span class="k"><svg class="ic" aria-hidden="true"><use href="#i-visualizer"/></svg><span class="vh">Visualizer</span></span> button left of the grid in the Arrangement’s header (in landscape, in the floating buttons at the bottom right) and press Play. The picture takes the Arrangement’s place and the transport stays on top. The same button, filled, goes back.</span></li>
+            <li><span>Tap the picture for the clean view: only the figure, with the song’s title and artist small beneath it. Tap again to bring the controls back.</span></li>
+            <li><span>There are three looks. <b>Lens</b>, the first, runs the song through a slit of light that magnifies it, with the whole song filling in above. <b>Stage</b> is an arc that fills with what plays, the loops turning as rings around its middle; in a break the arc becomes the drum kit. <b>Scope</b> turns the note the bass plays into a ring of light, its wave drawn around a circle with the note’s own shape inside, moving with the beat and growing in the song’s louder parts.</span></li>
+            <li><span><b>Customize</b>, beside the button, picks the look, one of eight colour palettes (<b>Tracks</b> uses your tracks’ colours, <b>Custom</b> your own), the paper (<b>Match App</b> follows <b>Settings</b> &gt; <b>Appearance</b>; or <b>Light</b> or <b>Dark</b>), full or calm motion, and the song’s <b>Title</b> and an <b>Artist</b> line. It is saved with the song. With Reduce Motion on, the Visualizer stays calm.</span></li>
           </ol>
         </article>
         <figure class="feat-wide">
           <div class="device wide"><div class="frame">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/12-visualizer-landscape.webp">
-            <img src="../assets/screens/light/12-visualizer-landscape.webp" width="1200" height="552" loading="lazy" alt="The Visualizer in landscape, in the Lens look: the chord in large type, the whole song in a strip, the tracks’ notes and hits flowing past the playhead, and a magnifier on the drums, with the Visualizer button and Customize at the bottom right.">
+            <source media="(prefers-color-scheme: dark)" srcset="../assets/screens/dark/12-visualizer-landscape-v58.webp">
+            <img src="../assets/screens/light/12-visualizer-landscape-v58.webp" width="1200" height="552" loading="lazy" alt="The Visualizer in landscape, in the Lens look: the song running through a slit of light that magnifies it, the notes above and the hits below, with the transport at the top and Customize at the bottom right.">
           </picture>
         </div></div>
         </figure>
+        <article class="howto">
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-export"/></svg>Post it as a video</h3>
+          <ol class="steps" role="list">
+            <li><span>Open <b>Export</b>, choose <b>Mixdown</b>, then <b>Video</b>. Pick a shape: <b>9:16</b> for Reels and TikTok, <b>1:1</b> square, or <b>16:9</b> for YouTube. In 9:16 every look keeps clear of the buttons and captions those apps lay over a video.</span></li>
+            <li><span>Under <b>Length</b>, choose <b>Whole song</b> or <b>Highlight</b>: 16 bars from where the most tracks play, or your loop when the loop is on. A Highlight loops with no seam in the sound or the picture, so it can play round and round.</span></li>
+            <li><span>The first frame is a finished picture, the cover an app shows, and the card shows it before you export. With Title on, the title and artist show for the first two seconds and the last two. There is no watermark and no end card.</span></li>
+            <li><span>Keep DAHW open while the frames draw, then <b>Save to Photos</b> or <b>Share</b>. Nothing is uploaded.</span></li>
+          </ol>
+        </article>
     </div>
   </section>
   <section class="feat wrap t-purple" id="piano-roll" aria-labelledby="piano-roll-title">
@@ -932,7 +959,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
             <li><span>Tap the project’s name at the top left of Arrange, then <b>Export</b>.</span></li>
             <li><span><b>Mixdown</b> makes one file of the whole song: choose <b>WAV</b> (24-bit), <b>M4A</b> or <b>Video</b>. <b>Stems</b> makes a WAV for every track and return; switch off the ones you don’t need. <b>Sample</b> exports one of the project’s samples.</span></li>
             <li><span>DAHW renders on your iPhone, from the first clip to the end of the last reverb and delay tails. For audio, the share sheet opens: save to Files, AirDrop, or send it anywhere.</span></li>
-            <li><span><b>Video</b> draws the Visualizer, in the song’s look and colours, over the same mix, at 1080p and 30 frames a second. Pick a shape (<b>9:16</b>, <b>1:1</b> or <b>16:9</b>) and keep DAHW open while the frames draw. Then <b>Save to Photos</b> or <b>Share</b>.</span></li>
+            <li><span><b>Video</b> draws the <a href="#visualizer">Visualizer</a>, in the song’s look and colours, over the same mix, at 1080p and 30 frames a second. Pick a shape (<b>9:16</b>, <b>1:1</b> or <b>16:9</b>) and a length (<b>Whole song</b>, or a looping <b>Highlight</b>), and keep DAHW open while the frames draw. Then <b>Save to Photos</b> or <b>Share</b>.</span></li>
           </ol>
         </article>
     </div>

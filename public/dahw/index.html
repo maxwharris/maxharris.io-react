@@ -366,7 +366,7 @@ b, strong { font-weight: 600; }
 .shots li { width: clamp(220px, 62vw, 280px); scroll-snap-align: start; }
 @media (min-width: 1000px) {
   .shots { overflow: visible; }
-  .shots ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; width: auto; }
+  .shots ul { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px; width: auto; }
   .shots li { width: auto; }
 }
 figcaption { margin-top: 16px; padding-right: 8px; }
@@ -628,7 +628,7 @@ figcaption { margin-top: 16px; padding-right: 8px; }
   <section class="section tour" id="tour" aria-labelledby="tour-title">
     <div class="wrap section-head">
       <h2 id="tour-title">Tour</h2>
-      <p class="lede">Four of DAHW’s screens, with an example song loaded.</p>
+      <p class="lede">Five of DAHW’s screens, with an example song loaded.</p>
     </div>
     <div class="shots" role="region" aria-label="Tour, scroll sideways" tabindex="0">
       <ul role="list">
@@ -659,6 +659,13 @@ figcaption { margin-top: 16px; padding-right: 8px; }
             <img class="for-dark" src="assets/screens/dark/04-drum-rack-v57.webp" width="720" height="1564" loading="lazy" alt="The Drum Rack: sixteen pads of kicks, snares, claps, hats, crashes and percussion, one snare lit as it plays, with its Tune, Tone, Level and Decay below.">
           </div></div>
           <figcaption class="t-yellow"><span class="eyebrow">Drum Rack</span> <span class="cap">Every pad is a full Sampler</span></figcaption>
+        </figure></li>
+        <li><figure>
+          <div class="device"><div class="frame">
+            <img class="for-light" src="assets/screens/light/13-visualizer-v58.webp" width="720" height="1564" loading="lazy" alt="The Visualizer in the Scope look: the bass note drawn as a ring of light, its wave repeated around a circle with the note’s own shape inside, under the transport and the Customize button.">
+            <img class="for-dark" src="assets/screens/dark/13-visualizer-v58.webp" width="720" height="1564" loading="lazy" alt="The Visualizer in the Scope look: the bass note drawn as a ring of light, its wave repeated around a circle with the note’s own shape inside, under the transport and the Customize button.">
+          </div></div>
+          <figcaption class="t-orange"><span class="eyebrow">Visualizer</span> <span class="cap">Watch the song play, then post it as a video</span></figcaption>
         </figure></li>
       </ul>
     </div>
