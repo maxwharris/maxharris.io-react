@@ -394,8 +394,15 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:28px}
 
 .k-terminal .body{display:flex;flex-direction:column;overflow:hidden}
 .k-terminal .term{flex:1;overflow:auto;min-height:0}
-/* the radio (src/radio) fills its pane: its header, then the faceplate on the glass, scaled to fit */
+/* the radio (src/radio) fills its pane, scaled to fit. On the desktop it floats: no glass, border or shadow around it,
+   just the faceplate with the window's bar under it (Max, 11/13/26: "i want the player to be floating, and not exist
+   within another box"); its window hugs the faceplate (store.js KINDS.radio). The phone's sheet (aria-modal) stays. */
 .k-radio .body{display:flex;flex-direction:column;overflow:hidden}
+.win:not([aria-modal]) .pane.k-radio{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;border:0;box-shadow:none;border-radius:0;overflow:visible}
+.win:not([aria-modal]) .pane.k-radio:focus-visible{box-shadow:none;outline:none}/* no box even then: its keys and knob ring themselves (radio.css) */
+.win:not([aria-modal]).dragging .pane.k-radio,.win:not([aria-modal]).tossing .pane.k-radio{box-shadow:none}
+.win:not([aria-modal]) .k-radio .body{overflow:visible}
+.win:not([aria-modal]) .k-radio .sheen{display:none}
 .k-radio .body>.mr,.radio-wait{flex:1;min-height:0}
 .radio-wait:has(p){background:#0b0c0e}/* bare glass while the faceplate loads; a message in it keeps the dark it was written for */
 .k-radio .sheen{z-index:0}/* the hover glow lights the glass around the faceplate, not its display */

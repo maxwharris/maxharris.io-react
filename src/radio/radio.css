@@ -13,10 +13,9 @@
   --mr-mono: var(--mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
   position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0;
 }
-.mr-wh { flex: none; }
 /* the box the radio fits in: it scales to the smaller of its width and height (5.4 px a millimetre at most) */
 .mr-host { position: relative; flex: 1; min-width: 0; min-height: 0; display: grid; place-items: center; container: mr-host / size; overflow: hidden; }
-.mr-window .mr-host { container-name: mr-win; padding: 2px 20px 22px; overflow: visible; }
+.mr-window .mr-host { container-name: mr-win; padding: 0; overflow: visible; }
 .mr-phone .mr-host { padding: 8px 16px max(56px, env(safe-area-inset-bottom)); }
 .mr-page .mr-host { padding: 28px max(16px, 3vw) 16px; }
 .mr-sr { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -45,6 +44,8 @@
   background-blend-mode: normal, overlay, normal;
   box-shadow: 0 0 0 .38em #1a1c1f, 0 1.2em 2.4em -.6em rgba(0,0,0,.65), inset 0 .25em .2em rgba(255,255,255,.8), inset 0 -.3em .35em rgba(0,0,0,.25);
 }
+/* on the desktop it floats with no window around it (Max, 11/13/26), so it carries a deeper shadow of its own */
+.mr-window .mr-face { box-shadow: 0 0 0 .38em #1a1c1f, 0 1.2em 2.4em -.6em rgba(0,0,0,.65), 0 5em 10em -2.5em rgba(0,0,0,.45), inset 0 .25em .2em rgba(255,255,255,.8), inset 0 -.3em .35em rgba(0,0,0,.25); }
 .mr-band {
   position: absolute; left: 39em; top: 5em; width: 107em; height: 40em; border-radius: 2.4em;
   background: linear-gradient(180deg, #2b2e33 0%, #111215 34%, #070809 60%, #121417 100%);

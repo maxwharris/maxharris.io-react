@@ -38,9 +38,9 @@ export const KINDS = {
   trash: { w: 480, h: 560, title: () => 'trash' },
   sys: { w: 430, h: 560, title: () => 'about maxOS' },
   secrets: { w: 440, h: 400, title: () => 'secrets.txt' },
-  // maxradio (src/radio): opened by typing radio in the terminal, never from the dock or the home grid; a thin window,
-  // the single-DIN faceplate under its header
-  radio: { w: 560, h: 256, title: () => 'radio' },
+  // maxradio (src/radio): opened by typing radio in the terminal, never from the dock or the home grid. The window is the
+  // faceplate alone, floating, so it keeps the faceplate's shape (178 x 50 mm), at most its largest size (5.4 px a mm)
+  radio: { w: 560, h: 158, aspect: 178 / 50, max: 961, title: () => 'radio' },
 };
 export const titleOf = (win) => KINDS[win.kind].title(win.opts);
 
@@ -83,7 +83,7 @@ const ROW_GAP = 60; // between stacked windows, leaving room for the top one's g
 const ORN = 48; // room on the left for a window's tab ornament
 const MAX_SHOWN = 6;
 const MIN_W = { about: 360, files: 460, project: 520, mail: 380, terminal: 420, scenes: 380, trash: 380, sys: 360, secrets: 360, radio: 520 };
-const MIN_H = { about: 300, files: 320, project: 340, mail: 300, terminal: 220, scenes: 280, trash: 260, sys: 280, secrets: 200, radio: 232 };
+const MIN_H = { about: 300, files: 320, project: 340, mail: 300, terminal: 220, scenes: 280, trash: 260, sys: 280, secrets: 200, radio: 146 };
 const STAY_TALL = { project: 3, files: 2, about: 1 }; // reluctance to be stacked
 
 export function stage() {
@@ -116,6 +116,16 @@ function plan(keys, wins, availW, availH) {
     cols[best.i] = merged;
   }
   return cols;
+}
+
+// A window of a fixed shape (KINDS aspect, the radio's faceplate): the largest of that shape within w x h, never wider
+// than its max. Others take the slot as it is (null).
+function fit(k, w, h) {
+  const K = KINDS[k];
+  if (!K.aspect) return null;
+  let fw = Math.min(w, K.max || w), fh = fw / K.aspect;
+  if (fh > h) { fh = h; fw = fh * K.aspect; }
+  return { w: fw, h: fh };
 }
 
 export function arrange(s) {
@@ -157,12 +167,15 @@ export function arrange(s) {
     x += ornOf(col);
     const cw = widths[i];
     if (col.length === 1) {
-      const k = col[0], h = solo ? availH : Math.min(KINDS[k].h, availH);
-      wins[k] = { ...wins[k], x, y: area.y0 + Math.max(0, (availH - h) / 2 - 10), w: cw, h };
+      const k = col[0], room = solo ? availH : Math.min(KINDS[k].h, availH), f = fit(k, cw, room);
+      const w = f ? f.w : cw, h = f ? f.h : room;
+      wins[k] = { ...wins[k], x: x + (cw - w) / 2, y: area.y0 + Math.max(0, (availH - h) / 2 - 10), w, h };
     } else {
       // two stacked: each keeps its own width within the column, so the row is not a rigid grid
       col.forEach((k, r) => {
-        const w = Math.max(Math.min(MIN_W[k] || 360, cw), Math.min(KINDS[k].w, cw)), h = Math.min(KINDS[k].h, rowH);
+        let w = Math.max(Math.min(MIN_W[k] || 360, cw), Math.min(KINDS[k].w, cw)), h = Math.min(KINDS[k].h, rowH);
+        const f = fit(k, w, h);
+        if (f) { w = f.w; h = f.h; }
         wins[k] = { ...wins[k], x: x + (cw - w) / 2, y: area.y0 + r * (rowH + ROW_GAP) + (r ? 0 : rowH - h), w, h };
       });
     }

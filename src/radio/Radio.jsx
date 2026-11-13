@@ -8,8 +8,8 @@
 //
 // The engine (engine.js) and its hook (useRadio.js) decide everything: this lays out what they say and passes the taps
 // back, and display.js draws the canvases. Inside, 1em is 1 mm of a real head unit (178 by 50 mm, one DIN; 124 by 80,
-// folded, where it is narrow), scaled to fit where it lives. context: 'window' (the desktop's window, under a header like
-// the other windows'), 'phone' (the phone's sheet), 'page' (the pop-out tab at /radio/, centred and scaled to fit).
+// folded, where it is narrow), scaled to fit where it lives. context: 'window' (the desktop's window: the faceplate alone,
+// floating, with the window's bar under it; Max, 11/13/26), 'phone' (the phone's sheet), 'page' (the pop-out tab at /radio/, centred and scaled to fit).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { radio, useDial, useRadio, useStationClock, useVolumeKnob } from './useRadio.js';
@@ -24,9 +24,8 @@ const PINS = Array.from({ length: 10 }, (_, i) => i); // the chassis connector, 
 const SAY_MS = 1500;
 const ATTACH_MS = 650;
 const SR = { off: 'radio off', tuning: 'tuning', blocked: 'press power to listen', offair: 'no signal', released: 'playing in another tab' };
-// the desktop's radio disc (os/icons.jsx TINT.radio, and its radio glyph), drawn here so the pop-out page carries none
-// of the desktop's code
-const DISC = { '--t1': '#8f9af6', '--t2': '#161b45' };
+// what DISP says on its way to a view: the song's view says loading until the name is up (Max, 11/13/26)
+const DISP_SAY = { text: 'loading' };
 
 const reducedNow = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 function useReducedMotion() {
@@ -147,7 +146,8 @@ export default function Radio({ context = 'window' }) {
   const onDisp = () => {
     if (!pw) return;
     radio.cycleDisplay();
-    setSaid({ text: radio.getSnapshot().disp, after: radio.getSnapshot().flash });
+    const d = radio.getSnapshot().disp;
+    setSaid({ text: DISP_SAY[d] || d, after: radio.getSnapshot().flash });
   };
   const onIllum = () => {
     if (!pw) return;
@@ -162,16 +162,6 @@ export default function Radio({ context = 'window' }) {
 
   return (
     <div className={`mr mr-${context}`}>
-      {context === 'window' ? (
-        <header className="wh mr-wh">
-          <span className="disc" style={DISC}>
-            <svg viewBox="0 0 24 24" className="ic" aria-hidden="true">
-              <rect x="3" y="8.5" width="18" height="11.5" rx="2.5" /><path d="M6.5 8.5 17 4" /><circle cx="15.6" cy="14.25" r="2.7" /><path d="M6.6 12h4.6M6.6 14.25h4.6M6.6 16.5h4.6" />
-            </svg>
-          </span>
-          <div><h2>radio</h2><p className="sub">999.9 fm · maxradio · live</p></div>
-        </header>
-      ) : null}
       <div className="mr-host">
         <div
           ref={rad}
