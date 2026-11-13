@@ -180,7 +180,7 @@ let loading = null; // an element being started
 let gen = 0; // bumps whenever playback is redirected; async steps holding an older number stop
 let session = null; // {alive}: from power on to power off; polling and retries belong to one
 let claimAt = 0; // when this radio was last switched on (the newest one keeps the station)
-let attempts = 0; // failed starts of the song on air
+let attempts = 0; // failed starts of the song on air since it last sounded
 let notFound = 0; // songs the catalog said it did not have, since the last one that played
 let offairTries = 0;
 let lastProgress = 0;
@@ -499,6 +499,7 @@ function handOver(g, el, slot, how) {
     fadeTo(el, 1, FADE_IN_MS);
   } else gainOf(el, 1);
   hissStop();
+  attempts = 0;
   offairTries = 0;
   notFound = 0;
   armBoundary(g);
