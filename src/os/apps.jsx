@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Component, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { owner, work, personal, concepts, findWork } from '../data/site';
 
 const building = personal.filter((p) => p.status === 'building');
@@ -8,7 +8,7 @@ import { useOS, MOD, EASE, TRASH0, host } from './store';
 import { Icon, Disc } from './icons';
 import { SCENES } from './board';
 import { PROMPT, runCommand, complete, historyStep, subscribe } from './terminal';
-import { useRadioSession } from '../radio/useRadio.js';
+import { radio, useRadio, useRadioSession } from '../radio/useRadio.js';
 
 const Out = ({ href, children, className = 'lnk g' }) => (
   <a className={className} href={href} target="_blank" rel="noopener noreferrer">{children}<Icon name="out" /></a>
@@ -421,13 +421,33 @@ export function Terminal({ win }) {
 // MAXradio (src/radio). The engine is part of the desktop (the terminal tunes in inside the keypress); the faceplate,
 // the record and its font load the first time the radio opens. Open: on, live. Closing powers it off (at once, not
 // after the exit animation); minimized, or parked in the dock, it plays on.
-const Radio = lazy(() => import('../radio/Radio.jsx'));
+// A faceplate that will not load (a dropped connection, or a deploy that replaced its file while the page was open) is
+// asked for once more; after that the window says so in the desktop's own styles, and the radio stays off.
+const loadRadio = () => import('../radio/Radio.jsx');
+const Radio = lazy(() => loadRadio().catch(() => loadRadio()));
+function RadioFailed() {
+  const { status } = useRadio();
+  // typing radio again would tune in with nothing to show for it
+  useEffect(() => { if (status !== 'off') radio.powerOff(); }, [status]);
+  return (
+    <div className="radio-wait">
+      <p role="alert" style={{ margin: 0, padding: 24, font: '500 13px/1.6 var(--mono)', color: '#c9ced4' }}>maxradio could not load. reload the page to try again.</p>
+    </div>
+  );
+}
+class RadioBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? <RadioFailed /> : this.props.children; }
+}
 export function RadioApp({ win }) {
   const { phone } = useOS();
   useRadioSession({ closing: !!win.closing });
   return (
-    <Suspense fallback={<div className="radio-wait" />}>
-      <Radio context={phone ? 'phone' : 'window'} />
-    </Suspense>
+    <RadioBoundary>
+      <Suspense fallback={<div className="radio-wait" />}>
+        <Radio context={phone ? 'phone' : 'window'} />
+      </Suspense>
+    </RadioBoundary>
   );
 }
