@@ -160,14 +160,17 @@ export default function OS() {
     return () => document.documentElement.classList.remove('os-on');
   }, []);
 
-  // switching between phone and desktop starts the layout over
+  // switching between phone and desktop starts the layout over. The radio plays on through it: its window or sheet comes
+  // back in the same render, so it never closes (closing it is what switches it off)
   const lastPhone = useRef(phone);
   useEffect(() => {
     if (lastPhone.current === phone) return;
     lastPhone.current = phone;
+    const radio = stateRef.current.wins.radio;
     dispatch({ type: 'reset' });
     dispatch({ type: 'layout', phone });
     if (!phone) actions.rest();
+    if (radio && !radio.closing) actions.open('radio');
   }, [phone, actions]);
 
   // keep the address bar and tab title on whatever window is in front
