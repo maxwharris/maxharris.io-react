@@ -1,0 +1,841 @@
+// MAXradio's engine: the one radio on a page, with no React in it (useRadio.js is the hook over it, Radio.jsx only draws
+// what it says). It follows the station clock (schedule.js) on the server's time and the radio crate as the catalog
+// lists it live (GET /catalog/api/radio): there is no broadcast and nothing stored, so every listener's page works out
+// the same song at the same offset, and tuning in joins mid-song. The audio is the catalog's own 160 kbps previews,
+// presigned per song (GET /catalog/api/radio/play/:id): nothing is copied.
+//
+// No play, pause, skip or seek, anywhere (Max, 11/13/26): power on is "tune in live", power off is silence.
+//
+// States: off; tuning (fetching the crate and the song, a burst of static); on; blocked (the browser refused to start
+// sound without a tap: the display says PUSH PWR); offair (the crate is empty or off, or the catalog cannot be reached:
+// NO SIGNAL, trying again with backoff); released (another tab or window took the radio).
+//
+// Playback is two <audio> elements: the song on air, and the next one loading about 20 s before its boundary. The
+// switch is at the boundary to the ms the timers allow, and every switch works out what is on air afresh, so a playlist
+// edit is followed at the next boundary. The music never goes through Web Audio (iOS stops it in the background, and S3
+// sends no CORS headers, so it could not be read anyway); Web Audio only makes the static, and the level meter and the
+// record read the song's waveform (GET /catalog/api/radio/peaks/:id) at the live position instead of the sound.
+
+import { onAir } from './schedule.js';
+import { calibrate, normalizeSongs, parseExpires, titleLine } from './format.js';
+import { stretch, levelAt } from './record/peaks.js';
+
+export const API = '/catalog/api/radio';
+export const PAGE_URL = '/radio/';
+/** What DISP steps the display's main line through, and the colours ILLUM steps the backlight through. */
+export const DISPLAY_MODES = ['song', 'next', 'info', 'clock'];
+export const ILLUMS = ['amber', 'green', 'blue', 'red', 'white'];
+export const STATION = 'MAXradio';
+export const FREQ = '999.9';
+
+const PRELOAD_MS = 20000; // the next song starts loading this long before its boundary
+const POLL_MS = 60000; // the crate is read again this often while on (and whenever the tab comes back into view)
+const DRIFT_MS = 2000; // further than this from the schedule: jump back to it
+const JOIN_MS = 400; // tuning in: once the sound starts, fine-tune once if it is further off than this
+const FADE_MS = 200; // the old song fades this long into its boundary, where element volume works
+const FADE_IN_MS = 600; // tuning in fades the song up under the static
+const STALL_MS = 8000; // no progress for this long while it should be playing: a fresh link, and rejoin
+const LINK_SPARE_MS = 2 * 60 * 1000; // a link with less than this left is renewed before it is used
+const HISS_MS = 4000; // the static under a slow tune gives up after this
+const TIMEOUT_MS = 12000; // any request, and waiting for a song to start
+const RETRY_MS = [0, 1000, 3000]; // a failing song: fetch its link again and rejoin, this long apart, then NO SIGNAL
+const BACKOFF_MS = [2000, 4000, 8000, 15000, 30000, 60000]; // NO SIGNAL: try again this long apart
+const KEEP = { volume: 'maxradio.volume', disp: 'maxradio.disp', illum: 'maxradio.illum' };
+
+const BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
+const SELF = Math.random().toString(36).slice(2) + Date.now().toString(36); // this page, to the other radios
+
+// ---------------------------------------------------------------- the snapshot the hook reads
+// Choices last for the visit, like the desktop's (sessionStorage; private mode just forgets them).
+function kept(key) {
+  try { return BROWSER ? window.sessionStorage.getItem(key) : null; } catch { return null; }
+}
+function keep(key, v) {
+  try { if (BROWSER) window.sessionStorage.setItem(key, String(v)); } catch { /* private mode */ }
+}
+const keptVolume = () => {
+  const v = Number(kept(KEEP.volume));
+  return kept(KEEP.volume) != null && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.8;
+};
+const keptChoice = (key, list) => (list.includes(kept(key)) ? kept(key) : list[0]);
+// iOS keeps the volume in the listener's hands: an element's volume reads back 1 whatever it is set to.
+function elementVolumeWorks() {
+  if (!BROWSER) return true;
+  try {
+    const ua = navigator.userAgent || '';
+    if (/iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return false;
+    const a = document.createElement('audio');
+    a.volume = 0.42;
+    return Math.abs(a.volume - 0.42) < 0.01;
+  } catch { return true; }
+}
+
+let snap = {
+  status: 'off',
+  song: null, // the song on air on this radio: {id, title, credit, durationMs, bpm, key, look}
+  next: null, // what plays after it
+  startedAt: 0, // station-clock ms
+  endsAt: 0,
+  volume: keptVolume(), // 0..1, the knob
+  volumeWorks: elementVolumeWorks(),
+  disp: keptChoice(KEEP.disp, DISPLAY_MODES),
+  illum: keptChoice(KEEP.illum, ILLUMS),
+  flash: null, // {text, n}: a moment on the display (NO STATION, VOL 24)
+  popping: false, // REL pressed: playing on until the new tab says it plays
+  reason: '', // offair: 'empty' or 'unreachable'
+  waves: 0, // counts waveforms as they arrive, so the record redraws
+};
+const listeners = new Set();
+function set(patch) {
+  snap = { ...snap, ...patch };
+  for (const fn of listeners) fn();
+}
+export const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
+export const getSnapshot = () => snap;
+
+// ---------------------------------------------------------------- the station clock, and the crate
+let cal = null; // {offset, rtt, at}: the server's clock against this device's (format.js, calibrate)
+/** The station's time, epoch ms: the server's clock as measured against this device's. */
+export const now = () => Date.now() + (cal ? cal.offset : 0);
+
+let songs = []; // the radio crate, in crate order, as every listener keeps it (format.js, normalizeSongs)
+let version = '';
+
+async function getJSON(url) {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const t = setTimeout(() => ctl && ctl.abort(), TIMEOUT_MS);
+  try {
+    const r = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' }, signal: ctl ? ctl.signal : undefined });
+    if (!r.ok) { const e = new Error(`HTTP ${r.status}`); e.status = r.status; throw e; }
+    return await r.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/** Read the crate and the server's clock. Returns {changed} or null when the catalog could not be reached. */
+async function refresh() {
+  const t0 = Date.now();
+  let data;
+  try { data = await getJSON(API); } catch { return null; }
+  cal = calibrate(cal, Number(data && data.now), t0, Date.now());
+  const list = data && data.on ? normalizeSongs(data.songs) : [];
+  const v = data && data.on ? String(data.version ?? '') : '';
+  const changed = v !== version || list.length !== songs.length || list.some((s, i) => s.id !== songs[i].id || s.durationMs !== songs[i].durationMs);
+  songs = list;
+  version = v;
+  return { changed };
+}
+
+// A song's slot in the schedule: the same song at the same start is the same slot.
+const slotOf = (x) => ({ song: x.song, startedAt: x.startedAt, endsAt: x.endsAt });
+const sameSlot = (a, b) => !!a && !!b && a.song.id === b.song.id && a.startedAt === b.startedAt;
+const liveSlot = () => { const x = onAir(songs, now()); return x ? slotOf(x) : null; };
+/** What plays after a slot, as the crate stands now (after an edit it may join partway through). */
+const nextOf = (slot) => { const x = onAir(songs, slot.endsAt); return x ? x.song : null; };
+
+// Presigned links to the previews, kept until a couple of minutes before they expire.
+const links = new Map(); // song id -> {url, until}
+async function linkFor(id, fresh = false) {
+  const c = links.get(id);
+  if (!fresh && c && c.until - Date.now() > LINK_SPARE_MS) return c.url;
+  const r = await getJSON(`${API}/play/${encodeURIComponent(id)}`);
+  if (!r || typeof r.url !== 'string' || !r.url) throw new Error('The catalog gave no link for this song.');
+  links.set(id, { url: r.url, until: parseExpires(r.expires) });
+  return r.url;
+}
+// Start a link partway: a media fragment, which the browser keeps to itself, so the signature is untouched.
+const at = (url, sec) => (sec > 0.5 ? `${url}#t=${sec.toFixed(2)}` : url);
+
+// Whole waveforms, 20 points a second, fetched once per song and kept for the visit (the record and the meter).
+const waves = new Map(); // song id -> {s, p}
+export function loadPeaks(id) {
+  if (id == null) return Promise.resolve(null);
+  let w = waves.get(id);
+  if (!w) {
+    w = { s: null, p: null };
+    w.p = getJSON(`${API}/peaks/${encodeURIComponent(id)}`).then((x) => {
+      const arr = Array.isArray(x && x.peaks) ? x.peaks : [];
+      w.s = arr.length ? stretch(arr) : null;
+      set({ waves: snap.waves + 1 });
+      return w.s;
+    }, () => {
+      setTimeout(() => { if (waves.get(id) === w) waves.delete(id); }, 30000); // try again later
+      return null;
+    });
+    waves.set(id, w);
+  }
+  return w.p;
+}
+/** A song's loudness from start to end, 0..1 (stretched as the catalog's record reads it), once it has arrived. */
+export const peaksOf = (id) => (waves.get(id) || {}).s || null;
+
+// ---------------------------------------------------------------- the two elements
+let A = null, B = null;
+let cur = null; // {slot, el}: on air on this radio; el is null while its song loads
+let pre = null; // {slot, el}: the next song, loading ahead of its boundary
+let leaving = null; // the last song's element: muted at its boundary, stopped once the next one sounds
+let loading = null; // an element being started
+let gen = 0; // bumps whenever playback is redirected; async steps holding an older number stop
+let session = null; // {alive}: from power on to power off; polling and retries belong to one
+let claimAt = 0; // when this radio was last switched on (the newest one keeps the station)
+let attempts = 0; // failed starts of the song on air
+let notFound = 0; // songs the catalog said it did not have, since the last one that played
+let offairTries = 0;
+let lastProgress = 0;
+const T = {}; // named timers
+const PLAYBACK_TIMERS = ['preload', 'fade', 'switch', 'retry', 'reconnect', 'hiss', 'leave', 'poll', 'tick', 'popping'];
+
+function later(name, fn, ms) {
+  clearTimeout(T[name]);
+  T[name] = setTimeout(() => { T[name] = 0; fn(); }, Math.max(0, ms));
+}
+function every(name, fn, ms) {
+  clearInterval(T[name]);
+  T[name] = setInterval(fn, ms);
+}
+function cancel(...names) {
+  for (const n of names) { clearTimeout(T[n]); clearInterval(T[n]); T[n] = 0; }
+}
+
+// A silent 8-bit WAV (the catalog's lib/silence.js): played inside the tap that tunes in, it unlocks each element for
+// the programmatic play() calls that follow (iOS, and Safari, only let an element start sound inside a tap).
+let unlockUrl = '';
+function unlockSource() {
+  if (!unlockUrl) {
+    const n = 480, buf = new Uint8Array(44 + n), dv = new DataView(buf.buffer);
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) buf[o + i] = s.charCodeAt(i); };
+    str(0, 'RIFF'); dv.setUint32(4, 36 + n, true); str(8, 'WAVE');
+    str(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, 8000, true); dv.setUint32(28, 8000, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true);
+    str(36, 'data'); dv.setUint32(40, n, true);
+    buf.fill(128, 44);
+    unlockUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  return unlockUrl;
+}
+const isUnlock = (el) => !!unlockUrl && el.src === unlockUrl;
+
+// The knob is a log-ish taper: half way round is about -12 dB, as a real volume pot.
+const taper = (v) => v * v;
+const fades = new Map(); // element -> {g, timer}: a fade's share of the volume, 0..1
+function applyVolume(el) {
+  if (!el || !snap.volumeWorks) return;
+  const f = fades.get(el);
+  try { el.volume = Math.min(1, Math.max(0, taper(snap.volume) * (f ? f.g : 1))); } catch { /* not settable */ }
+}
+function fadeTo(el, to, ms) {
+  if (!el) return;
+  const f = fades.get(el) || { g: 1, timer: 0 };
+  clearInterval(f.timer);
+  fades.set(el, f);
+  if (!snap.volumeWorks || ms <= 0) { f.g = to; applyVolume(el); return; }
+  const from = f.g, t0 = performance.now();
+  f.timer = setInterval(() => {
+    const k = Math.min(1, (performance.now() - t0) / ms);
+    f.g = from + (to - from) * k;
+    applyVolume(el);
+    if (k >= 1) clearInterval(f.timer);
+  }, 25);
+}
+const gainOf = (el, g) => { const f = fades.get(el) || { g: 1, timer: 0 }; clearInterval(f.timer); f.g = g; fades.set(el, f); applyVolume(el); };
+
+function els() {
+  if (!A && BROWSER && typeof Audio === 'function') {
+    A = makeEl();
+    B = makeEl();
+  }
+  return [A, B];
+}
+function makeEl() {
+  const el = new Audio();
+  el.preload = 'auto';
+  for (const [ev, fn] of Object.entries(ON)) el.addEventListener(ev, () => fn(el));
+  return el;
+}
+/** The element free for a new song: not on air, not leaving, not starting. */
+function spare() {
+  const busy = new Set([cur && cur.el, leaving, loading]);
+  return els().find((e) => e && !busy.has(e)) || null;
+}
+/** Silence an element and let go of its file (an element this radio pauses is not "paused by the system"). */
+function stopEl(el) {
+  if (!el || isUnlock(el)) return; // the unlock clip: a few ms of silence, left to finish so the unlock holds
+  const f = fades.get(el);
+  if (f) clearInterval(f.timer);
+  fades.delete(el);
+  if (!el.paused) { el.dataset.ours = '1'; try { el.pause(); } catch { /* gone */ } }
+  el.muted = false;
+  if (el.getAttribute('src')) { el.removeAttribute('src'); try { el.load(); } catch { /* nothing to drop */ } }
+}
+function stopAll() {
+  for (const el of [A, B]) stopEl(el);
+  cur = null; pre = null; leaving = null; loading = null;
+}
+function dropLeaving() {
+  if (leaving && (!cur || leaving !== cur.el)) stopEl(leaving);
+  leaving = null;
+}
+
+// What the elements say. Only the element on air matters; the unlock clip says nothing.
+const ON = {
+  playing(el) {
+    if (cur && el === cur.el) { lastProgress = performance.now(); attempts = 0; }
+  },
+  timeupdate(el) {
+    if (!cur || el !== cur.el) return;
+    if (el.currentTime !== Number(el.dataset.t)) { el.dataset.t = String(el.currentTime); lastProgress = performance.now(); }
+    if (now() >= cur.slot.endsAt + 50) boundary(gen); // a timer that came late
+  },
+  ended(el) {
+    // a preview a little shorter than the schedule's length is quiet until the boundary; one that ends at it switches
+    if (cur && el === cur.el && now() >= cur.slot.endsAt - 40) boundary(gen);
+  },
+  pause(el) {
+    if (el.dataset.ours) { delete el.dataset.ours; return; }
+    // paused by something other than this radio (the system took the audio, a headset button): the radio goes off
+    if (cur && el === cur.el && !el.ended && !isUnlock(el) && snap.status === 'on') powerOff();
+  },
+  error(el) {
+    if (!el.getAttribute('src') || isUnlock(el)) return;
+    if (pre && el === pre.el) { stopEl(el); pre = null; return; } // the boundary loads it afresh
+    if (cur && el === cur.el) recover();
+  },
+};
+
+// ---------------------------------------------------------------- the static
+let ctx = null, noise = null, hiss = null;
+function hissStart(ms = HISS_MS) {
+  if (!ctx || ctx.state === 'closed') return;
+  try {
+    if (ctx.state !== 'running') ctx.resume().catch(() => {}); // without a tap this may stay silent: then no static
+    hissStop(true);
+    const t = ctx.currentTime;
+    if (!noise) {
+      noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = noise.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    src.loop = true;
+    // the dial sweeping onto the station: the hiss's colour rises, then settles
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.Q.value = 0.8;
+    bp.frequency.setValueAtTime(500, t);
+    bp.frequency.exponentialRampToValueAtTime(4200, t + 0.45);
+    bp.frequency.exponentialRampToValueAtTime(1600, t + 0.9);
+    const g = ctx.createGain(), peak = 0.0001 + 0.05 * taper(snap.volume);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.06);
+    g.gain.setValueAtTime(peak, t + 0.5);
+    g.gain.linearRampToValueAtTime(peak * 0.45, t + 1);
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(ctx.destination);
+    src.start(t);
+    hiss = { src, g };
+    later('hiss', () => hissStop(), ms);
+  } catch { hiss = null; }
+}
+function hissStop(quick = false) {
+  const h = hiss;
+  hiss = null;
+  cancel('hiss');
+  if (!h || !ctx) return;
+  try {
+    const t = ctx.currentTime, end = quick ? 0.02 : 0.35;
+    h.g.gain.cancelScheduledValues(t);
+    h.g.gain.setValueAtTime(h.g.gain.value, t);
+    h.g.gain.linearRampToValueAtTime(0, t + end);
+    h.src.stop(t + end + 0.02);
+    h.src.onended = () => {
+      try { h.src.disconnect(); h.g.disconnect(); } catch { /* gone */ }
+      // a context left running costs an audio thread: rest it between bursts
+      if (!hiss && ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+    };
+  } catch { /* the context went away */ }
+}
+
+// ---------------------------------------------------------------- the lock screen (Media Session)
+let handlersSet = false;
+function mediaHandlers() {
+  if (handlersSet || !BROWSER || !('mediaSession' in navigator)) return;
+  handlersSet = true;
+  const ms = navigator.mediaSession;
+  const h = (name, fn) => { try { ms.setActionHandler(name, fn); } catch { /* not supported here */ } };
+  h('play', () => { prime(); tuneIn(); }); // power on: live, wherever the station is now
+  h('pause', () => powerOff()); // power off
+  // a radio has no next, previous or seek; and no position state, so nothing offers to scrub
+  for (const a of ['stop', 'seekbackward', 'seekforward', 'seekto', 'previoustrack', 'nexttrack', 'skipad']) h(a, null);
+}
+function mediaShow(song) {
+  if (!BROWSER || !('mediaSession' in navigator)) return;
+  try {
+    if (typeof window.MediaMetadata === 'function') {
+      navigator.mediaSession.metadata = new window.MediaMetadata({ title: song ? titleLine(song) : STATION, artist: `${STATION} ${FREQ} FM`, album: 'maxharris.io' });
+    }
+    navigator.mediaSession.playbackState = song ? 'playing' : 'paused';
+  } catch { /* older browsers */ }
+}
+function mediaClear() {
+  if (!BROWSER || !('mediaSession' in navigator)) return;
+  try { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; } catch { /* older browsers */ }
+}
+
+// ---------------------------------------------------------------- one radio at a time
+// Every radio on this site (other tabs; the desktop's window and the pop-out page) shares a channel. Switching one on
+// says so ("claim"); once it actually plays it says so again ("playing"), and every other radio that is on lets go
+// (released). So REL leaves this radio playing until the new tab sounds, and a tab the browser kept quiet (PUSH PWR)
+// takes nothing from the one still playing. The newest switch-on wins.
+let chan = null;
+function listen() {
+  if (chan || !BROWSER || typeof BroadcastChannel !== 'function') return;
+  try {
+    chan = new BroadcastChannel('maxradio');
+    chan.onmessage = (e) => heard(e.data);
+  } catch { chan = null; }
+}
+function post(type) {
+  try { if (chan) chan.postMessage({ type, id: SELF, at: claimAt }); } catch { /* the channel closed */ }
+}
+const newerThanMine = (m) => !claimAt || m.at > claimAt || (m.at === claimAt && m.id > SELF);
+function heard(m) {
+  if (!m || m.id === SELF || typeof m.at !== 'number') return;
+  const st = snap.status;
+  if (m.type === 'playing') {
+    if (st === 'off' || st === 'released') return;
+    if (newerThanMine(m)) release();
+    else if (st === 'on') post('playing'); // this one was switched on after it: it lets go
+  } else if (m.type === 'claim') {
+    // one that is not sounding yet and was switched on earlier lets go now; one that is sounding plays on until the
+    // new one actually plays
+    if ((st === 'tuning' || st === 'blocked' || st === 'offair') && newerThanMine(m)) release();
+  }
+}
+
+// ---------------------------------------------------------------- playing the schedule
+/**
+ * Start a slot on a free element, from wherever the schedule is now. how: 'join' (tuning in: faded up under the
+ * static, fine-tuned once), 'switch' (a boundary: on time, at full volume), 'retry' (after an error or a stall).
+ */
+async function begin(g, slot, how) {
+  let el;
+  const reuse = pre && sameSlot(pre.slot, slot) && pre.el.getAttribute('src') && !pre.el.error;
+  if (reuse) { el = pre.el; pre = null; }
+  else {
+    if (pre) { stopEl(pre.el); pre = null; }
+    el = spare();
+    if (!el) return;
+  }
+  loading = el;
+  loadPeaks(slot.song.id);
+  if (!reuse) {
+    let url;
+    try { url = await linkFor(slot.song.id, how === 'retry'); }
+    catch (e) {
+      if (loading === el) loading = null;
+      if (g === gen) failed(e);
+      return;
+    }
+    if (g !== gen) { if (loading === el) loading = null; return; }
+    el.muted = false;
+    el.src = at(url, (now() - slot.startedAt) / 1000 + 0.3); // a little ahead: it takes a moment to start
+  }
+  gainOf(el, how === 'switch' ? 1 : 0);
+  // Where the song is now, once the element knows its length (the time it took to load included). Never quite to
+  // the end: an ended element would start again from the top when played.
+  const place = () => {
+    if (g !== gen || loading !== el) return;
+    const want = (now() - slot.startedAt) / 1000, dur = Number.isFinite(el.duration) ? el.duration : Infinity;
+    const to = Math.max(0, Math.min(want, dur - 0.25));
+    if (Math.abs(el.currentTime - to) > 0.3) { try { el.currentTime = to; } catch { /* not seekable yet */ } }
+  };
+  if (el.readyState >= 1) place();
+  else el.addEventListener('loadedmetadata', place, { once: true });
+  let timer = 0;
+  try {
+    await Promise.race([el.play(), new Promise((_, no) => { timer = setTimeout(() => no(Object.assign(new Error('The song took too long to start.'), { name: 'TimeoutError' })), TIMEOUT_MS); })]);
+  } catch (e) {
+    if (loading === el) loading = null;
+    if (g !== gen) return; // redirected meanwhile (that is what an AbortError usually is)
+    if (e && e.name === 'NotAllowedError') { blocked(); return; }
+    stopEl(el); // so a song that starts late cannot sound on its own
+    failed(e);
+    return;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (loading === el) loading = null;
+  if (g !== gen) { stopEl(el); return; }
+  handOver(g, el, slot, how);
+}
+
+/** The slot's element sounds: it is on air. Let go of the last one, and set the boundary's timers. */
+function handOver(g, el, slot, how) {
+  cur = { slot, el };
+  dropLeaving();
+  for (const e of els()) if (e && e !== el && (!pre || e !== pre.el)) stopEl(e);
+  lastProgress = performance.now();
+  if (how !== 'switch') {
+    // tuning in: the time it took to start is now heard; fine-tune once, then fade up as the static fades out
+    const want = (now() - slot.startedAt) / 1000, dur = Number.isFinite(el.duration) ? el.duration : Infinity;
+    if (want < dur - 0.3 && Math.abs(el.currentTime - want) * 1000 > JOIN_MS) { try { el.currentTime = want; } catch { /* not seekable */ } }
+    fadeTo(el, 1, FADE_IN_MS);
+  } else gainOf(el, 1);
+  hissStop();
+  offairTries = 0;
+  notFound = 0;
+  armBoundary(g);
+  const was = snap.status;
+  set({ status: 'on', song: shown(slot), next: nextOf(slot), startedAt: slot.startedAt, endsAt: slot.endsAt, reason: '' });
+  mediaShow(slot.song);
+  if (was !== 'on' || how !== 'switch') post('playing');
+}
+/** The song as the display shows it: the crate's latest words and colours, the slot's own length. */
+function shown(slot) {
+  const fresh = songs.find((s) => s.id === slot.song.id);
+  return { ...(fresh || slot.song), durationMs: slot.song.durationMs };
+}
+
+function armBoundary(g) {
+  const slot = cur.slot, t = now();
+  later('preload', () => preload(g), slot.endsAt - PRELOAD_MS - t);
+  if (snap.volumeWorks) later('fade', () => { if (g === gen && cur && cur.el) fadeTo(cur.el, 0, FADE_MS); }, slot.endsAt - FADE_MS - t);
+  later('switch', () => boundary(g), slot.endsAt - t);
+}
+
+/** About 20 s before the boundary: load what will be on air at it, as the crate stands now. */
+async function preload(g) {
+  if (g !== gen || !cur) return;
+  const x = onAir(songs, cur.slot.endsAt);
+  if (!x) return;
+  const slot = slotOf(x);
+  if (pre && sameSlot(pre.slot, slot)) return;
+  if (pre) { stopEl(pre.el); pre = null; }
+  const el = spare();
+  if (!el) return;
+  let url;
+  try { url = await linkFor(slot.song.id); } catch { return; } // the boundary tries again
+  if (g !== gen || !cur || el === cur.el || el === loading || el === leaving) return;
+  el.muted = false;
+  gainOf(el, 1);
+  el.src = at(url, x.offsetMs / 1000);
+  pre = { slot, el };
+  loadPeaks(slot.song.id);
+}
+
+/** The boundary: cut the last song here, and start whatever the schedule has on air now. */
+function boundary(g) {
+  if (g !== gen || !session || !cur) return;
+  const t = now();
+  if (t < cur.slot.endsAt - 20) { later('switch', () => boundary(gen), cur.slot.endsAt - t); return; }
+  const x = onAir(songs, Math.max(t, cur.slot.endsAt));
+  if (!x) { offair('empty'); return; }
+  const g2 = ++gen;
+  cancel('preload', 'fade', 'switch', 'retry');
+  if (cur.el) {
+    // Muted rather than paused: it plays on silently until the next song sounds, because iOS lets a page that is
+    // playing start its next song from the lock screen, and not one that has gone quiet.
+    cur.el.muted = true;
+    leaving = cur.el;
+    later('leave', dropLeaving, 8000);
+  }
+  cur = { slot: slotOf(x), el: null };
+  attempts = 0;
+  set({ song: shown(cur.slot), next: nextOf(cur.slot), startedAt: cur.slot.startedAt, endsAt: cur.slot.endsAt });
+  // after a playlist edit the schedule may be partway through a song here: that joins like tuning in, faded up
+  begin(g2, cur.slot, x.offsetMs > 500 ? 'join' : 'switch');
+}
+
+/** Tune again at once (the song on air left the crate), joining whatever is on air now. */
+function retune() {
+  if (!session) return;
+  const x = onAir(songs, now());
+  if (!x) { offair('empty'); return; }
+  const g = ++gen;
+  cancel('preload', 'fade', 'switch', 'retry');
+  if (pre) { stopEl(pre.el); pre = null; }
+  if (cur && cur.el) { cur.el.muted = true; leaving = cur.el; later('leave', dropLeaving, 8000); }
+  cur = { slot: slotOf(x), el: null };
+  attempts = 0;
+  set({ status: 'tuning', song: null, next: null });
+  hissStart(1500);
+  begin(g, cur.slot, 'join');
+}
+
+/** The song on air would not load or play: a fresh link and rejoin, a few times, then NO SIGNAL (which keeps trying). */
+function recover() {
+  if (!session || !cur) return;
+  const g = ++gen;
+  cancel('preload', 'fade', 'switch', 'retry');
+  links.delete(cur.slot.song.id);
+  if (cur.el) stopEl(cur.el);
+  cur.el = null;
+  if (attempts >= RETRY_MS.length) { offair('unreachable'); return; }
+  const wait = RETRY_MS[attempts++];
+  later('retry', () => {
+    if (g !== gen || !cur) return;
+    // the song may have ended while waiting: then whatever is on air now
+    const slot = now() < cur.slot.endsAt ? cur.slot : liveSlot();
+    if (!slot) { offair('empty'); return; }
+    cur = { slot, el: null };
+    begin(g, slot, 'retry');
+  }, wait);
+}
+function failed(e) {
+  if (!(e && e.status === 404)) { recover(); return; }
+  // The one answer for a song the radio does not have: it left the crate since. Read the crate and tune again; a
+  // song the crate still lists is a failing link. Twice at most before NO SIGNAL, so a muddle cannot loop.
+  if (++notFound > 2) { offair('unreachable'); return; }
+  const g = gen;
+  refresh().then((r) => {
+    if (g !== gen || !session) return;
+    if (!r) { offair('unreachable'); return; }
+    if (!songs.length) { offair('empty'); return; }
+    if (cur && songs.some((x) => x.id === cur.slot.song.id)) recover(); else retune();
+  });
+}
+
+/** Once a second while on: catch a late boundary, pull a drifting song back to the schedule, notice a stall. */
+function tick() {
+  if (!session || !cur || snap.status !== 'on') return;
+  const t = now();
+  if (t >= cur.slot.endsAt + 250) { boundary(gen); return; }
+  const el = cur.el;
+  if (!el || el.paused) return;
+  const want = (t - cur.slot.startedAt) / 1000, dur = Number.isFinite(el.duration) ? el.duration : Infinity;
+  if (want >= dur - 0.3) return; // the preview's last moment (or past its end): the boundary takes it from here
+  if (performance.now() - lastProgress > STALL_MS) { recover(); return; }
+  if (!el.seeking && el.readyState >= 2 && Math.abs(el.currentTime - want) * 1000 > DRIFT_MS) { try { el.currentTime = want; } catch { /* not seekable */ } }
+}
+
+/** Every minute while on, and when the tab comes back: the crate as it is now, and the clock again. */
+async function poll() {
+  const s = session;
+  if (!s || snap.status !== 'on') return;
+  const r = await refresh();
+  if (s !== session || snap.status !== 'on' || !r) return; // unreachable: keep playing what is known
+  if (!songs.length) { offair('empty'); return; }
+  if (!cur) return;
+  if (!songs.some((x) => x.id === cur.slot.song.id)) { retune(); return; } // the song on air left the crate
+  set({ song: shown(cur.slot), next: nextOf(cur.slot) });
+  // the list changed under a song already loading as next: load what will really be on air at the boundary
+  if (r.changed && now() >= cur.slot.endsAt - PRELOAD_MS) preload(gen);
+}
+
+function offair(reason) {
+  if (!session) return;
+  gen++;
+  cancel('preload', 'fade', 'switch', 'retry', 'leave');
+  stopAll();
+  hissStop();
+  set({ status: 'offair', reason, song: null, next: null });
+  mediaShow(null);
+  later('reconnect', reconnect, BACKOFF_MS[Math.min(offairTries++, BACKOFF_MS.length - 1)]);
+}
+async function reconnect() {
+  const s = session;
+  if (!s || snap.status !== 'offair') return;
+  cancel('reconnect');
+  const r = await refresh();
+  if (s !== session || snap.status !== 'offair') return;
+  if (!r || !songs.length) { offair(r ? 'empty' : 'unreachable'); return; }
+  set({ status: 'tuning', reason: '' });
+  hissStart(1500);
+  tune();
+}
+function tune() {
+  const slot = liveSlot();
+  if (!slot) { offair('empty'); return; }
+  const g = ++gen;
+  cur = { slot, el: null };
+  attempts = 0;
+  begin(g, slot, 'join');
+}
+
+function endSession() {
+  if (session) session.alive = false;
+  session = null;
+  gen++;
+  cancel(...PLAYBACK_TIMERS);
+  stopAll();
+  hissStop();
+  attempts = 0;
+  notFound = 0;
+  offairTries = 0;
+}
+function blocked() {
+  endSession();
+  set({ status: 'blocked', song: null, next: null, popping: false });
+  mediaShow(null);
+}
+function release() {
+  endSession();
+  claimAt = 0;
+  set({ status: 'released', song: null, next: null, popping: false, reason: '' });
+  mediaClear();
+}
+
+function onVisible() {
+  if (document.visibilityState !== 'visible' || !session) return;
+  if (snap.status === 'offair') { reconnect(); return; }
+  poll();
+  tick();
+}
+let wired = false;
+function wire() {
+  if (wired || !BROWSER) return;
+  wired = true;
+  document.addEventListener('visibilitychange', onVisible);
+  window.addEventListener('online', onVisible);
+}
+
+// ---------------------------------------------------------------- what the faceplate and the terminal call
+/**
+ * Call this synchronously inside the tap or keypress that tunes in (the terminal's Enter, the power button), so the
+ * browser lets the page play afterwards: each idle element plays a few silent samples, and the static's audio context
+ * starts. It never interrupts the song playing.
+ */
+export function prime() {
+  if (!BROWSER) return;
+  const busy = new Set([cur && cur.el, pre && pre.el, leaving, loading]);
+  for (const el of els()) {
+    if (!el || busy.has(el)) continue;
+    try {
+      el.muted = false;
+      el.src = unlockSource();
+      const p = el.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch { /* the real play() reports any problem */ }
+  }
+  try {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ctx = new AC();
+    }
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+  } catch { ctx = null; }
+  mediaHandlers();
+}
+
+/** Tune in: fetch the crate, set the clock, and play whatever is on air now, from where it is now. */
+export function powerOn() {
+  if (!BROWSER) return;
+  els();
+  mediaHandlers();
+  listen();
+  wire();
+  endSession();
+  const s = { alive: true };
+  session = s;
+  claimAt = Date.now();
+  post('claim');
+  set({ status: 'tuning', song: null, next: null, reason: '', popping: false });
+  hissStart();
+  every('poll', poll, POLL_MS);
+  every('tick', tick, 1000);
+  refresh().then((r) => {
+    if (s !== session) return;
+    if (!r) { offair('unreachable'); return; }
+    if (!songs.length) { offair('empty'); return; }
+    tune();
+  });
+}
+
+/** Silence: audio, timers and polling stop. */
+export function powerOff() {
+  endSession();
+  claimAt = 0;
+  set({ status: 'off', song: null, next: null, popping: false, reason: '' });
+  mediaShow(null);
+}
+
+/** The power button: on (live) from off, PUSH PWR or released; off from anything else. Call it inside the tap. */
+export function power() {
+  const s = snap.status;
+  if (s === 'off' || s === 'blocked' || s === 'released') { prime(); powerOn(); } else powerOff();
+}
+
+/** The radio opened, or someone typed radio: on unless it already is (NO SIGNAL tries again now). */
+export function tuneIn() {
+  const s = snap.status;
+  if (s === 'off' || s === 'blocked' || s === 'released') powerOn();
+  else if (s === 'offair') reconnect();
+}
+
+function flash(text, ms = 1600) {
+  set({ flash: { text, n: (snap.flash ? snap.flash.n : 0) + 1 } });
+  clearTimeout(T.flash);
+  T.flash = setTimeout(() => set({ flash: null }), ms);
+}
+
+/** The knob: 0..1, kept for the visit. On iOS the element ignores it (snapshot volumeWorks: false). */
+export function setVolume(v) {
+  const volume = Math.round(Math.min(1, Math.max(0, Number(v) || 0)) * 100) / 100;
+  if (volume !== snap.volume) {
+    set({ volume });
+    keep(KEEP.volume, volume);
+    for (const el of els()) applyVolume(el);
+    if (hiss && ctx) { try { hiss.g.gain.setTargetAtTime(0.0001 + 0.05 * taper(volume), ctx.currentTime, 0.05); } catch { /* ended */ } }
+  }
+  flash(snap.volumeWorks ? `VOL ${Math.round(volume * 30)}` : 'USE DEVICE VOL', 1100);
+}
+
+export function cycleDisplay() {
+  const disp = DISPLAY_MODES[(DISPLAY_MODES.indexOf(snap.disp) + 1) % DISPLAY_MODES.length];
+  set({ disp });
+  keep(KEEP.disp, disp);
+}
+export function cycleIllum() {
+  const illum = ILLUMS[(ILLUMS.indexOf(snap.illum) + 1) % ILLUMS.length];
+  set({ illum });
+  keep(KEEP.illum, illum);
+}
+
+/** Presets 1 to 6: 1 is MAXradio, the only station (it switches the radio on); the rest have nothing stored. */
+export function preset(n) {
+  if (n === 1) {
+    const s = snap.status;
+    if (s === 'off' || s === 'blocked' || s === 'released') power();
+    else flash(`P1 ${STATION}`);
+    return;
+  }
+  flash('NO STATION');
+}
+
+/**
+ * REL: the radio in a tab of its own (PAGE_URL). Call it inside the click, so the browser opens the tab. This radio
+ * plays on until the new tab actually plays (the channel says so); then it shows released.
+ */
+export function popOut() {
+  if (!BROWSER) return false;
+  let w = null;
+  try { w = window.open(PAGE_URL, '_blank'); } catch { w = null; }
+  if (!w) { flash('POP-UP BLOCKED'); return false; }
+  try { w.opener = null; } catch { /* nothing to cut */ }
+  if (snap.status === 'on' || snap.status === 'tuning') {
+    set({ popping: true });
+    later('popping', () => set({ popping: false }), 20000); // the new tab never played (PUSH PWR there): carry on
+  }
+  return true;
+}
+
+/** Where the song on air is now, from the element when it is in step with the schedule, else the schedule. */
+export function position() {
+  if (!cur || snap.status !== 'on') return null;
+  const d = cur.slot.song.durationMs;
+  let ms = now() - cur.slot.startedAt;
+  const el = cur.el;
+  if (el && !el.paused && !el.seeking && el.readyState >= 2 && Math.abs(el.currentTime * 1000 - ms) < DRIFT_MS) ms = el.currentTime * 1000;
+  ms = Math.min(d, Math.max(0, ms));
+  return { id: cur.slot.song.id, ms, durationMs: d, frac: ms / d };
+}
+/** How loud the song on air is right now, 0..1, read from its waveform (the meter; the record smooths its own). */
+export function level() {
+  const p = position();
+  if (!p) return 0;
+  const s = peaksOf(p.id);
+  return s ? levelAt(s, p.frac) : 0;
+}

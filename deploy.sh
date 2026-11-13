@@ -11,6 +11,7 @@
 # check: https://maxharris.io/dahw/updates/
 # check: https://maxharris.io/dahw/support/
 # check: https://maxharris.io/dahw/privacy/
+# check: https://maxharris.io/radio/
 #   (http: the certificate covers maxharris.io and www only; the site itself calls /api on its own domain)
 #
 # nginx (sites-available/maxharris.io) serves dist/ and proxies /api and /socket.io to :3001.

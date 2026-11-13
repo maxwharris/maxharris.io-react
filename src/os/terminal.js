@@ -2,6 +2,7 @@
 import { owner, work, personal, concepts, findWork } from '../data/site';
 import { SCENES } from './board';
 import { APPS, APP, esc, host, stackTop } from './store';
+import { prime, tuneIn } from '../radio/engine.js';
 
 export const PROMPT = '<span class="c1">max@maxos ~ %</span>';
 // EUNO, Max's command center, answers only devices on his tailnet (and then asks for its password)
@@ -20,8 +21,8 @@ function reachable(url, ms) {
     .finally(() => clearTimeout(timer));
 }
 
-const VISIBLE = ['help', 'ls', 'open', 'whoami', 'about', 'contact', 'neofetch', 'theme', 'scene', 'history', 'clear', 'sudo', 'exit'];
-const OPENABLE = () => [...work.map((p) => p.key), ...APPS.map((a) => a.id), ...personal.map((p) => p.key), ...concepts.map((p) => p.key)];
+const VISIBLE = ['help', 'ls', 'open', 'whoami', 'about', 'contact', 'radio', 'neofetch', 'theme', 'scene', 'history', 'clear', 'sudo', 'exit'];
+const OPENABLE = () => [...work.map((p) => p.key), ...APPS.map((a) => a.id), ...personal.map((p) => p.key), ...concepts.map((p) => p.key), 'radio'];
 const pad = (s, n) => (s + ' '.repeat(n)).slice(0, Math.max(n, s.length + 1));
 const T0 = Date.now();
 
@@ -35,6 +36,17 @@ export function historyStep(term, dir) {
   if (hi < 0 || hi > term.hist.length) return null;
   term.hi = hi;
   return term.hist[hi] || '';
+}
+
+// MAXradio (src/radio): reached only by typing radio. It is primed here, inside the keypress, so the browser lets it
+// play once its window opens; the window then switches it on. Typed again while the window is open, it comes back on
+// (say another tab had taken it).
+function tuneRadio(ctx, say) {
+  prime();
+  say('tuning to 999.9 MAXradio...', 'c2');
+  const w = ctx.get().wins.radio;
+  ctx.actions.open('radio', {}, ctx.origin());
+  if (w && !w.closing) tuneIn();
 }
 
 export function newTerm() {
@@ -86,7 +98,7 @@ export function runCommand(raw, ctx) {
     case 'help': case '?':
       out('<span class="c3">commands</span>\n' + [
         ['help', 'this list'], ['ls [work|personal]', 'see what is here'], ['open <name>', 'open a project or app'],
-        ['whoami', 'who is at the keyboard'], ['about', 'the short version'], ['contact', 'how to reach max'],
+        ['whoami', 'who is at the keyboard'], ['about', 'the short version'], ['contact', 'how to reach max'], ['radio', '999.9 fm, maxradio'],
         ['neofetch', 'system summary'], ['theme [light|dark]', 'switch the glass'], ['scene [neon|classic|ink|...]', 'change the board'],
         ['history', 'what you typed'], ['clear', 'clean slate'], ['sudo', 'go on, try it'], ['exit', 'close the terminal'],
       ].map(([k, d]) => `  <span class="c1">${esc(pad(k, 29))}</span>${esc(d)}`).join('\n'));
@@ -101,6 +113,7 @@ export function runCommand(raw, ctx) {
     case 'open': case 'cd': {
       if (c === 'cd' && !a) { say("there's nowhere else to go. this is the desktop."); break; }
       if (!a) { say('usage: open <name>. try ls work.'); break; }
+      if (a === 'radio' && c === 'open') { tuneRadio(ctx, say); break; }
       const p = findWork(a), pe = personal.find((x) => x.key === a) || concepts.find((x) => x.key === a);
       if (p) { say(`opening ${p.title}`, 'c2'); actions.open('project', { key: a }, ctx.origin()); }
       else if (APP[a]) { say(`opening ${APP[a].label}`, 'c2'); actions.openApp(a, ctx.origin()); }
@@ -108,6 +121,7 @@ export function runCommand(raw, ctx) {
       else say(c === 'cd' ? `cd: ${a}: try open ${a}` : `open: ${a}: not found. try ls work.`);
       break;
     }
+    case 'radio': tuneRadio(ctx, say); break;
     case 'whoami': out(`you: a guest\nhost: <span class="c3">${esc(owner.name)}</span>, ${esc(owner.title)}`); break;
     case 'about': out(owner.about.map((l) => '- ' + esc(l)).join('\n')); break;
     case 'contact':

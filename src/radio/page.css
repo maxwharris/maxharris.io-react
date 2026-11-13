@@ -1,0 +1,10 @@
+/* The pop-out page: the radio centred on a quiet dark page, and a small way back to the desktop. */
+html, body { margin: 0; min-height: 100%; background: #08090b; color: #c9ced4; }
+body { min-height: 100vh; min-height: 100dvh; display: flex; background: radial-gradient(120% 90% at 50% 20%, #15171b, #08090b 70%); -webkit-font-smoothing: antialiased; }
+#radio-root { flex: 1; display: flex; min-width: 0; }
+.mr-pagebox { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+.mr-pagebox > .mr { width: min(640px, 100%); flex: none; }
+.mr-home { font: 600 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .1em; color: #6c727a; text-decoration: none; padding: 9px 12px; border-radius: 8px; }
+.mr-home:hover, .mr-home:focus-visible { color: #d6dbe0; }
+.mr-home:focus-visible { outline: 2px solid #6c727a; outline-offset: 2px; }

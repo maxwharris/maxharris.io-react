@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { owner, work, personal, concepts, findWork } from '../data/site';
 
 const building = personal.filter((p) => p.status === 'building');
@@ -8,6 +8,7 @@ import { useOS, MOD, EASE, TRASH0, host } from './store';
 import { Icon, Disc } from './icons';
 import { SCENES } from './board';
 import { PROMPT, runCommand, complete, historyStep, subscribe } from './terminal';
+import { useRadioSession } from '../radio/useRadio.js';
 
 const Out = ({ href, children, className = 'lnk g' }) => (
   <a className={className} href={href} target="_blank" rel="noopener noreferrer">{children}<Icon name="out" /></a>
@@ -416,3 +417,17 @@ export function Terminal({ win }) {
   );
 }
 
+// ---------- radio ----------
+// MAXradio (src/radio). The engine is part of the desktop (the terminal tunes in inside the keypress); the faceplate,
+// the record and its font load the first time the radio opens. Open: on, live. Closing powers it off (at once, not
+// after the exit animation); minimized, or parked in the dock, it plays on.
+const Radio = lazy(() => import('../radio/Radio.jsx'));
+export function RadioApp({ win }) {
+  const { phone } = useOS();
+  useRadioSession({ closing: !!win.closing });
+  return (
+    <Suspense fallback={<div className="radio-wait" />}>
+      <Radio context={phone ? 'phone' : 'window'} />
+    </Suspense>
+  );
+}

@@ -34,3 +34,6 @@ server/node_modules
 
 # Deployment
 maxharris-deploy.tar.gz
+
+# the radio's dev mock (scripts/radio-mock.js) makes its test songs here
+.radio-mock/

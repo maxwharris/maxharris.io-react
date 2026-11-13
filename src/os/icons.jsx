@@ -38,6 +38,7 @@ const GLYPHS = {
   box: '<path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/>',
   mark: '<path d="M3 17.5 9 9l3.6 4.8L15 11l6 6.5"/><path d="M3 20.5h18"/><circle cx="16.5" cy="5.5" r="1.8"/>',
   wave: '<path d="M3 12h1.5M6 9v6M9 5.5v13M12 8v8M15 3.5v17M18 7.5v9M21 12h-1.5"/>',
+  radio: '<rect x="3" y="8.5" width="18" height="11.5" rx="2.5"/><path d="M6.5 8.5 17 4"/><circle cx="15.6" cy="14.25" r="2.7"/><path d="M6.6 12h4.6M6.6 14.25h4.6M6.6 16.5h4.6"/>',
 };
 
 const TINT = {
@@ -46,6 +47,7 @@ const TINT = {
   manager: ['#f3c062', '#b8721f'], storefront: ['#f4a493', '#b9504a'], simplemanager: ['#9ccdec', '#306c9a'], euno: ['#a9c1d2', '#284557'],
   admin: ['#b1d1a5', '#4d7750'], channels: ['#f1d684', '#b98a25'], chatebs: ['#9fdcd4', '#25807c'], ebspos: ['#c3ccd6', '#566373'],
   nems: ['#e2bf98', '#85603f'], ebsweb: ['#9ccdec', '#2f5f9c'], dahw: ['#c7a6f2', '#5b3a9c'], sys: ['#3a4752', '#0f161c'],
+  radio: ['#8f9af6', '#161b45'],
 };
 
 export function Icon({ name, className = '' }) {
