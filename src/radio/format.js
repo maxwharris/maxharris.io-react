@@ -1,6 +1,6 @@
 // The radio's small pure helpers (no DOM, tested in format.test.js): what the display writes, the song list as the
 // engine keeps it, and the clock calibration. The tempo and key wording are the catalog's (frontend/src/lib/format.js
-// bpm, frontend/src/lib/keys.js shortKey), so the record's label reads as it does there: "FLY LOW" over "110 · Cm".
+// bpm, frontend/src/lib/keys.js shortKey): 110 and "Cm", as the catalog writes them.
 
 /** A tempo as the catalog writes it: 110, 87.5; '' for none. */
 export function bpmText(x) {
@@ -21,22 +21,23 @@ export function keyText(s) {
   return ROOTS[pc] + (/^(minor|min|m)$/.test(m[3] || '') ? 'm' : '');
 }
 
-/** The record's label, as the catalog's: [title, "BPM · key"], the second line only with what is known. */
-export const recordLabel = (song) => (song ? [song.title, [bpmText(song.bpm), keyText(song.key)].filter(Boolean).join(' · ')] : []);
-
 /** The title with its credit, as the display scrolls it: "fly low (a friend)". */
 export const titleLine = (song) => (song ? song.title + (song.credit ? ` (${song.credit})` : '') : '');
 
 const EASTERN = (() => {
-  try { return new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true }); } catch { return null; }
+  try { return new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' }); } catch { return null; }
 })();
-/** The station's clock: Eastern time, whatever the listener's own zone. {time: '9:05', ampm: 'PM', text: '9:05 PM'}. */
+/**
+ * The station's clock: Eastern time, whatever the listener's own zone, and which Eastern time it is (EST, or EDT in
+ * summer). {time: '9:05', ampm: 'PM', tz: 'EST', text: '9:05 PM'}.
+ */
 export function easternClock(ms) {
-  if (!EASTERN || !Number.isFinite(ms)) return { time: '--:--', ampm: '', text: '' };
+  if (!EASTERN || !Number.isFinite(ms)) return { time: '--:--', ampm: '', tz: '', text: '' };
   const parts = EASTERN.formatToParts(new Date(ms));
   const get = (t) => (parts.find((p) => p.type === t) || {}).value || '';
   const time = `${get('hour')}:${get('minute')}`, ampm = get('dayPeriod').toUpperCase();
-  return { time, ampm, text: `${time} ${ampm}` };
+  const tz = /^E[SD]T$/.test(get('timeZoneName')) ? get('timeZoneName') : 'ET';
+  return { time, ampm, tz, text: `${time} ${ampm}` };
 }
 
 /** When a presigned link stops working (the catalog player's reading): epoch ms, epoch s, seconds from now, or a date. */

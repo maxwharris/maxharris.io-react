@@ -22,9 +22,10 @@ import { stretch, levelAt } from './record/peaks.js';
 
 export const API = '/catalog/api/radio';
 export const PAGE_URL = '/radio/';
-/** What DISP steps the display's main line through, and the colours ILLUM steps the backlight through. */
-export const DISPLAY_MODES = ['song', 'next', 'info', 'clock'];
-export const ILLUMS = ['amber', 'green', 'blue', 'red', 'white'];
+/** What DISP steps the display through (the station, the song in big dots, the clock in the big digits), and the colours
+ * ILLUM steps the display, the knob's ring and the key legends through (vfd.js ILLUM), blue first. */
+export const DISPLAY_MODES = ['station', 'text', 'clock'];
+export const ILLUMS = ['blue', 'aqua', 'green', 'amber', 'red', 'white'];
 export const STATION = 'MAXradio';
 export const FREQ = '999.9';
 
