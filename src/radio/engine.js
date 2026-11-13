@@ -435,6 +435,9 @@ async function begin(g, slot, how) {
   if (reuse) { el = pre.el; pre = null; }
   else {
     if (pre) { stopEl(pre.el); pre = null; }
+    // Both busy: the last song still leaving, and a start the schedule has since moved on from (it drops itself when it
+    // lands). The leaving one is only kept so iOS sees the page playing: it gives way.
+    if (!spare()) dropLeaving();
     el = spare();
     if (!el) return;
   }
