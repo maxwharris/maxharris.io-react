@@ -604,10 +604,12 @@ function tick() {
   const t = now();
   if (t >= cur.slot.endsAt + 250) { boundary(gen); return; }
   const el = cur.el;
-  if (!el || el.paused) return;
+  if (!el) return;
   const want = (t - cur.slot.startedAt) / 1000, dur = Number.isFinite(el.duration) ? el.duration : Infinity;
-  if (want >= dur - 0.3) return; // the preview's last moment (or past its end): the boundary takes it from here
-  if (performance.now() - lastProgress > STALL_MS) { recover(); return; }
+  if (el.ended || want >= dur - 0.3) return; // the preview's last moment (or past its end): the boundary takes it from here
+  // Stopped (with no pause event: a pause from outside powers off) or stuck while the schedule says it should sound:
+  // a fresh link, and rejoin live.
+  if (el.paused || performance.now() - lastProgress > STALL_MS) { recover(); return; }
   if (!el.seeking && el.readyState >= 2 && Math.abs(el.currentTime - want) * 1000 > DRIFT_MS) { try { el.currentTime = want; } catch { /* not seekable */ } }
 }
 

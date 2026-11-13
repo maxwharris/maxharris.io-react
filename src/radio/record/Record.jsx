@@ -106,7 +106,7 @@ export default function Record({ song = null, playing = false, idleLabel = ['MAX
       <pre ref={tex} className="tex" aria-hidden="true" />
       <pre ref={base} className="base" aria-hidden="true" />
       <pre ref={lit} className="lit" aria-hidden="true" />
-      {label.length ? <div className="lbl" aria-hidden="true"><b>{label[0]}</b>{label[1] || ''}</div> : null}
+      {label.length ? <div className="mr-lbl" aria-hidden="true"><b>{label[0]}</b>{label[1] || ''}</div> : null}
     </div>
   );
 }

@@ -13,7 +13,7 @@
 .mr-rec .tex { color: color-mix(in srgb, var(--rec-fg) 14%, var(--rec-bg)); }
 .mr-rec .base { color: color-mix(in srgb, var(--rec-fg) 46%, var(--rec-bg)); }
 .mr-rec .lit { color: var(--rec-fg); font-weight: 700; }
-.mr-rec .lbl { font: 400 clamp(7px, calc(var(--rd) * .026), 12px)/1.35 "MR Mono", ui-monospace, Menlo, monospace; /* first: the shorthand resets the rest */
+.mr-rec .mr-lbl { font: 400 clamp(7px, calc(var(--rd) * .026), 12px)/1.35 "MR Mono", ui-monospace, Menlo, monospace; /* first: the shorthand resets the rest */
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; white-space: nowrap;
   max-width: calc(var(--rd) * .3); overflow: hidden; text-overflow: ellipsis; letter-spacing: .06em; font-variant-ligatures: none; }
-.mr-rec .lbl b { display: block; font-weight: 700; font-size: 1.08em; letter-spacing: .08em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+.mr-rec .mr-lbl b { display: block; font-weight: 700; font-size: 1.08em; letter-spacing: .08em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
