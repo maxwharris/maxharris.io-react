@@ -111,15 +111,16 @@ export function useLevelMeter(ref) {
 }
 
 /**
- * A line of text that scrolls when it does not fit: box is the clipping element, text the line inside it. Returns
- * {scroll, seconds}: whether it overflows (and may scroll: never with reduced motion), and how long one pass takes.
+ * A line of text that scrolls when it does not fit: box is the clipping element, inner the text inside it (a block or
+ * inline-block: an inline box has no size to measure or observe). Returns {scroll, seconds}: whether it overflows (and
+ * may scroll: never with reduced motion), and how long one pass takes.
  */
 export function useMarquee(box, inner, text) {
   const [over, setOver] = useState(false);
   useEffect(() => {
     const b = box.current, t = inner.current;
     if (!b || !t || typeof ResizeObserver !== 'function') return undefined;
-    const ro = new ResizeObserver(() => setOver(t.scrollWidth > b.clientWidth + 1));
+    const ro = new ResizeObserver(() => setOver(t.getBoundingClientRect().width > b.clientWidth + 1));
     ro.observe(b);
     ro.observe(t);
     return () => ro.disconnect();

@@ -9,8 +9,10 @@
 //   /__radio-mock/state?songs=9001,9003   which songs are in the crate, in order (any of 9001 to 9004)
 //   /__radio-mock/state?on=0              no radio crate (NO SIGNAL); on=1 brings it back
 //   /__radio-mock/state?fail=2            the next 2 audio requests answer 403, like an expired link
+//   /__radio-mock/state?drop=1            the next audio response breaks off a third of the way in (a dropped connection)
 //   /__radio-mock/state?skew=5000         the server's clock 5 s ahead of this computer's
 //   /__radio-mock/state?ttl=30            links good for 30 s instead of an hour
+//   /__radio-mock/state?retitle=9001:a much longer title   a new title, as when Max renames a song (no new version)
 //   /__radio-mock/state?reset=1           all of that back to the start
 
 import fs from 'node:fs';
@@ -26,7 +28,7 @@ const SONGS = [
   { id: 9003, title: 'sign on', credit: null, seconds: 16, audio: 16, bpm: null, key: null, notes: [62, 66, 69, 74, 69, 66], look: { bg: '#06110a', fg: '#4aee7f', card: '#0b1c11' } },
   { id: 9004, title: 'low tide', credit: 'a friend', seconds: 11.2, audio: 10.6, bpm: 140, key: 'F major', notes: [53, 57, 60, 65, 64, 60, 57, 55], look: { bg: '#1430c4', fg: '#ffffff', card: '#0c2194' } },
 ];
-const START = { ids: SONGS.map((s) => s.id), on: true, fail: 0, skew: 0, ttl: 3600 };
+const START = { ids: SONGS.map((s) => s.id), on: true, fail: 0, drop: 0, skew: 0, ttl: 3600, titles: {} };
 let state = { ...START };
 
 // ---------------------------------------------------------------- the tones
@@ -95,7 +97,7 @@ function make(log) {
 const crate = () => (state.on ? state.ids.map((id) => SONGS.find((s) => s.id === id)).filter(Boolean) : []);
 const inCrate = (raw) => (/^[1-9]\d{0,9}$/.test(raw) ? crate().find((s) => s.id === Number(raw)) : null);
 function radioList() {
-  const songs = crate().map((s) => ({ id: s.id, title: s.title, credit: s.credit, durationMs: Math.round(s.seconds * 1000), bpm: s.bpm, key: s.key, look: s.look }));
+  const songs = crate().map((s) => ({ id: s.id, title: state.titles[s.id] || s.title, credit: s.credit, durationMs: Math.round(s.seconds * 1000), bpm: s.bpm, key: s.key, look: s.look }));
   const version = songs.length ? crypto.createHash('sha1').update(songs.map((s) => `${s.id}:${s.durationMs}`).join(',')).digest('hex').slice(0, 12) : '';
   return { on: songs.length > 0, now: Date.now() + state.skew, version, songs };
 }
@@ -123,6 +125,15 @@ function sendFile(req, res, file, type) {
   }
   res.setHeader('Content-Length', end - start + 1);
   if (req.method === 'HEAD') { res.end(); return; }
+  if (state.drop > 0 && end - start > 4096) {
+    // a dropped connection: a third of what was promised, then the socket closes
+    state.drop--;
+    const cut = start + Math.floor((end - start) / 3);
+    const rs = fs.createReadStream(file, { start, end: cut });
+    rs.on('data', (b) => res.write(b));
+    rs.on('end', () => setTimeout(() => res.destroy(), 50));
+    return;
+  }
   fs.createReadStream(file, { start, end }).pipe(res);
 }
 
@@ -153,7 +164,8 @@ function handle(req, res, next) {
   m = /^\/__radio-mock\/media\/(\d+)\.(m4a|wav)$/.exec(p);
   if (m) {
     const exp = Number(url.searchParams.get('exp'));
-    if (state.fail > 0 || (exp && Date.now() > exp)) {
+    // a drop comes first, so drop=1&fail=3 is a stream that breaks off and is then refused (it dies mid-song)
+    if (!(state.drop > 0) && (state.fail > 0 || (exp && Date.now() > exp))) {
       if (state.fail > 0) state.fail--;
       res.statusCode = 403;
       res.setHeader('Content-Type', 'application/xml');
@@ -167,10 +179,11 @@ function handle(req, res, next) {
   }
   if (p === '/__radio-mock/state') {
     const q = url.searchParams;
-    if (q.has('reset')) state = { ...START };
+    if (q.has('reset')) state = { ...START, titles: {} };
+    if (q.has('retitle')) { const [id, ...t] = q.get('retitle').split(':'); state.titles = { ...state.titles, [Number(id)]: t.join(':') }; }
     if (q.has('songs')) state.ids = q.get('songs').split(',').map(Number).filter((id) => SONGS.some((s) => s.id === id));
     if (q.has('on')) state.on = q.get('on') !== '0';
-    for (const k of ['fail', 'skew', 'ttl']) if (q.has(k)) state[k] = Number(q.get(k)) || 0;
+    for (const k of ['fail', 'drop', 'skew', 'ttl']) if (q.has(k)) state[k] = Number(q.get(k)) || 0;
     if (!state.ttl) state.ttl = START.ttl;
     json(res, 200, { ...state, radio: radioList() });
     return;

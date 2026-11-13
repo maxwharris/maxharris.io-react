@@ -34,6 +34,7 @@ const DRIFT_MS = 2000; // further than this from the schedule: jump back to it
 const JOIN_MS = 400; // tuning in: once the sound starts, fine-tune once if it is further off than this
 const FADE_MS = 200; // the old song fades this long into its boundary, where element volume works
 const FADE_IN_MS = 600; // tuning in fades the song up under the static
+const START_LEAD = 0.3; // s: a song started partway is started this far ahead, for the moment it takes to sound
 const STALL_MS = 8000; // no progress for this long while it should be playing: a fresh link, and rejoin
 const LINK_SPARE_MS = 2 * 60 * 1000; // a link with less than this left is renewed before it is used
 const HISS_MS = 4000; // the static under a slow tune gives up after this
@@ -145,7 +146,7 @@ async function linkFor(id, fresh = false) {
   return r.url;
 }
 // Start a link partway: a media fragment, which the browser keeps to itself, so the signature is untouched.
-const at = (url, sec) => (sec > 0.5 ? `${url}#t=${sec.toFixed(2)}` : url);
+const at = (url, sec) => (sec > 0.1 ? `${url}#t=${sec.toFixed(2)}` : url);
 
 // Whole waveforms, 20 points a second, fetched once per song and kept for the visit (the record and the meter).
 const waves = new Map(); // song id -> {s, p}
@@ -183,6 +184,7 @@ let attempts = 0; // failed starts of the song on air
 let notFound = 0; // songs the catalog said it did not have, since the last one that played
 let offairTries = 0;
 let lastProgress = 0;
+let pausedAt = -1e9; // when the song on air was last paused from outside (the pause handler decides what that was)
 const T = {}; // named timers
 const PLAYBACK_TIMERS = ['preload', 'fade', 'switch', 'retry', 'reconnect', 'hiss', 'leave', 'poll', 'tick', 'popping'];
 
@@ -258,13 +260,13 @@ function spare() {
   const busy = new Set([cur && cur.el, leaving, loading]);
   return els().find((e) => e && !busy.has(e)) || null;
 }
-/** Silence an element and let go of its file (an element this radio pauses is not "paused by the system"). */
+/** Silence an element and let go of its file. */
 function stopEl(el) {
   if (!el || isUnlock(el)) return; // the unlock clip: a few ms of silence, left to finish so the unlock holds
   const f = fades.get(el);
   if (f) clearInterval(f.timer);
   fades.delete(el);
-  if (!el.paused) { el.dataset.ours = '1'; try { el.pause(); } catch { /* gone */ } }
+  if (!el.paused) { try { el.pause(); } catch { /* gone */ } }
   el.muted = false;
   if (el.getAttribute('src')) { el.removeAttribute('src'); try { el.load(); } catch { /* nothing to drop */ } }
 }
@@ -292,9 +294,16 @@ const ON = {
     if (cur && el === cur.el && now() >= cur.slot.endsAt - 40) boundary(gen);
   },
   pause(el) {
-    if (el.dataset.ours) { delete el.dataset.ours; return; }
-    // paused by something other than this radio (the system took the audio, a headset button): the radio goes off
-    if (cur && el === cur.el && !el.ended && !isUnlock(el) && snap.status === 'on') powerOff();
+    if (!cur || el !== cur.el || el.ended || isUnlock(el) || snap.status !== 'on') return;
+    // Paused by something other than this radio (the system took the audio, a headset button): the radio goes off.
+    // Decided a moment later. The radio's own pauses always move on (another element on air, or a new generation),
+    // and a failure (an error, a recovery) is never taken for the listener's pause. (No flag for its own pauses: a
+    // load() right after a pause() drops the queued pause event, and a flag left behind would hide the next one.)
+    pausedAt = performance.now();
+    const g = gen;
+    setTimeout(() => {
+      if (g === gen && cur && el === cur.el && el.paused && !el.ended && !el.error && snap.status === 'on') powerOff();
+    }, 400);
   },
   error(el) {
     if (!el.getAttribute('src') || isUnlock(el)) return;
@@ -441,14 +450,16 @@ async function begin(g, slot, how) {
     }
     if (g !== gen) { if (loading === el) loading = null; return; }
     el.muted = false;
-    el.src = at(url, (now() - slot.startedAt) / 1000 + 0.3); // a little ahead: it takes a moment to start
+    el.src = at(url, (now() - slot.startedAt) / 1000 + START_LEAD); // a little ahead: it takes a moment to start
   }
   gainOf(el, how === 'switch' ? 1 : 0);
-  // Where the song is now, once the element knows its length (the time it took to load included). Never quite to
-  // the end: an ended element would start again from the top when played.
+  // Where the song is now, once the element knows its length (the time it took to load included), aimed a little
+  // ahead for the moment it takes to sound; a song switched in at its top from the preloaded element starts at 0, on
+  // time. Never quite to the end: an ended element would start again from the top when played.
+  const lead = reuse && how === 'switch' ? 0 : START_LEAD;
   const place = () => {
     if (g !== gen || loading !== el) return;
-    const want = (now() - slot.startedAt) / 1000, dur = Number.isFinite(el.duration) ? el.duration : Infinity;
+    const want = (now() - slot.startedAt) / 1000 + lead, dur = Number.isFinite(el.duration) ? el.duration : Infinity;
     const to = Math.max(0, Math.min(want, dur - 0.25));
     if (Math.abs(el.currentTime - to) > 0.3) { try { el.currentTime = to; } catch { /* not seekable yet */ } }
   };
@@ -609,6 +620,7 @@ function tick() {
   if (el.ended || want >= dur - 0.3) return; // the preview's last moment (or past its end): the boundary takes it from here
   // Stopped (with no pause event: a pause from outside powers off) or stuck while the schedule says it should sound:
   // a fresh link, and rejoin live.
+  if (el.paused && performance.now() - pausedAt < 1500) return; // a pause from outside: its handler decides
   if (el.paused || performance.now() - lastProgress > STALL_MS) { recover(); return; }
   if (!el.seeking && el.readyState >= 2 && Math.abs(el.currentTime - want) * 1000 > DRIFT_MS) { try { el.currentTime = want; } catch { /* not seekable */ } }
 }
