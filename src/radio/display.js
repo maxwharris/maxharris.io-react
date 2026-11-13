@@ -41,9 +41,9 @@ class DotLine {
     this.p = (h * d) / 7;
     this.n = Math.floor((w * d) / this.p + 0.01);
   }
-  /** Whether a text fits without scrolling. */
+  /** Whether a text fits without scrolling (a line not measured yet, just shown, is taken to fit: it draws once it is). */
   fits(text) {
-    return this.n > 0 && textCols(text).length <= this.n;
+    return !this.n || textCols(text).length <= this.n;
   }
   draw(text, now, on, reduced) {
     if (text !== this.text) { this.text = text; this.cols = textCols(text); this.t0 = now; }

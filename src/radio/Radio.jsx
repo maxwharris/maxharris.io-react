@@ -97,8 +97,9 @@ export default function Radio({ context = 'window' }) {
   const display = useRef(null);
 
   const status = s.status, on = status === 'on', pw = POWERED.has(status);
-  // what the display shows: the station (999.9 and maxradio), the song in big dots, or the clock in the big digits
-  const view = !pw ? 'off' : s.disp === 'text' || s.disp === 'clock' ? s.disp : 'station';
+  // what the display shows: the station (999.9 and maxradio), the song in big dots (while there is one), or the clock in
+  // the big digits
+  const view = !pw ? 'off' : s.disp === 'text' && on ? 'text' : s.disp === 'clock' ? 'clock' : 'station';
   // a moment on the display (display.js puts it where it fits whole): what DISP or ILLUM picked, the engine's (vol 24,
   // no station), or rel opening the tab while this one plays on
   const local = said && (!s.flash || s.flash === said.after) ? said.text : '';
@@ -112,8 +113,7 @@ export default function Radio({ context = 'window' }) {
     main = view === 'text' ? title : 'maxradio';
     rt = view === 'text' ? '999.9 fm  maxradio' : title;
   }
-  const big = on ? title : main;
-  const texts = { main: vfdText(main), big: vfdText(big), rt: vfdText(rt), flash: vfdText(flash) };
+  const texts = { main: vfdText(main), big: vfdText(title), rt: vfdText(rt), flash: vfdText(flash) };
   const lit = illumColor(s.illum);
   const ampm = (clock.ampm || '').toLowerCase(), tz = (clock.tz || 'et').toLowerCase();
   const sr = on && s.song ? `now playing ${title.toLowerCase()}, maxradio 999.9 fm` : SR[status] || '';
