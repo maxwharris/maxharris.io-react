@@ -1,5 +1,5 @@
 // A COPY of the record's drawing code from the catalog's frontend/src/lib/ascii.js (the catalog repo, ../catalog), with
-// makeMotion from its components/Art.jsx, so MAXradio's record is the catalog's record (Max, 11/13/26: "lets also
+// makeMotion from its components/Art.jsx, so maxradio's record is the catalog's record (Max, 11/13/26: "lets also
 // reutilize the dynamic graphic for the radio. does not need to be interactive"). Keep it in step: when the record
 // changes there, copy the change here. Copied as written: RAMP, CELL, ringGeo, texture, needleRadius, needlePoint,
 // drawRings, beatPulse, makeMotion. Left out on purpose: timeAt (tapping a groove; the radio's record takes no input),

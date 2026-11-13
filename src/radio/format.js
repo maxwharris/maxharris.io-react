@@ -1,25 +1,5 @@
-// The radio's small pure helpers (no DOM, tested in format.test.js): what the display writes, the song list as the
-// engine keeps it, and the clock calibration. The tempo and key wording are the catalog's (frontend/src/lib/format.js
-// bpm, frontend/src/lib/keys.js shortKey): 110 and "Cm", as the catalog writes them.
-
-/** A tempo as the catalog writes it: 110, 87.5; '' for none. */
-export function bpmText(x) {
-  const n = Number(x);
-  if (!Number.isFinite(n) || n <= 0) return '';
-  return String(Math.round(n * 10) / 10);
-}
-
-// The catalog's key parsing (frontend/src/lib/keys.js): "C minor", "Cm", "F# maj", "Bb".
-const ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-const PC = { C: 0, 'B#': 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, Fb: 4, F: 5, 'E#': 5, 'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11, Cb: 11 };
-/** A key as the catalog writes it short: "Em", "F#m", "A", "Bb"; '' when it does not read as one. */
-export function keyText(s) {
-  const m = /^\s*([A-Ga-g])([#b]?)\s*(major|minor|maj|min|m)?\s*$/.exec(String(s || ''));
-  if (!m) return '';
-  const pc = PC[m[1].toUpperCase() + (m[2] || '')];
-  if (pc === undefined) return '';
-  return ROOTS[pc] + (/^(minor|min|m)$/.test(m[3] || '') ? 'm' : '');
-}
+// The radio's small pure helpers (no DOM, tested in format.test.js): the title line, the Eastern clock, the song list
+// as the engine keeps it, and the clock calibration.
 
 /** The title with its credit, as the display scrolls it: "fly low (a friend)". */
 export const titleLine = (song) => (song ? song.title + (song.credit ? ` (${song.credit})` : '') : '');

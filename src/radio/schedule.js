@@ -1,4 +1,4 @@
-// MAXradio's station clock (Max, 11/13/26: "follow an algorithm following current time of day (according to EST) and
+// maxradio's station clock (Max, 11/13/26: "follow an algorithm following current time of day (according to EST) and
 // playlist size"; "it should work like a real radio without a single broadcast source, instead an algorithm").
 //
 // There is no broadcast and no stored state. Every listener's page runs this on the server-calibrated clock and the

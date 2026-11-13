@@ -38,12 +38,12 @@ export function historyStep(term, dir) {
   return term.hist[hi] || '';
 }
 
-// MAXradio (src/radio): reached only by typing radio. It is primed here, inside the keypress, so the browser lets it
+// maxradio (src/radio): reached only by typing radio. It is primed here, inside the keypress, so the browser lets it
 // play once its window opens; the window then switches it on. Typed again while the window is open, it comes back on
 // (say another tab had taken it).
 function tuneRadio(ctx, say) {
   prime();
-  say('tuning to 999.9 MAXradio...', 'c2');
+  say('tuning to 999.9 maxradio...', 'c2');
   const w = ctx.get().wins.radio;
   ctx.actions.open('radio', {}, ctx.origin());
   if (w && !w.closing) tuneIn();

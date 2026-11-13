@@ -418,7 +418,7 @@ export function Terminal({ win }) {
 }
 
 // ---------- radio ----------
-// MAXradio (src/radio). The engine is part of the desktop (the terminal tunes in inside the keypress); the faceplate,
+// maxradio (src/radio). The engine is part of the desktop (the terminal tunes in inside the keypress); the faceplate,
 // the record and its font load the first time the radio opens. Open: on, live. Closing powers it off (at once, not
 // after the exit animation); minimized, or parked in the dock, it plays on.
 // A faceplate that will not load (a dropped connection, or a deploy that replaced its file while the page was open) is

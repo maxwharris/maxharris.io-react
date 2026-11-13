@@ -1,4 +1,4 @@
-// MAXradio's engine: the one radio on a page, with no React in it (useRadio.js is the hook over it, Radio.jsx only draws
+// maxradio's engine: the one radio on a page, with no React in it (useRadio.js is the hook over it, Radio.jsx only draws
 // what it says). It follows the station clock (schedule.js) on the server's time and the radio crate as the catalog
 // lists it live (GET /catalog/api/radio): there is no broadcast and nothing stored, so every listener's page works out
 // the same song at the same offset, and tuning in joins mid-song. The audio is the catalog's own 160 kbps previews,
@@ -26,7 +26,7 @@ export const PAGE_URL = '/radio/';
  * ILLUM steps the display, the knob's ring and the key legends through (vfd.js ILLUM), blue first. */
 export const DISPLAY_MODES = ['station', 'text', 'clock'];
 export const ILLUMS = ['blue', 'aqua', 'green', 'amber', 'red', 'white'];
-export const STATION = 'MAXradio';
+export const STATION = 'maxradio'; // Max: "in maxradio, keep all lowercase"
 export const FREQ = '999.9';
 
 const PRELOAD_MS = 20000; // the next song starts loading this long before its boundary
@@ -82,7 +82,7 @@ let snap = {
   volumeWorks: elementVolumeWorks(),
   disp: keptChoice(KEEP.disp, DISPLAY_MODES),
   illum: keptChoice(KEEP.illum, ILLUMS),
-  flash: null, // {text, n}: a moment on the display (NO STATION, VOL 24)
+  flash: null, // {text, n}: a moment on the display (no station, vol 24)
   popping: false, // REL pressed: playing on until the new tab says it plays
   reason: '', // offair: 'empty' or 'unreachable'
   waves: 0, // counts waveforms as they arrive, so the record redraws
@@ -384,7 +384,7 @@ function mediaShow(song) {
   if (!BROWSER || !('mediaSession' in navigator)) return;
   try {
     if (typeof window.MediaMetadata === 'function') {
-      navigator.mediaSession.metadata = new window.MediaMetadata({ title: song ? titleLine(song) : STATION, artist: `${STATION} ${FREQ} FM`, album: 'maxharris.io' });
+      navigator.mediaSession.metadata = new window.MediaMetadata({ title: song ? titleLine(song).toLowerCase() : STATION, artist: `${STATION} ${FREQ} fm`, album: 'maxharris.io' });
     }
     navigator.mediaSession.playbackState = song ? 'playing' : 'paused';
   } catch { /* older browsers */ }
@@ -799,7 +799,7 @@ export function setVolume(v) {
     for (const el of els()) applyVolume(el);
     if (hiss && ctx) { try { hiss.g.gain.setTargetAtTime(0.0001 + 0.05 * taper(volume), ctx.currentTime, 0.05); } catch { /* ended */ } }
   }
-  flash(snap.volumeWorks ? `VOL ${Math.round(volume * 30)}` : 'USE DEVICE VOL', 1100);
+  flash(snap.volumeWorks ? `vol ${Math.round(volume * 30)}` : 'device vol', 1100);
 }
 
 export function cycleDisplay() {
@@ -813,15 +813,15 @@ export function cycleIllum() {
   keep(KEEP.illum, illum);
 }
 
-/** Presets 1 to 6: 1 is MAXradio, the only station (it switches the radio on); the rest have nothing stored. */
+/** Presets 1 to 6: 1 is maxradio, the only station (it switches the radio on); the rest have nothing stored. */
 export function preset(n) {
   if (n === 1) {
     const s = snap.status;
     if (s === 'off' || s === 'blocked' || s === 'released') power();
-    else flash(`P1 ${STATION}`);
+    else flash(`p1 ${STATION}`);
     return;
   }
-  flash('NO STATION');
+  flash('no station');
 }
 
 /**
@@ -832,7 +832,7 @@ export function popOut() {
   if (!BROWSER) return false;
   let w = null;
   try { w = window.open(PAGE_URL, '_blank'); } catch { w = null; }
-  if (!w) { flash('POP-UP BLOCKED'); return false; }
+  if (!w) { flash('tab blocked'); return false; }
   try { w.opener = null; } catch { /* nothing to cut */ }
   if (snap.status === 'on' || snap.status === 'tuning') {
     set({ popping: true });

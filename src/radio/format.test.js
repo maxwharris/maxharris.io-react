@@ -1,17 +1,9 @@
-// The radio's pure helpers (npm test): the catalog's wording, the Eastern clock, the song list and the calibration.
+// The radio's pure helpers (npm test): the title line, the Eastern clock, the song list and the calibration.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bpmText, keyText, titleLine, easternClock, parseExpires, normalizeSongs, calibrate } from './format.js';
+import { titleLine, easternClock, parseExpires, normalizeSongs, calibrate } from './format.js';
 
-test('tempo, key and title read as the catalog writes them', () => {
-  assert.equal(bpmText(110), '110');
-  assert.equal(bpmText(87.46), '87.5');
-  assert.equal(bpmText(0), '');
-  assert.equal(bpmText(null), '');
-  assert.equal(keyText('C minor'), 'Cm');
-  assert.equal(keyText('F# major'), 'F#');
-  assert.equal(keyText('Bb min'), 'Bbm');
-  assert.equal(keyText('nonsense'), '');
+test('the title line carries the credit when there is one', () => {
   assert.equal(titleLine({ title: 'fly low', credit: 'a friend' }), 'fly low (a friend)');
   assert.equal(titleLine({ title: 'hektik', credit: null }), 'hektik');
 });
