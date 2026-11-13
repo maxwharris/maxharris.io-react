@@ -105,7 +105,7 @@ export default function Radio({ context = 'window' }) {
   const flash = pw ? local || (s.flash ? s.flash.text : '') || (on && s.popping ? 'opening tab' : '') : '';
   const title = s.song ? titleLine(s.song) : '';
   let main = '', rt = '';
-  if (status === 'tuning') { main = 'tuning'; rt = `seek ${freq}`; }
+  if (status === 'tuning') { main = 'tuning'; rt = 'to 999.9 fm'; } // the digits sweep up the band meanwhile
   else if (status === 'blocked') { main = 'push pwr'; rt = 'push pwr to tune in'; }
   else if (status === 'offair') { main = 'no signal'; rt = s.reason === 'unreachable' ? 'searching for 999.9 fm' : 'maxradio is off air'; }
   else if (on) {

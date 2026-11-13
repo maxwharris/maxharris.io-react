@@ -1,11 +1,11 @@
 /* The pop-out page: the radio centred on a quiet backdrop (warm grey in light, near black in dark, with a little grain),
    and a small way back to the desktop under it. */
 :root {
-  --pg-hi: #f1efea; --pg-lo: #cdc9c0; --pg-ink: rgba(21,23,26,.5); --pg-ink-hi: #15171a;
+  --pg-hi: #f1efea; --pg-lo: #cdc9c0; --pg-ink: rgba(21,23,26,.66); --pg-ink-hi: #15171a;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --pg-hi: #1b1c1f; --pg-lo: #060708; --pg-ink: rgba(236,238,240,.42); --pg-ink-hi: #eceef0; color-scheme: dark; }
+  :root { --pg-hi: #1b1c1f; --pg-lo: #060708; --pg-ink: rgba(236,238,240,.58); --pg-ink-hi: #eceef0; color-scheme: dark; }
 }
 html, body { margin: 0; height: 100%; }
 html { background: var(--pg-lo); }
