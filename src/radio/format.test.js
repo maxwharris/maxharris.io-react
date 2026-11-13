@@ -1,9 +1,9 @@
-// The radio's pure helpers (npm test): the label's wording, the Eastern clock, the song list and the calibration.
+// The radio's pure helpers (npm test): the catalog's wording, the Eastern clock, the song list and the calibration.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bpmText, keyText, recordLabel, titleLine, easternClock, parseExpires, normalizeSongs, calibrate } from './format.js';
+import { bpmText, keyText, titleLine, easternClock, parseExpires, normalizeSongs, calibrate } from './format.js';
 
-test('the label reads as the catalog writes it', () => {
+test('tempo, key and title read as the catalog writes them', () => {
   assert.equal(bpmText(110), '110');
   assert.equal(bpmText(87.46), '87.5');
   assert.equal(bpmText(0), '');
@@ -12,19 +12,16 @@ test('the label reads as the catalog writes it', () => {
   assert.equal(keyText('F# major'), 'F#');
   assert.equal(keyText('Bb min'), 'Bbm');
   assert.equal(keyText('nonsense'), '');
-  assert.deepEqual(recordLabel({ title: 'fly low', bpm: 110, key: 'C minor' }), ['fly low', '110 · Cm']);
-  assert.deepEqual(recordLabel({ title: 'hektik', bpm: null, key: 'E minor' }), ['hektik', 'Em']);
-  assert.deepEqual(recordLabel({ title: 'hektik', bpm: null, key: null }), ['hektik', '']);
-  assert.deepEqual(recordLabel(null), []);
   assert.equal(titleLine({ title: 'fly low', credit: 'a friend' }), 'fly low (a friend)');
   assert.equal(titleLine({ title: 'hektik', credit: null }), 'hektik');
 });
 
 test('the clock is Eastern time whatever the device zone', () => {
-  assert.deepEqual(easternClock(Date.UTC(2026, 10, 13, 5, 0, 0)), { time: '12:00', ampm: 'AM', text: '12:00 AM' });
-  assert.deepEqual(easternClock(Date.UTC(2026, 10, 13, 22, 7, 0)), { time: '5:07', ampm: 'PM', text: '5:07 PM' });
-  // daylight time in summer: UTC-4
+  assert.deepEqual(easternClock(Date.UTC(2026, 10, 13, 5, 0, 0)), { time: '12:00', ampm: 'AM', tz: 'EST', text: '12:00 AM' });
+  assert.deepEqual(easternClock(Date.UTC(2026, 10, 13, 22, 7, 0)), { time: '5:07', ampm: 'PM', tz: 'EST', text: '5:07 PM' });
+  // daylight time in summer: UTC-4, and the display says so
   assert.equal(easternClock(Date.UTC(2027, 6, 1, 16, 30, 0)).text, '12:30 PM');
+  assert.equal(easternClock(Date.UTC(2027, 6, 1, 16, 30, 0)).tz, 'EDT');
   assert.equal(easternClock(NaN).time, '--:--');
 });
 

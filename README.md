@@ -7,7 +7,7 @@ windows floating over a circuit board that is generated and drawn live on a canv
 npm install
 npm run dev        # http://localhost:5173 (proxies /api and /socket.io to the server on :3001)
 npm run build
-npm test           # the radio's station clock and helpers (node --test)
+npm test           # the radio's station clock, helpers and display (node --test)
 RADIO_MOCK=1 npm run dev   # the radio against four local test songs instead of the catalog
 ```
 
@@ -25,7 +25,7 @@ RADIO_MOCK=1 npm run dev   # the radio against four local test songs instead of 
 | `src/os/Phone.jsx` | the home screen used on phones and upright tablets |
 | `src/os/board.js` | the circuit board behind the windows (neon, classic, ink, relief, gold): generated, routed and animated on a canvas; no React |
 | `src/os/terminal.js` | the terminal's commands |
-| `src/radio/` | MAXradio, reached by typing `radio`: the station clock (`schedule.js`, every listener works out the same song and offset), the engine (`engine.js`, no React), its hook (`useRadio.js`), the catalog's record (`record/`, a copy to keep in step) and the faceplate (`Radio.jsx`, a functional skeleton). It plays the catalog's radio crate live from `/catalog/api/radio`; `scripts/radio-mock.js` stands in for it with `RADIO_MOCK=1` |
+| `src/radio/` | maxradio, reached by typing `radio`: the station clock (`schedule.js`, every listener works out the same song and offset), the engine (`engine.js`, no React), its hook (`useRadio.js`), the catalog's record (`record/ascii.js` and `peaks.js`, a copy to keep in step; `record/dots.js` draws it in dots) and the faceplate, the single-DIN unit Max picked (`Radio.jsx` and `radio.css`; `display.js` draws its dot-matrix display, `vfd.js` holds its 5x7 font, 7-segment digits and scrolling). Everything it writes is lowercase. It plays the catalog's radio crate live from `/catalog/api/radio`; `scripts/radio-mock.js` stands in for it with `RADIO_MOCK=1` |
 | `radio/index.html` | the radio on its own at `/radio/` (REL pops it out): a second page in the build that loads only React and the radio |
 | `src/pages/SharePage.jsx`, `src/etf.jsx` | `/share` and `/etf`, loaded only when visited. `/share` is switched off for now (`SHARE_ON` in `src/App.jsx` and `server/index.js`) |
 | `server/` | express API: contact form (`/api/contact`), share board, analytics |
