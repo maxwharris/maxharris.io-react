@@ -1,7 +1,7 @@
 // Dev only: the catalog's talk-over, as the contract between the catalog and this site has it (the catalog's
 // docs/app.md, Radio). scripts/radio-mock.js (RADIO_MOCK=1) answers its routes from here, and scripts/radio-admin-mock.js
 // (RADIO_ADMIN_MOCK=1) puts the talk field from here into its GET /radio. One talk at a time. The PCM a talk is sent is
-// encoded by a real ffmpeg into a live MP3 (mono, 44.1 kHz, 64 kbps CBR), and every listener gets whole frames from about
+// encoded by a real ffmpeg into a live MP3 (mono, 44.1 kHz, 128 kbps CBR), and every listener gets whole frames from about
 // half a second back, then the rest as it comes; the events stream says where the talk stands. A talk ends on DELETE, on
 // a take-over, after 4 s with no audio, after 30 minutes, or from the switch below; ending closes every stream and says
 // so on the events stream. vite.config.js loads the mocks only in the dev server, so none of it reaches a build.
@@ -34,7 +34,7 @@ const BEAT_MS = 20000; // a comment on every events stream this often
 const MAX_LISTENERS = 50; // streams of one talk at once
 const MAX_WATCHERS = 200; // events streams at once
 const ENCODE = ['-hide_banner', '-loglevel', 'error', '-f', 's16le', '-ar', String(RATE), '-ac', '1', '-i', 'pipe:0',
-  '-ac', '1', '-ar', '44100', '-c:a', 'libmp3lame', '-b:a', '64k', '-write_xing', '0', '-id3v2_version', '0',
+  '-ac', '1', '-ar', '44100', '-c:a', 'libmp3lame', '-b:a', '128k', '-write_xing', '0', '-id3v2_version', '0',
   '-flush_packets', '1', '-f', 'mp3', 'pipe:1'];
 
 let hasFfmpeg = null;

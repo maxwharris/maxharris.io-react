@@ -100,12 +100,12 @@ test('a failing talk stream is asked for again, further apart, for as long as th
   assert.equal(voiceRetryMs({ tries: 0, talk: null, id: ID }), -1);
 });
 
-test('Max is told how late listeners hear him: about 5 s, mostly Chrome holding back the stream', () => {
-  // Chrome starts a live MP3 once it holds about 32 KB: at the catalog's 64 kbps that is 4.1 s, then the mic's 250 ms
+test('Max is told how late listeners hear him: about 3 s, mostly Chrome holding back the stream', () => {
+  // Chrome starts a live MP3 once it holds about 32 KB: at the catalog's 128 kbps that is 2 s, then the mic's 250 ms
   // chunks and the catalog's 0.4 s from a post to its stream (in the dev mocks, 4.5 s from going live to the first sound)
-  const chromeHolds = (32 * 1024 * 8) / 64000;
+  const chromeHolds = (32 * 1024 * 8) / 128000;
   assert.equal(TALK_LAG_S, Math.round(chromeHolds + 0.25 + 0.4));
-  assert.equal(TALK_LAG_S, 5);
+  assert.equal(TALK_LAG_S, 3);
 });
 
 test("the events stream's word wins while it is live; a queue read stands in when it is not", () => {

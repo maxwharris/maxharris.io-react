@@ -25,7 +25,7 @@
 // station clock like the songs (schedule.js dropFor), so a listener tuning in during one joins it partway. Where element
 // volume works the music dips under them.
 //
-// The talk-over: Max goes live in the radio admin (admin/mic.js) and every radio hears him about 5 s later (talk.js,
+// The talk-over: Max goes live in the radio admin (admin/mic.js) and every radio hears him about 3 s later (talk.js,
 // TALK_LAG_S: mostly the browser holding back the start of a live MP3), over the music (Max, 11/15/26: "so the user can
 // talk over the radio like announcer"; he picked "works everywhere", locked iPhones included). The catalog says when a
 // talk is on (GET /radio's talk field, and its events stream, open while the radio is on) and streams it as a live MP3
