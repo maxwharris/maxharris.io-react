@@ -247,7 +247,7 @@ export function createMeadow({ reduced = () => false } = {}) {
     const nA = clamp(Math.round(W / 470), 2, 6), top = (tall ? 0.1 : 0.12) * H, bot = base - (tall ? 0.14 : 0.18) * H, high = [];
     for (let i = 0; i < nA; i++) {
       const c = cloud(r, S * (260 + 250 * r()) * [1.25, 0.72, 1][i % 3], false), f = [0.25, 0.85, 0.5][i % 3] + 0.25 * (r() - 0.5);
-      high.push({ ...c, at: 0.3 + 0.4 * r(), y: top + c.h + Math.max(0, bot - top - c.h) * f });
+      high.push({ ...c, at: 0.38 + 0.24 * r(), y: top + c.h + Math.max(0, bot - top - c.h) * f });
     }
     layer(high, 0.25, 6.5 * V);
     // small, flat clouds low over the hills, further off and slower
@@ -444,7 +444,8 @@ export function createMeadow({ reduced = () => false } = {}) {
     if (key === built && sky) return;
     W = Math.max(2, w); H = Math.max(2, h); dpr = k;
     U = clamp(Math.min(W, H) / 900, 0.55, 1.6);
-    S = clamp(Math.sqrt(W * H) / 1150, 0.66, 1.9);
+    // the clouds grow with the screen, but no faster than its height, so an ultrawide sky does not crowd
+    S = clamp(Math.min(Math.sqrt(W * H) / 1150, H / 860), 0.66, 1.9);
     V = clamp(W / 1440, 0.5, 1.8);
     mx = W * 0.012; my = H * 0.01;
     geometry();

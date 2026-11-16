@@ -394,6 +394,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:28px}
 #saver b{font-size:clamp(64px,11vw,150px);font-weight:600;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
 #saver span{font:500 13px var(--mono);opacity:.8;margin-top:10px}
 .os.saver #saver{opacity:1}
+.os[data-board="meadow"] #saver{text-shadow:0 2px 26px rgba(6,28,70,.6),0 1px 3px rgba(6,28,70,.45)}/* the clock stands over the pale horizon and the sunlit crest */
 .os.saver #wins,.os.saver #menubar,.os.saver #dock,.os.saver #desk,.os.saver #crown{opacity:0;transition:opacity 1.2s}
 #boot{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:#060b10;color:#eef2f5;animation:bootout .45s ease .65s forwards;cursor:pointer}
 .boot-in{display:flex;flex-direction:column;align-items:center;gap:12px;animation:bootin .6s cubic-bezier(.2,.9,.3,1) backwards}
