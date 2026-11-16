@@ -13,11 +13,12 @@
 //
 // Playback is two <audio> elements: the song on air, and the next one loading about 20 s before its boundary. The queue
 // is read again a few seconds before every boundary (and every minute, and when the tab comes back), so the switch uses
-// the newest order. An edit never cuts the song on air (the catalog carries it to its end; Max, 11/15/26: edits take
-// effect when the song on air ends); only taking that song out of the queue retunes at once. The music never goes
-// through Web Audio (iOS stops it in the background, and S3 sends no CORS headers, so it could not be read anyway); Web
-// Audio only makes the static, and the level meter and the record read the song's waveform (GET
-// /catalog/api/radio/peaks/:id) at the live position instead of the sound.
+// the newest order, and once more as the boundary passes, so an edit made in those last seconds takes over at once
+// rather than at the next read, a minute into the song. An edit never cuts the song on air (the catalog carries it to
+// its end; Max, 11/15/26: edits take effect when the song on air ends); only taking that song out of the queue retunes
+// at once. The music never goes through Web Audio (iOS stops it in the background, and S3 sends no CORS headers, so it
+// could not be read anyway); Web Audio only makes the static, and the level meter and the record read the song's
+// waveform (GET /catalog/api/radio/peaks/:id) at the live position instead of the sound.
 //
 // The announcer drops (Max, 11/15/26: "should play over tracks maybe once per track (towards the beginning) alternating
 // between the two") play on an element of their own, on the station clock like the songs (schedule.js dropFor), so a
@@ -719,7 +720,10 @@ async function preload(g) {
   loadPeaks(slot.song.id);
 }
 
-/** A few seconds before the boundary: the queue as it is now, so the next song is the newest order's. */
+/**
+ * A few seconds before the boundary: the queue as it is now, so the next song is the newest order's. And again as the
+ * boundary passes (boundary()), for an edit made in between.
+ */
 async function readAhead(g) {
   const s = session;
   if (g !== gen || !s || !cur) return;
@@ -777,6 +781,10 @@ function boundary(g) {
   // after an edit that took out the song on air the schedule may be partway through a song here: that joins like
   // tuning in, faded up
   begin(g2, cur.slot, x.offsetMs > 500 ? 'join' : 'switch');
+  // The queue once more: an edit made since the read before this boundary (play next, or taking out the song that
+  // was next) put another song on air here. follow() tunes to it now, before or just as this one sounds, instead of
+  // at the next read, which could be a minute into this song.
+  readAhead(g2);
 }
 
 /** Tune again at once (the song on air left the queue, or this radio fell out of step), joining what is on air now. */
