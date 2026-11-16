@@ -3,6 +3,7 @@ import { owner, work } from '../data/site';
 import { useOS, APPS, APP } from './store';
 import { Icon, Disc } from './icons';
 import { ThemeButton } from './shell';
+import { openRadio } from './radioIcon';
 import { useClock } from './useClock';
 
 // Below 760px the desktop becomes a home screen; apps open as full-height sheets.
@@ -42,6 +43,9 @@ export default function Phone() {
               <Disc tint={a.id} glyph={a.glyph} /><span className="lbl">{a.label}</span>
             </button>
           ))}
+          <button type="button" className="p-app g" onClick={(e) => openRadio(state, actions, disc(e))}>
+            <Disc tint="radio" glyph="radio" /><span className="lbl">radio</span>
+          </button>
         </nav>
         <section className="p-work glass" aria-label="work">
           <h2>work · {work.length} projects</h2>

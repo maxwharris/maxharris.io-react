@@ -5,6 +5,7 @@ import { useClock } from './useClock';
 import { Icon, Disc } from './icons';
 import { SCENES } from './board';
 import { Swatch } from './apps';
+import { openRadio } from './radioIcon';
 
 export function ThemeButton({ className = 'mb g' }) {
   const { actions, theme } = useOS();
@@ -112,13 +113,15 @@ export function MenuBar() {
 }
 
 // ---------- desktop icons ----------
-const DESK = [['work', 'work', 'work', 'work'], ['personal', 'personal', 'personal', 'personal'], ['about', 'about', 'about', 'about.txt'], ['terminal', 'terminal', 'terminal', 'terminal'], ['mail', 'mail', 'mail', 'say hi']];
+// the last is maxradio's (radioIcon.js), which opens the radio window and tunes in
+const DESK = [['work', 'work', 'work', 'work'], ['personal', 'personal', 'personal', 'personal'], ['about', 'about', 'about', 'about.txt'], ['terminal', 'terminal', 'terminal', 'terminal'], ['mail', 'mail', 'mail', 'say hi'], ['radio', 'radio', 'radio', 'radio']];
 export function Desk({ inert }) {
   const { state, actions } = useOS();
+  const open = (id, disc) => (id === 'radio' ? openRadio(state, actions, disc) : actions.openApp(id, disc));
   return (
     <nav id="desk" aria-label="desktop" inert={inert}>
       {DESK.map(([id, t, g, l]) => (
-        <button key={id} type="button" className="dicon g" onClick={(e) => actions.openApp(id, e.currentTarget.querySelector('.disc'))}>
+        <button key={id} type="button" className="dicon g" onClick={(e) => open(id, e.currentTarget.querySelector('.disc'))}>
           <Disc tint={t} glyph={g} /><span className="lbl">{l}</span>
         </button>
       ))}

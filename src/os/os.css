@@ -127,7 +127,9 @@ html.os-on,html.os-on body{margin:0;height:100%;overflow:hidden;background:#1630
 .os.watching #wins{transform:scale(.93);opacity:.12;pointer-events:none}
 .os.watching #wins .win{pointer-events:none}
 .os.watching #desk{opacity:0;pointer-events:none}
-@media (max-height:780px){#desk{top:56px;gap:0}.dicon{padding:4px 4px 6px;gap:5px}.dicon .disc{--s:44px}}
+/* six desk icons since the radio's (seven with secrets.txt): packed closer below 900px tall so they clear the crown */
+@media (max-height:900px){#desk{top:56px;gap:0}.dicon{padding:4px 4px 6px;gap:5px}}
+@media (max-height:790px){.dicon .disc{--s:44px}}
 .win{position:absolute;pointer-events:auto;transition:left .55s cubic-bezier(.2,.8,.2,1),top .55s cubic-bezier(.2,.8,.2,1),width .55s cubic-bezier(.2,.8,.2,1),height .55s cubic-bezier(.2,.8,.2,1)}
 .win.dragging{transition:width .55s cubic-bezier(.2,.8,.2,1),height .55s cubic-bezier(.2,.8,.2,1)}
 .win[hidden]{display:none}
