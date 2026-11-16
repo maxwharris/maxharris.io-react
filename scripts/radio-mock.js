@@ -1,24 +1,32 @@
 // Dev only. `RADIO_MOCK=1 npm run dev` answers the radio's three catalog routes (GET /catalog/api/radio, /play/:id,
-// /peaks/:id) with four short test songs, so the radio can be tried before the catalog serves them and a boundary comes
+// /peaks/:id) with five short test songs, so the radio can be tried before the catalog serves them and a boundary comes
 // round in seconds. Two of them do what real previews may: 'night drive' runs longer than the schedule says (cut at the
-// boundary) and 'low tide' ends early (quiet until it). The tones are made once into .radio-mock/ (gitignored): AAC in
-// MP4 like the catalog's previews when ffmpeg is installed, else WAV. vite.config.js loads this file only in the dev
-// server with RADIO_MOCK=1, so nothing of it reaches a build.
+// boundary) and 'low tide' ends early (quiet until it). Only 'sign on' (16 s) and 'long play' (20 s) are long enough for
+// an announcer drop (8 s in, schedule.js dropFor), and they play one after the other, so their drops take turns. The
+// tones are made once into .radio-mock/ (gitignored): AAC in MP4 like the catalog's previews when ffmpeg is installed,
+// else WAV. vite.config.js loads this file only in the dev server with RADIO_MOCK=1, so nothing of it reaches a build.
+//
+// The queue works as the catalog's does (Max, 11/15/26): the songs in the crate's order, looping, from a stored anchor,
+// with the song on air at an edit carried to its end. Every change below re-anchors at once, at that moment, as an edit
+// in the catalog does (reanchor, the catalog's rule; scripts/radio-mock.test.js).
 //
 // Change the station while it runs (each answers the mock's state as JSON):
-//   /__radio-mock/state?songs=9001,9003   which songs are in the crate, in order (any of 9001 to 9004)
+//   /__radio-mock/state?songs=9001,9003   which songs are in the crate, in order (any of 9001 to 9005): an edit; leave out
+//                                         the song on air to take it off (the radio retunes)
+//   /__radio-mock/state?next=9004         move a song to just after the one on air (the admin's play next)
 //   /__radio-mock/state?on=0              no radio crate (NO SIGNAL); on=1 brings it back
 //   /__radio-mock/state?fail=2            the next 2 audio requests answer 403, like an expired link
 //   /__radio-mock/state?drop=1            the next audio response breaks off a third of the way in (a dropped connection)
 //   /__radio-mock/state?skew=5000         the server's clock 5 s ahead of this computer's
 //   /__radio-mock/state?ttl=30            links good for 30 s instead of an hour
 //   /__radio-mock/state?retitle=9001:a much longer title   a new title, as when Max renames a song (no new version)
-//   /__radio-mock/state?reset=1           all of that back to the start
+//   /__radio-mock/state?reset=1           all of that back to the start, the queue anchored afresh
 
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { onAir } from '../src/radio/schedule.js';
 
 const DIR = path.resolve(process.cwd(), '.radio-mock');
 const RATE = 44100;
@@ -27,8 +35,9 @@ const SONGS = [
   { id: 9002, title: 'night drive', credit: 'the static', seconds: 9, audio: 9.8, bpm: 96, key: 'C minor', notes: [48, 55, 51, 58, 60, 58, 55, 51], look: { bg: '#f7d75c', fg: '#15130f', card: '#fae38a' } },
   { id: 9003, title: 'sign on', credit: null, seconds: 16, audio: 16, bpm: null, key: null, notes: [62, 66, 69, 74, 69, 66], look: { bg: '#06110a', fg: '#4aee7f', card: '#0b1c11' } },
   { id: 9004, title: 'low tide', credit: 'a friend', seconds: 11.2, audio: 10.6, bpm: 140, key: 'F major', notes: [53, 57, 60, 65, 64, 60, 57, 55], look: { bg: '#1430c4', fg: '#ffffff', card: '#0c2194' } },
+  { id: 9005, title: 'long play', credit: null, seconds: 20, audio: 20, bpm: 100, key: 'D minor', notes: [50, 53, 57, 62, 60, 57, 53, 52], look: { bg: '#d9472b', fg: '#fff4e8', card: '#b83a22' } },
 ];
-const START = { ids: SONGS.map((s) => s.id), on: true, fail: 0, drop: 0, skew: 0, ttl: 3600, titles: {} };
+const START = { ids: [9001, 9002, 9003, 9005, 9004], on: true, fail: 0, drop: 0, skew: 0, ttl: 3600, titles: {} };
 let state = { ...START };
 
 // ---------------------------------------------------------------- the tones
@@ -93,13 +102,54 @@ function make(log) {
   log(`radio mock: made ${SONGS.length} test songs in ${path.relative(process.cwd(), DIR)}/ (${ext})`);
 }
 
-// ---------------------------------------------------------------- the routes
+// ---------------------------------------------------------------- the queue
+/**
+ * The catalog's re-anchor (its backend/lib/radio.js), run when the playable list changes, at that moment te (station
+ * clock ms). old: what was stored, {songs: [[id, durationMs], ...], anchor, carry}; list: the playable songs now, in
+ * order, [{id, durationMs}]. Returns what to store. The song on air at te (the old order's walk, schedule.js onAir) plays
+ * on to its end when it is still in the list, and the new order takes over with the song after it; a song on air that
+ * left the list stops at te, and the next of the old order still in the list takes over at once.
+ */
+export function reanchor(old, list, version, te) {
+  if (!list.length) return { version, songs: [], anchor: null, carry: null };
+  const was = { songs: (old && old.songs ? old.songs : []).map(([id, durationMs]) => ({ id, durationMs })), anchor: old ? old.anchor : null, carry: old ? old.carry : null };
+  const ids = list.map((s) => s.id), S = onAir(was, te);
+  let anchor, carry = null;
+  if (!S) anchor = { at: te, songId: ids[0] };
+  else if (ids.includes(S.song.id)) {
+    carry = { songId: S.song.id, startedAt: S.startedAt, endsAt: S.endsAt };
+    anchor = { at: S.endsAt, songId: ids[(ids.indexOf(S.song.id) + 1) % ids.length] };
+  } else {
+    const order = was.songs.map((s) => s.id), i = order.indexOf(S.song.id);
+    let songId = ids[0];
+    for (let j = 1; j < order.length; j++) {
+      const id = order[(i + j) % order.length];
+      if (ids.includes(id)) { songId = id; break; }
+    }
+    anchor = { at: te, songId };
+  }
+  return { version, songs: list.map((s) => [s.id, s.durationMs]), anchor, carry };
+}
+/** The list's version, as the catalog writes it: 12 hex of a sha1 of id:durationMs in order ('' when empty). */
+export const versionOf = (list) => (list.length ? crypto.createHash('sha1').update(list.map((s) => `${s.id}:${s.durationMs}`).join(',')).digest('hex').slice(0, 12) : '');
+
+let station = { version: '', songs: [], anchor: null, carry: null }; // the catalog's one row
+const serverNow = () => Date.now() + state.skew;
 const crate = () => (state.on ? state.ids.map((id) => SONGS.find((s) => s.id === id)).filter(Boolean) : []);
+/** Re-anchor when the playable list is not the stored one (lazily on GET, and at once after every change). */
+function sync() {
+  const list = crate().map((s) => ({ id: s.id, durationMs: Math.round(s.seconds * 1000) }));
+  const version = versionOf(list);
+  if (version !== station.version) station = reanchor(station, list, version, serverNow());
+}
+const walkable = () => ({ songs: station.songs.map(([id, durationMs]) => ({ id, durationMs })), anchor: station.anchor, carry: station.carry });
+
+// ---------------------------------------------------------------- the routes
 const inCrate = (raw) => (/^[1-9]\d{0,9}$/.test(raw) ? crate().find((s) => s.id === Number(raw)) : null);
 function radioList() {
+  sync();
   const songs = crate().map((s) => ({ id: s.id, title: state.titles[s.id] || s.title, credit: s.credit, durationMs: Math.round(s.seconds * 1000), bpm: s.bpm, key: s.key, look: s.look }));
-  const version = songs.length ? crypto.createHash('sha1').update(songs.map((s) => `${s.id}:${s.durationMs}`).join(',')).digest('hex').slice(0, 12) : '';
-  return { on: songs.length > 0, now: Date.now() + state.skew, version, songs };
+  return { on: songs.length > 0, now: serverNow(), version: station.version, songs, anchor: station.anchor, carry: station.carry };
 }
 function json(res, code, body) {
   res.statusCode = code;
@@ -179,9 +229,18 @@ function handle(req, res, next) {
   }
   if (p === '/__radio-mock/state') {
     const q = url.searchParams;
-    if (q.has('reset')) state = { ...START, titles: {} };
+    sync(); // the queue as it stood, so an edit here re-anchors from it at this moment
+    if (q.has('reset')) { state = { ...START, titles: {} }; station = { version: '', songs: [], anchor: null, carry: null }; }
     if (q.has('retitle')) { const [id, ...t] = q.get('retitle').split(':'); state.titles = { ...state.titles, [Number(id)]: t.join(':') }; }
-    if (q.has('songs')) state.ids = q.get('songs').split(',').map(Number).filter((id) => SONGS.some((s) => s.id === id));
+    if (q.has('songs')) state.ids = [...new Set(q.get('songs').split(',').map(Number).filter((id) => SONGS.some((s) => s.id === id)))];
+    if (q.has('next')) {
+      const id = Number(q.get('next')), x = onAir(walkable(), serverNow());
+      if (x && x.song.id !== id && state.ids.includes(id) && state.ids.includes(x.song.id)) {
+        const ids = state.ids.filter((i) => i !== id);
+        ids.splice(ids.indexOf(x.song.id) + 1, 0, id);
+        state.ids = ids;
+      }
+    }
     if (q.has('on')) state.on = q.get('on') !== '0';
     for (const k of ['fail', 'drop', 'skew', 'ttl']) if (q.has(k)) state[k] = Number(q.get(k)) || 0;
     if (!state.ttl) state.ttl = START.ttl;

@@ -1,7 +1,9 @@
-// The radio's pure helpers (npm test): the title line, the Eastern clock, the song list and the calibration.
+// The radio's pure helpers (npm test): the title line, the Eastern clock, the song list, the station, the calibration
+// and the embed's address.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { titleLine, easternClock, parseExpires, normalizeSongs, calibrate } from './format.js';
+import { titleLine, easternClock, parseExpires, normalizeSongs, normalizeStation, stationKey, embedOptions, calibrate } from './format.js';
+import { onAir } from './schedule.js';
 
 test('the title line carries the credit when there is one', () => {
   assert.equal(titleLine({ title: 'fly low', credit: 'a friend' }), 'fly low (a friend)');
@@ -63,4 +65,54 @@ test('calibration keeps the tightest recent sample and follows a moved device cl
   assert.equal(cal.rtt, 800);
   // a bad answer changes nothing
   assert.equal(calibrate(cal, NaN, 1, 2), cal);
+});
+
+test('the station: the queue with its anchor and carry, ids as the list spells them, nothing when off', () => {
+  const songs = [{ id: 12, title: 'a', durationMs: 10000 }, { id: 13, title: 'b', durationMs: 20000 }];
+  const st = normalizeStation({ on: true, now: 1, version: 'abc', songs, anchor: { at: '2000000', songId: '13' }, carry: { songId: 12, startedAt: 1990000, endsAt: 2000000 } });
+  assert.deepEqual([st.version, st.songs.map((s) => s.id)], ['abc', [12, 13]]);
+  assert.deepEqual(st.anchor, { at: 2000000, songId: 13 });
+  assert.deepEqual(st.carry, { songId: 12, startedAt: 1990000, endsAt: 2000000 });
+  // the walk reads it as sent: the carried song to its end, then the anchor's
+  assert.equal(onAir(st, 1995000).song.id, 12);
+  assert.deepEqual([onAir(st, 2000000).song.id, onAir(st, 2000000).offsetMs], [13, 0]);
+  // an anchor song the list lacks stays as sent (the walk then starts at the first song, as the catalog's does)
+  assert.equal(normalizeStation({ on: true, songs, anchor: { at: 5, songId: 99 } }).anchor.songId, 99);
+  // an anchor time that is not a number stays so (the walk counts it as 0, from the anchor's song); a carry that cannot
+  // be placed is left out
+  const bad = normalizeStation({ on: true, songs, anchor: { at: 'soon', songId: 13 }, carry: { songId: 12, startedAt: null, endsAt: 4 } });
+  assert.ok(Number.isNaN(bad.anchor.at));
+  assert.equal(bad.carry, null);
+  assert.deepEqual([onAir(bad, 0).song.id, onAir(bad, 0).startedAt], [13, 0]);
+  assert.deepEqual(normalizeStation({ on: true, songs }), { songs: normalizeSongs(songs), version: '', anchor: null, carry: null });
+  // off, or nothing that can play: nothing at all
+  const off = { songs: [], version: '', anchor: null, carry: null };
+  assert.deepEqual(normalizeStation({ on: false, version: 'abc', songs, anchor: { at: 1, songId: 12 } }), off);
+  assert.deepEqual(normalizeStation({ on: true, songs: [{ id: 1, durationMs: 0 }] }), off);
+  assert.deepEqual(normalizeStation(null), off);
+});
+
+test('the station key changes with the queue, the anchor or the carry, and not with a title', () => {
+  const base = { on: true, version: 'v1', songs: [{ id: 1, title: 'a', durationMs: 1000 }, { id: 2, title: 'b', durationMs: 2000 }], anchor: { at: 10, songId: 1 }, carry: null };
+  const k = stationKey(normalizeStation(base));
+  assert.equal(stationKey(normalizeStation({ ...base, songs: [{ ...base.songs[0], title: 'renamed' }, base.songs[1]] })), k);
+  assert.notEqual(stationKey(normalizeStation({ ...base, anchor: { at: 11, songId: 1 } })), k);
+  assert.notEqual(stationKey(normalizeStation({ ...base, carry: { songId: 2, startedAt: 0, endsAt: 10 } })), k);
+  assert.notEqual(stationKey(normalizeStation({ ...base, songs: [base.songs[1], base.songs[0]] })), k);
+  assert.notEqual(stationKey(normalizeStation({ ...base, version: 'v2' })), k);
+  assert.equal(stationKey(normalizeStation({ on: false })), '');
+});
+
+test("the embed's address: the display alone, the knob and the light, each optional", () => {
+  const illums = ['blue', 'amber'];
+  assert.deepEqual(embedOptions('', illums), { display: false, volume: null, illum: null });
+  assert.deepEqual(embedOptions('?display', illums), { display: true, volume: null, illum: null });
+  assert.deepEqual(embedOptions('?display=1&volume=65&illum=Amber', illums), { display: true, volume: 0.65, illum: 'amber' });
+  assert.equal(embedOptions('?display=0', illums).display, false);
+  assert.equal(embedOptions('?volume=150', illums).volume, 1);
+  assert.equal(embedOptions('?volume=-3', illums).volume, 0);
+  assert.equal(embedOptions('?volume=0', illums).volume, 0);
+  assert.equal(embedOptions('?volume=loud', illums).volume, null);
+  assert.equal(embedOptions('?volume=', illums).volume, null);
+  assert.equal(embedOptions('?illum=pink', illums).illum, null);
 });

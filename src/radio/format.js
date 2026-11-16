@@ -1,5 +1,5 @@
-// The radio's small pure helpers (no DOM, tested in format.test.js): the title line, the Eastern clock, the song list
-// as the engine keeps it, and the clock calibration.
+// The radio's small pure helpers (no DOM, tested in format.test.js): the title line, the Eastern clock, the song list and
+// the station as the engine keeps them, the clock calibration, and the embed's address.
 
 /** The title with its credit, as the display scrolls it: "fly low (a friend)". */
 export const titleLine = (song) => (song ? song.title + (song.credit ? ` (${song.credit})` : '') : '');
@@ -57,6 +57,54 @@ export function normalizeSongs(list) {
     });
   }
   return out;
+}
+
+const num = (v) => (v === null || v === undefined || v === '' ? NaN : Number(v));
+/**
+ * The station as GET /catalog/api/radio sends it, kept as every listener can agree on it: {songs (normalizeSongs), version,
+ * anchor {at, songId} or null, carry {songId, startedAt, endsAt} or null} (schedule.js reads the last three). Nothing on
+ * air (on false, or no song that can play) is no songs, no anchor and no carry. The anchor is kept as sent, so the walk
+ * reads it as the catalog's does (a time that is not a number counts as 0 there); a carry whose times are not numbers is
+ * left out, as the walk could not place it. Ids take the list's own spelling (the catalog's 12 and "12" are one song),
+ * and an id the list lacks is kept as sent.
+ */
+export function normalizeStation(data) {
+  const songs = data && data.on ? normalizeSongs(data.songs) : [];
+  if (!songs.length) return { songs, version: '', anchor: null, carry: null };
+  const idOf = (raw) => { const s = songs.find((x) => String(x.id) === String(raw)); return s ? s.id : raw; };
+  const a = data.anchor, c = data.carry;
+  const anchor = a && typeof a === 'object' ? { at: num(a.at), songId: idOf(a.songId) } : null;
+  const carry = c && Number.isFinite(num(c.startedAt)) && Number.isFinite(num(c.endsAt))
+    ? { songId: idOf(c.songId), startedAt: num(c.startedAt), endsAt: num(c.endsAt) }
+    : null;
+  return { songs, version: String(data.version ?? ''), anchor, carry };
+}
+
+/** What makes two readings of the station the same station (titles and colours aside): the queue, the anchor, the carry. */
+export function stationKey(st) {
+  if (!st || !st.songs || !st.songs.length) return '';
+  const a = st.anchor, c = st.carry;
+  return [
+    st.version,
+    st.songs.map((s) => `${s.id}:${s.durationMs}`).join(','),
+    a ? `${a.at}@${a.songId}` : '-',
+    c ? `${c.songId}:${c.startedAt}-${c.endsAt}` : '-',
+  ].join('|');
+}
+
+/**
+ * The embed's address (radio/embed/): ?display for the display strip alone (the whole faceplate without it), ?volume=0..100
+ * for the knob and ?illum=<a colour in illums> for the light, each optional. {display, volume (0..1 or null), illum or
+ * null}; anything else in a value is ignored.
+ */
+export function embedOptions(search, illums = []) {
+  const q = new URLSearchParams(search || '');
+  const d = q.get('display');
+  const display = d !== null && !/^(0|false|no|off)$/i.test(d.trim());
+  const v = num(String(q.get('volume') ?? '').trim());
+  const volume = Number.isFinite(v) ? Math.round(Math.min(100, Math.max(0, v))) / 100 : null;
+  const i = String(q.get('illum') ?? '').trim().toLowerCase();
+  return { display, volume, illum: illums.includes(i) ? i : null };
 }
 
 /**
