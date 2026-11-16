@@ -1,17 +1,23 @@
 // Dev only. `RADIO_MOCK=1 npm run dev` answers the radio's three catalog routes (GET /catalog/api/radio, /play/:id,
 // /peaks/:id) with five short test songs, so the radio can be tried before the catalog serves them and a boundary comes
-// round in seconds. Two of them do what real previews may: 'night drive' runs longer than the schedule says (cut at the
-// boundary) and 'low tide' ends early (quiet until it). Only 'sign on' (16 s) and 'long play' (20 s) are long enough for
-// an announcer drop (8 s in, on every other song: schedule.js dropFor), and they play one after the other, so one of
-// them carries it each time round. The
-// tones are made once into .radio-mock/ (gitignored): AAC in MP4 like the catalog's previews when ffmpeg is installed,
-// else WAV. vite.config.js loads this file only in the dev server with RADIO_MOCK=1, so nothing of it reaches a build.
+// round in seconds. It also answers the talk-over's routes (Max live on the mic: scripts/talk-mock.js, a real ffmpeg
+// encode of the PCM it is sent), and plays a long test tone for any other song id, so `RADIO_MOCK=1 RADIO_ADMIN_MOCK=1
+// npm run dev` works as one: the radio plays the radio admin mock's queue, and the admin's mic goes out to the radios.
+// Two of the five do what real previews may: 'night drive' runs longer than the schedule says (cut at the boundary) and
+// 'low tide' ends early (quiet until it). Only 'sign on' (16 s) and 'long play' (20 s) are long enough for an announcer
+// drop (8 s in, on every other song: schedule.js dropFor), and they play one after the other, so one of them carries it
+// each time round. The tones are made once into .radio-mock/ (gitignored): AAC in MP4 like the catalog's previews when
+// ffmpeg is installed, else WAV. vite.config.js loads this file only in the dev server with RADIO_MOCK=1, so nothing of
+// it reaches a build.
 //
 // The queue works as the catalog's does (Max, 11/15/26): the songs in the crate's order, looping, from a stored anchor,
 // with the song on air at an edit carried to its end. Every change below re-anchors at once, at that moment, as an edit
 // in the catalog does (reanchor, the catalog's rule; scripts/radio-mock.test.js).
 //
 // Change the station while it runs (each answers the mock's state as JSON):
+//   /__radio-mock/state?talk=on           Max live from "another device": the mock talks itself (talk-mock.js); talk=off
+//                                         ends whatever talk is live, as the catalog ends one; talk=drop breaks off every
+//                                         listener's stream while the talk goes on
 //   /__radio-mock/state?songs=9001,9003   which songs are in the crate, in order (any of 9001 to 9005): an edit; leave out
 //                                         the song on air to take it off (the radio retunes)
 //   /__radio-mock/state?next=9004         move a song to just after the one on air (the admin's play next)
@@ -28,6 +34,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { onAir } from '../src/radio/schedule.js';
+import { isTalkPath, talkField, talkRoute, talkSwitch } from './talk-mock.js';
 
 const DIR = path.resolve(process.cwd(), '.radio-mock');
 const RATE = 44100;
@@ -38,6 +45,17 @@ const SONGS = [
   { id: 9004, title: 'low tide', credit: 'a friend', seconds: 11.2, audio: 10.6, bpm: 140, key: 'F major', notes: [53, 57, 60, 65, 64, 60, 57, 55], look: { bg: '#1430c4', fg: '#ffffff', card: '#0c2194' } },
   { id: 9005, title: 'long play', credit: null, seconds: 20, audio: 20, bpm: 100, key: 'D minor', notes: [50, 53, 57, 62, 60, 57, 53, 52], look: { bg: '#d9472b', fg: '#fff4e8', card: '#b83a22' } },
 ];
+const OWN_IDS = new Set(SONGS.map((s) => s.id));
+// Any other song id (the radio admin mock's, with both mocks on) plays one of these, looped to ANY_SECONDS: longer than
+// any of its songs, so the radio is never quiet before a boundary. Made only with ffmpeg (a WAV that long is 30 MB).
+const ANY_SECONDS = 360;
+const ANY = [
+  { notes: [57, 64, 69, 72, 76, 72, 69, 64], bpm: 104 },
+  { notes: [50, 57, 62, 65, 69, 65, 62, 57], bpm: 92 },
+  { notes: [55, 62, 67, 71, 74, 71, 67, 62], bpm: 118 },
+  { notes: [52, 59, 64, 67, 71, 67, 64, 59], bpm: 98 },
+].map((v) => ({ ...v, loop: true, audio: (60 / v.bpm) * 16 })); // 4 bars, looped
+let anyReady = false;
 const START = { ids: [9001, 9002, 9003, 9005, 9004], on: true, fail: 0, drop: 0, skew: 0, ttl: 3600, titles: {} };
 let state = { ...START };
 
@@ -55,7 +73,7 @@ function synth(song) {
     const note = 0.22 * Math.exp(-tb / 0.32) * (Math.sin(2 * Math.PI * f * t) + 0.3 * Math.sin(4 * Math.PI * f * t));
     const root = hz(song.notes[0] - 12), bar = (t % (beat * 4)) / (beat * 4);
     const pad = 0.07 * (0.6 + 0.4 * Math.sin(Math.PI * bar)) * (Math.sin(2 * Math.PI * root * t) + 0.5 * Math.sin(2 * Math.PI * root * 1.5 * t));
-    const env = Math.min(1, t / 0.25, (song.audio - t) / 0.5);
+    const env = song.loop ? 1 : Math.min(1, t / 0.25, (song.audio - t) / 0.5); // a loop runs on with no fades
     out[i] = Math.max(-1, Math.min(1, (kick + note + pad) * env));
   }
   return out;
@@ -80,14 +98,26 @@ function peaks(samples, duration) {
   }
   return { v: 1, pps: 20, duration, peaks: out };
 }
+/** The same for a loop played over and over for `duration` seconds. */
+function loopPeaks(samples, duration) {
+  const step = RATE / 20, out = [];
+  for (let k = 0; k < Math.round(duration * 20); k++) {
+    let m = 0;
+    for (let j = 0; j < step; j++) m = Math.max(m, Math.abs(samples[(k * step + j) % samples.length]));
+    out.push(Math.round(m * 1000) / 1000);
+  }
+  return { v: 1, pps: 20, duration, peaks: out };
+}
 
 let ext = 'wav';
 function make(log) {
   fs.mkdirSync(DIR, { recursive: true });
   const ffmpeg = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' }).status === 0;
   ext = ffmpeg ? 'm4a' : 'wav';
-  const stamp = crypto.createHash('sha1').update(JSON.stringify([SONGS, ext, synth.toString()])).digest('hex');
+  const stamp = crypto.createHash('sha1').update(JSON.stringify([SONGS, ANY, ANY_SECONDS, ext, synth.toString(), loopPeaks.toString()])).digest('hex');
   const stampFile = path.join(DIR, 'stamp');
+  anyReady = ffmpeg;
+  if (!ffmpeg) log('radio mock: without ffmpeg only its own five songs play (no tones for other ids, no talk-over)');
   if (fs.existsSync(stampFile) && fs.readFileSync(stampFile, 'utf8') === stamp) return;
   for (const s of SONGS) {
     const samples = synth(s);
@@ -99,8 +129,18 @@ function make(log) {
       if (r.status !== 0) throw new Error(`ffmpeg failed for ${s.id}: ${r.stderr}`);
     }
   }
+  if (ffmpeg) {
+    ANY.forEach((v, k) => {
+      const samples = synth(v), w = path.join(DIR, `any-${k}.wav`);
+      fs.writeFileSync(w, wav(samples));
+      fs.writeFileSync(path.join(DIR, `any-${k}.json`), JSON.stringify(loopPeaks(samples, ANY_SECONDS)));
+      const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-stream_loop', '-1', '-i', w, '-t', String(ANY_SECONDS), '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', path.join(DIR, `any-${k}.m4a`)]);
+      fs.rmSync(w, { force: true });
+      if (r.status !== 0) throw new Error(`ffmpeg failed for the tone any-${k}: ${r.stderr}`);
+    });
+  }
   fs.writeFileSync(stampFile, stamp);
-  log(`radio mock: made ${SONGS.length} test songs in ${path.relative(process.cwd(), DIR)}/ (${ext})`);
+  log(`radio mock: made ${SONGS.length} test songs${ffmpeg ? ` and ${ANY.length} long tones for any other id` : ''} in ${path.relative(process.cwd(), DIR)}/ (${ext})`);
 }
 
 // ---------------------------------------------------------------- the queue
@@ -147,10 +187,23 @@ const walkable = () => ({ songs: station.songs.map(([id, durationMs]) => ({ id, 
 
 // ---------------------------------------------------------------- the routes
 const inCrate = (raw) => (/^[1-9]\d{0,9}$/.test(raw) ? crate().find((s) => s.id === Number(raw)) : null);
+/**
+ * The files for a song id: its own while one of the five test songs is in the crate (one taken out answers 404, as the
+ * catalog does for a song that left the radio), and for any other id one of the long tones. null: nothing to play.
+ */
+function filesOf(raw) {
+  if (!/^[1-9]\d{0,9}$/.test(raw)) return null;
+  const id = Number(raw);
+  if (OWN_IDS.has(id)) {
+    const s = inCrate(raw);
+    return s ? { name: String(s.id), ext } : null;
+  }
+  return anyReady ? { name: `any-${id % ANY.length}`, ext: 'm4a' } : null;
+}
 function radioList() {
   sync();
   const songs = crate().map((s) => ({ id: s.id, title: state.titles[s.id] || s.title, credit: s.credit, durationMs: Math.round(s.seconds * 1000), bpm: s.bpm, key: s.key, look: s.look }));
-  return { on: songs.length > 0, now: serverNow(), version: station.version, songs, anchor: station.anchor, carry: station.carry };
+  return { on: songs.length > 0, now: serverNow(), version: station.version, songs, anchor: station.anchor, carry: station.carry, talk: talkField() };
 }
 function json(res, code, body) {
   res.statusCode = code;
@@ -191,28 +244,29 @@ function sendFile(req, res, file, type) {
 function handle(req, res, next) {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
+  if (isTalkPath(p)) { talkRoute(req, res, url); return; } // the talk-over: its own routes and checks (talk-mock.js)
   if (req.method !== 'GET' && req.method !== 'HEAD' && (p.startsWith('/catalog/api/radio') || p.startsWith('/__radio-mock'))) { json(res, 405, { error: 'GET only.' }); return; }
   if (p === '/catalog/api/radio') { json(res, 200, radioList()); return; }
   let m = /^\/catalog\/api\/radio\/play\/([^/]*)$/.exec(p);
   if (m) {
-    const s = inCrate(m[1]);
-    if (!s) { json(res, 404, { error: 'Not found.' }); return; }
+    const f = filesOf(m[1]);
+    if (!f) { json(res, 404, { error: 'Not found.' }); return; }
     const exp = Date.now() + state.ttl * 1000;
-    json(res, 200, { url: `/__radio-mock/media/${s.id}.${ext}?sig=${crypto.randomBytes(6).toString('hex')}&exp=${exp}`, expires: new Date(exp).toISOString() });
+    json(res, 200, { url: `/__radio-mock/media/${f.name}.${f.ext}?sig=${crypto.randomBytes(6).toString('hex')}&exp=${exp}`, expires: new Date(exp).toISOString() });
     return;
   }
   m = /^\/catalog\/api\/radio\/peaks\/([^/]*)$/.exec(p);
   if (m) {
-    const s = inCrate(m[1]);
-    if (!s) { json(res, 404, { error: 'Not found.' }); return; }
+    const f = filesOf(m[1]);
+    if (!f) { json(res, 404, { error: 'Not found.' }); return; }
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
-    res.end(fs.readFileSync(path.join(DIR, `${s.id}.json`)));
+    res.end(fs.readFileSync(path.join(DIR, `${f.name}.json`)));
     return;
   }
   if (p.startsWith('/catalog/api/radio')) { json(res, 404, { error: 'Not found.' }); return; }
-  m = /^\/__radio-mock\/media\/(\d+)\.(m4a|wav)$/.exec(p);
+  m = /^\/__radio-mock\/media\/(\d+|any-\d)\.(m4a|wav)$/.exec(p);
   if (m) {
     const exp = Number(url.searchParams.get('exp'));
     // a drop comes first, so drop=1&fail=3 is a stream that breaks off and is then refused (it dies mid-song)
@@ -245,6 +299,7 @@ function handle(req, res, next) {
     if (q.has('on')) state.on = q.get('on') !== '0';
     for (const k of ['fail', 'drop', 'skew', 'ttl']) if (q.has(k)) state[k] = Number(q.get(k)) || 0;
     if (!state.ttl) state.ttl = START.ttl;
+    if (q.has('talk')) talkSwitch(q.get('talk'));
     json(res, 200, { ...state, radio: radioList() });
     return;
   }

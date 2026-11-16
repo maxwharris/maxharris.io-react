@@ -4,15 +4,17 @@
 //   GET  /catalog/api/crates, /catalog/api/crates/:id, /catalog/api/search?q=
 //   POST /catalog/api/crates {name}, PUT /catalog/api/crates/:id/order {songIds}
 //   POST /catalog/api/crates/:id/songs {songId}, DELETE /catalog/api/crates/:id/songs/:songId
-//   GET  /catalog/api/radio: {on, now, version, songs, anchor, carry}, re-anchored the way the catalog does it whenever
-//        the playable list changes (src/radio/admin/queue.js, reanchor): on this read, and at once after every change to
-//        the radio crate, so the admin's view moves like the real thing.
+//   GET  /catalog/api/radio: {on, now, version, songs, anchor, carry, talk}, re-anchored the way the catalog does it
+//        whenever the playable list changes (src/radio/admin/queue.js, reanchor): on this read, and at once after every
+//        change to the radio crate, so the admin's view moves like the real thing. talk is the talk-over's (Max on the
+//        mic: scripts/talk-mock.js, whose routes, the mic's start, audio, end, stream and events, are answered here too,
+//        a change refused with signin=0 as the catalog's session routes are).
 // A change needs X-Catalog: 1 and an Origin of this host, as the catalog's (lib/guard.js). Any other /catalog/api route
 // answers 404 here, so nothing reaches the live catalog. The radio's audio (/catalog/api/radio/play, /peaks) is passed on
-// to RADIO_MOCK=1 when that is on too, but its tones are for its own songs (9001-9005), not these, so with both mocks on
-// the radio itself shows no signal: try the radio with RADIO_MOCK=1 alone. vite.config.js loads this file only in the
-// dev server with RADIO_ADMIN_MOCK=1, so
-// none of it can reach a build.
+// to RADIO_MOCK=1 when that is on too, which plays a long test tone for each of these songs: `RADIO_MOCK=1
+// RADIO_ADMIN_MOCK=1 npm run dev` is the radio playing this queue, with the admin's edits and its mic, together. Alone,
+// this one answers 404 for the audio, so the radio shows no signal. vite.config.js loads this file only in the dev server
+// with RADIO_ADMIN_MOCK=1, so none of it can reach a build.
 //
 // Switches while it runs (each answers the mock's state as JSON, the song on air included):
 //   /__radio-admin-mock/state?signin=0        every session route answers 401 {signin: true}; signin=1 signs back in
@@ -24,11 +26,14 @@
 //                                             air plays out at its old length (as after any change of lengths), so
 //                                             reset=1&quick=1 is the way to start over with short songs at once
 //   /__radio-admin-mock/state?elsewhere=add:514   an edit made in the catalog meanwhile (add:<id> or remove:<id>)
+//   /__radio-admin-mock/state?talk=on         a talk live from "another device" (the mic's go live meets a 409: take over);
+//                                             talk=off ends whatever talk is live (scripts/talk-mock.js)
 //   /__radio-admin-mock/state?reset=1         back to the start
 
 import crypto from 'node:crypto';
 import { onAir } from '../src/radio/schedule.js';
 import { reanchor } from '../src/radio/admin/queue.js';
+import { changesTalk, isTalkPath, talkField, talkRoute, talkSwitch } from './talk-mock.js';
 
 // [id, title, credit, seconds, has a preview, year, look]
 const LIBRARY = [
@@ -141,6 +146,12 @@ let state = start();
 async function api(req, res, p, url) {
   const s = state;
   const method = req.method;
+  // the talk-over (scripts/talk-mock.js): changes need the session, like the catalog's
+  if (isTalkPath(url.pathname)) {
+    if (changesTalk(req, url.pathname) && !s.signin) return fail(res, 401, 'Sign in to use the catalog.', { signin: true });
+    await talkRoute(req, res, url);
+    return undefined;
+  }
   if (method !== 'GET' && method !== 'HEAD') {
     if (req.headers['x-catalog'] !== '1') return fail(res, 403, 'A change needs the X-Catalog: 1 header, which the app sends. Reload the app and try again.');
     const origin = req.headers.origin;
@@ -152,7 +163,7 @@ async function api(req, res, p, url) {
     if (method !== 'GET') return fail(res, 404, 'That song is not on the radio.');
     const te = Date.now();
     const list = anchorAt(s, te);
-    return json(res, 200, { on: list.length > 0, now: te, version: versionOf(list), songs: list, anchor: s.store.anchor, carry: s.store.carry });
+    return json(res, 200, { on: list.length > 0, now: te, version: versionOf(list), songs: list, anchor: s.store.anchor, carry: s.store.carry, talk: talkField() });
   }
   if (p.startsWith('/radio/')) return 'pass';
 
@@ -240,7 +251,7 @@ function status() {
   const x = onAir(st, Date.now());
   const c = radioCrate(s);
   return {
-    signin: s.signin, refuse: s.refuse, slow: s.slow, quick: s.quick,
+    signin: s.signin, refuse: s.refuse, slow: s.slow, quick: s.quick, talk: talkField(),
     radio: {
       crate: c ? c.id : null,
       order: c ? c.songIds.slice() : [],
@@ -270,6 +281,7 @@ function control(url, res) {
       if (what === 'remove') c.songIds = c.songIds.filter((x) => x !== id);
     }
   }
+  if (q.has('talk')) talkSwitch(q.get('talk'));
   // a change to the radio crate or its songs re-anchors at once, as the catalog's edits do
   anchorAt(s, Date.now());
   json(res, 200, status());
