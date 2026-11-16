@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Component, lazy, Suspense, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { owner, work, personal, concepts, findWork } from '../data/site';
 
 const building = personal.filter((p) => p.status === 'building');
@@ -33,7 +33,7 @@ export function About() {
       </div>
       <p className="tipline">
         {phone
-          ? 'every icon on the home screen opens something. the circuit board behind it is drawn live; try scenes.'
+          ? 'every icon on the home screen opens something. the world behind it is drawn live; try scenes.'
           : <>windows arrange themselves, up to six at once. drag one by the bar under it to move it around. <kbd>{MOD}K</kbd> finds anything.</>}
       </p>
     </div>
@@ -299,7 +299,29 @@ export function Trash() {
 }
 
 // ---------- scenes ----------
+// the meadow in miniature: the far ridge and the hazy hills, a cloud, the near hill and its crest
+function MeadowArt() {
+  const id = useId();
+  return (
+    <svg viewBox="0 0 64 36" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#a6dc5c" />
+          <stop offset=".45" stopColor="#5daa30" />
+          <stop offset="1" stopColor="#2a7420" />
+        </linearGradient>
+      </defs>
+      <path className="m-range" d="M36 25c9-2.6 17-3.7 24-3.6 2 0 4 .2 6 .5V30H36z" />
+      <path className="m-ridge" d="M-2 22.1c5-1.1 9-1.6 13-1.5 6 .2 12 2.8 19 6.9V36H-2z" />
+      <path className="m-cloud" d="M14.5 16.5a2.6 2.6 0 0 1 2.2-2.9 3.6 3.6 0 0 1 5.4-3.4 4.4 4.4 0 0 1 8 .9 3 3 0 0 1 3.6 3 2.4 2.4 0 0 1 1.3 2.4z" />
+      <path className="m-shade" d="M15.2 16.5h19.6c-.3-1.3-1.5-1.9-2.8-1.6-1.1-1-3.2-1.1-4.5-.2-1.9-1.1-4.4-1-5.9.3-1.6-.7-3.7-.3-4.6 1.2z" />
+      <path className="m-cloud" d="M42.5 10.8a1.8 1.8 0 0 1 1.9-1.9 2.6 2.6 0 0 1 4.6-.5 2 2 0 0 1 2.4 2.4z" />
+      <path d="M-2 27.4C10 25 22 19.6 38 19.4c10-.1 19 2 28 5.2V38H-2z" fill={`url(#${id}g)`} />
+    </svg>
+  );
+}
 export function Swatch({ name }) {
+  if (name === 'meadow') return <span className="sw sw-meadow" aria-hidden="true"><MeadowArt /></span>;
   return (
     <span className={`sw sw-${name}`} aria-hidden="true">
       <svg viewBox="0 0 64 36" preserveAspectRatio="xMidYMid slice">
@@ -339,7 +361,7 @@ export function Sys() {
       <Icon name="mark" className="mark" />
       <h2>maxOS 26</h2>
       <p className="eyebrow">maxharris.io</p>
-      <p>glass windows floating over a circuit board that is generated and drawn live: chips, buses and vias routed on a grid, with signals running through the traces. no stock photos, no video.</p>
+      <p>glass windows floating over a world drawn live: a meadow under drifting clouds, or a circuit board with chips, buses and vias routed on a grid and signals running through the traces. no stock photos, no video.</p>
       <div className="keys">
         <kbd>{MOD}K</kbd><span>search anything</span>
         <kbd>esc</kbd><span>close the front window</span>
@@ -353,7 +375,7 @@ export function Sys() {
 }
 const SECRETS = [
   '↑ ↑ ↓ ↓ ← → ← → b a',
-  'double-click the board to send a signal.',
+  'double-click the meadow for a gust, or a board to send a signal.',
   'leave it alone for a minute.',
   "the terminal knows more than 'help' says. try vim.",
   'the board has a seed: the same traces every visit. hover one.',

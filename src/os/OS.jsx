@@ -35,7 +35,7 @@ const toRect = (o) => {
 export default function OS() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const phone = useMedia(PHONE);
-  // the glass follows the board unless the visitor picked a theme
+  // the glass follows the scene unless the visitor picked a theme
   const theme = state.theme || (SCENE_DARK[state.scene] ? 'dark' : 'light');
   const stateRef = useRef(state);
   const phoneRef = useRef(phone);
@@ -84,7 +84,7 @@ export default function OS() {
         v = clamp(v, 0, 1);
         const was = stateRef.current.imm;
         set({ imm: v });
-        if (v >= 0.99 && was < 0.99 && !quiet) a.toast('full immersion. turn the crown back to see the board.');
+        if (v >= 0.99 && was < 0.99 && !quiet) a.toast('full immersion. turn the crown back to see the world.');
       },
       getImm: () => stateRef.current.imm,
       setTrash: (trash) => set({ trash }),
@@ -153,7 +153,7 @@ export default function OS() {
     else if (path === '/about' || hash === 'about') (phoneRef.current ? a.openApp('about') : a.focus('about'));
     else if (path === '/contact' || hash === 'contact') a.openApp('mail');
     else if (path === '/terminal') (phoneRef.current ? a.openApp('terminal') : a.focus('terminal'));
-    if (import.meta.env.VITE_DEMO) setTimeout(() => a.toast('five boards to try: open scenes in the dock, or right-click the board', 6000), 1600);
+    if (import.meta.env.VITE_DEMO) setTimeout(() => a.toast('six scenes to try: open scenes in the dock, or right-click the desktop', 6000), 1600);
   }, [actions]);
   useEffect(() => {
     document.documentElement.classList.add('os-on');
