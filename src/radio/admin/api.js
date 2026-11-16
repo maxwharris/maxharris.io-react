@@ -8,11 +8,12 @@ export const API = '/catalog/api';
 export const CATALOG_URL = 'https://maxharris.io/catalog/';
 
 export class CatalogError extends Error {
-  /** status: the HTTP status, 0 when the catalog could not be reached; signin: no session. */
-  constructor(status, message, signin = false) {
+  /** status: the HTTP status, 0 when the catalog could not be reached; signin: no session; data: the answer's body. */
+  constructor(status, message, signin = false, data = null) {
     super(message);
     this.status = status;
     this.signin = signin;
+    this.data = data;
   }
 }
 
@@ -33,7 +34,7 @@ async function call(method, path, body, signal) {
   }
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (res.status === 401) throw new CatalogError(401, 'sign in to the catalog first.', true);
-  if (!res.ok) throw new CatalogError(res.status, (data && typeof data.error === 'string' && data.error) || `the catalog answered ${res.status}.`);
+  if (!res.ok) throw new CatalogError(res.status, (data && typeof data.error === 'string' && data.error) || `the catalog answered ${res.status}.`, false, data);
   return data;
 }
 
@@ -52,3 +53,47 @@ export const addSong = (id, songId) => call('POST', `/crates/${id}/songs`, { son
 export const removeSong = (id, songId) => call('DELETE', `/crates/${id}/songs/${songId}`);
 /** {songs: [compact song rows, best first, at most 20], files} */
 export const search = (q, signal) => call('GET', `/search?q=${encodeURIComponent(q)}`, undefined, signal);
+
+// ---------------------------------------------------------------- the talk-over (mic.js): Max live over the radio
+/**
+ * Starts a talk: {id, startedAt, sampleRate (24000), chunkMs (250)}. A talk already live answers 409 (a CatalogError whose
+ * data.live is {id, since}); takeOver ends that one first and starts this one.
+ */
+export const startTalk = (takeOver = false) => call('POST', '/radio/talk', takeOver ? { takeOver: true } : {});
+
+/**
+ * One chunk of the talk's voice (raw s16le PCM, mono, 24 kHz) as number seq. Never throws: {outcome: 'ok', 'retry' (no
+ * answer, or the catalog was busy), 'gone' (410: the talk has ended) or 'refused' (with status and the catalog's error)}.
+ */
+export async function sendAudio(id, seq, pcm) {
+  let res;
+  try {
+    res = await fetch(`${API}/radio/talk/${encodeURIComponent(id)}/audio?seq=${seq}`, {
+      method: 'POST',
+      body: pcm,
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/octet-stream', 'X-Catalog': '1' },
+    });
+  } catch {
+    return { outcome: 'retry' };
+  }
+  if (res.ok) return { outcome: 'ok' };
+  if (res.status === 410) return { outcome: 'gone' };
+  if (res.status === 429 || res.status >= 500) return { outcome: 'retry' };
+  const data = await res.json().catch(() => null);
+  return { outcome: 'refused', status: res.status, error: (data && typeof data.error === 'string' && data.error) || '' };
+}
+
+/** Ends a talk (also one that has ended already). Fire and forget, and kept alive so it still goes as the page closes. */
+export function endTalk(id) {
+  try {
+    fetch(`${API}/radio/talk/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      keepalive: true,
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'X-Catalog': '1' },
+    }).catch(() => {});
+  } catch { /* the catalog ends it by itself 4 s after the last audio */ }
+}

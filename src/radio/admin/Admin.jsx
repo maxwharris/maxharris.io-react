@@ -3,9 +3,10 @@
 // order with each song's Eastern start time and length; drag a row by its handle (or arrow keys on the handle), play a
 // song next, take one out (with undo), or add one from the catalog's search. An edit shows at once, saves behind it, and
 // takes effect when the song on air ends (Max: "your order, edits take effect when the song on air ends"); nothing here
-// plays, pauses, skips or seeks. All of it lowercase, like the rest of maxradio.
+// plays, pauses, skips or seeks. Under the song on air, the mic: Max talks over the radio, live (Mic.jsx). All of it
+// lowercase, like the rest of maxradio.
 //
-// state.js holds the state and talks to the catalog; queue.js works out the queue; this lays it out.
+// state.js holds the state and talks to the catalog; queue.js works out the queue; mic.js runs the mic; this lays it out.
 
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useOS, EASE } from '../../os/store';
@@ -13,6 +14,7 @@ import { Icon, Disc } from '../../os/icons';
 import { createAdmin } from './state.js';
 import { CATALOG_URL, search } from './api.js';
 import { liveQueue, clock, span, eastern, count, low } from './queue.js';
+import Mic from './Mic.jsx';
 import './admin.css';
 
 // ---------------------------------------------------------------- drawn icons (24 px lines, like the desktop's)
@@ -145,6 +147,7 @@ export default function Admin({ win }) {
         </div>
       )}
       <OnAir air={view.onAir} now={now} empty={!m.order.length} />
+      <Mic />
       <Find admin={admin} has={m.order} />
       <section className="ra-up" aria-labelledby="ra-up-h">
         <div className="ra-h">
