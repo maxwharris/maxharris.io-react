@@ -2,7 +2,7 @@
 // browser never plays his voice back.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeTalk, sameTalk, heardOwn, talkPlan, playsOut, musicShare, retryVoice, takesTalk, NO_OWN, OWN_MS, TALK_SHARE, DROP_SHARE } from './talk.js';
+import { normalizeTalk, sameTalk, heardOwn, talkPlan, playsOut, musicShare, voiceRetryMs, takesTalk, NO_OWN, OWN_MS, TALK_SHARE, DROP_SHARE } from './talk.js';
 
 const ID = 'AbCdEfGhIjKlMnOpQrSt_-';
 const OTHER = 'zzzzzzzzzzzzzzzzzzzzzz';
@@ -40,7 +40,7 @@ test("this browser's admin: on, off, and every own talk remembered (a few)", () 
   assert.equal(many.ids[7], 'talk-number-11');
 });
 
-test('a radio plays the talk the catalog says is on, unless it is its own browser\'s, failed, or off', () => {
+test('a radio plays the talk the catalog says is on, unless it is its own browser\'s, or off', () => {
   const on = normalizeTalk({ on: true, id: ID, since: 1 });
   const now = 100000;
   // an ordinary listener
@@ -48,9 +48,6 @@ test('a radio plays the talk the catalog says is on, unless it is its own browse
   assert.deepEqual(talkPlan({ enabled: true, talk: { on: false }, own: NO_OWN, now }), { play: null, echo: false });
   // switched off, or the embed with ?talk=0: nothing at all
   assert.deepEqual(talkPlan({ enabled: false, talk: on, own: heardOwn(NO_OWN, ID, true, now), now }), { play: null, echo: false });
-  // gave up on it (twice failing): not again; a new talk is tried
-  assert.equal(talkPlan({ enabled: true, talk: on, failed: ID, now }).play, null);
-  assert.equal(talkPlan({ enabled: true, talk: normalizeTalk({ on: true, id: OTHER }), failed: ID, now }).play, OTHER);
 });
 
 test("Max's own browser dips but never plays his talk back", () => {
@@ -93,13 +90,14 @@ test('the music dips to a third under the talk, which outranks a drop', () => {
   assert.equal(musicShare({ talking: false, drop: false }), 1);
 });
 
-test('the talk element gets one more try, only while that talk is still on', () => {
+test('a failing talk stream is asked for again, further apart, for as long as that talk is on', () => {
   const on = normalizeTalk({ on: true, id: ID });
-  assert.equal(retryVoice({ tries: 0, talk: on, id: ID }), true);
-  assert.equal(retryVoice({ tries: 1, talk: on, id: ID }), false);
-  assert.equal(retryVoice({ tries: 0, talk: { on: false }, id: ID }), false);
-  assert.equal(retryVoice({ tries: 0, talk: normalizeTalk({ on: true, id: OTHER }), id: ID }), false);
-  assert.equal(retryVoice({ tries: 0, talk: null, id: ID }), false);
+  const waits = [0, 1, 2, 3, 4, 5, 60].map((tries) => voiceRetryMs({ tries, talk: on, id: ID }));
+  assert.deepEqual(waits, [1000, 3000, 8000, 15000, 30000, 30000, 30000]);
+  // the talk is over, or another one is on (that one is played instead): nothing to ask for
+  assert.equal(voiceRetryMs({ tries: 0, talk: { on: false }, id: ID }), -1);
+  assert.equal(voiceRetryMs({ tries: 0, talk: normalizeTalk({ on: true, id: OTHER }), id: ID }), -1);
+  assert.equal(voiceRetryMs({ tries: 0, talk: null, id: ID }), -1);
 });
 
 test("the events stream's word wins while it is live; a queue read stands in when it is not", () => {

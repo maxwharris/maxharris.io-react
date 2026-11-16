@@ -36,7 +36,7 @@
 import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
 import { stretch, levelAt } from './record/peaks.js';
-import { NO_OWN, OWN_MS, heardOwn, musicShare, normalizeTalk, playsOut, retryVoice, sameTalk, takesTalk, talkPlan } from './talk.js';
+import { NO_OWN, OWN_MS, heardOwn, musicShare, normalizeTalk, playsOut, sameTalk, takesTalk, talkPlan, voiceRetryMs } from './talk.js';
 
 export const API = '/catalog/api/radio';
 export const PAGE_URL = '/radio/';
@@ -69,8 +69,9 @@ const UNDUCK_MS = 450; // and back up once it is over
 const DROP_LATE_MS = 300; // a drop with less than this left is not started
 const TALK_START_MS = 15000; // the talk's stream not sounding this long after it was asked for: failing
 const TALK_STALL_MS = 6000; // sounding, then no progress for this long: failing (the catalog ends a talk after 4 s of silence)
-const TALK_RETRY_MS = 1000; // a failing talk stream is asked for again once, after this (unless the talk ended meanwhile)
-const TALK_STEADY_MS = 20000; // sounding this long after a retry: it has its retry back
+// A failing talk stream is asked for again while the talk is on, further apart each time (talk.js, voiceRetryMs); once it
+// has sounded this long after a retry, the next failure starts from the shortest wait again.
+const TALK_STEADY_MS = 20000;
 // The catalog said the talk is over: its stream plays on to its end, his last words (Chrome holds about 4.5 s of it), and
 // then 'ended' lets the music back up. A stream still playing this long after that word is let go anyway.
 const TALK_TAIL_MS = 12000;
@@ -660,15 +661,15 @@ function skipDrop() {
 // on V. Once V sounds the music dips to a third, or is muted where element volume does not work (iOS keeps the volume in
 // the listener's hands), and comes back after his last word: the catalog says the talk is over as Max stops, seconds
 // before a listener hears the end of it, so V plays its stream on to its end first (talk.js, playsOut). A failing stream
-// gets one more try while the talk is still on; then this radio leaves that talk be. Max's own browser never plays his
-// talk: his radio admin says 'talking' on the channel (heard), so the radios here dip without it. The embed with ?talk=0
-// takes no part.
+// is asked for again for as long as the catalog says the talk is on, 1, 3, 8 and 15 s after failures in a row, then
+// every 30 s (talk.js, voiceRetryMs), so a dropped connection gets Max back once the network is. Max's own browser never
+// plays his talk: his radio admin says 'talking' on the channel (heard), so the radios here dip without it. The embed
+// with ?talk=0 takes no part.
 let talk = { on: false }; // the catalog's word (talk.js, normalizeTalk)
 let talkOff = false; // the embed with ?talk=0
 let own = NO_OWN; // what this browser's radio admin said (talk.js, heardOwn)
 let voice = null; // {id, tries, sounding, down, ending, t0, since, progress, pos}: the talk V plays (ending: over, playing out)
 let hold = { id: '', at: 0 }; // when this radio first heard that talk was on (TALK_HOLD_MS)
-let failedTalk = ''; // a talk this radio gave up on
 let talking = false; // the snapshot's talking: V sounds, or this browser's admin is live
 let es = null; // the events stream
 let esLive = false; // it has said where the talk stands since it last (re)connected
@@ -736,19 +737,20 @@ function stopVoice() {
   voice = null;
   quietVoice();
 }
-/** V failed (an error, the stream's end, a stall): the music comes back, and one more try while the talk is still on. */
+/**
+ * V failed (an error, the stream's end, a stall): the music comes back, and while the talk is still on V asks for it
+ * again, a little later each time it fails in a row (talk.js, voiceRetryMs). A talk that is over just ends.
+ */
 function voiceFailed(v) {
   if (voice !== v || v.down) return;
   v.down = true;
-  const again = retryVoice({ tries: v.tries, talk, id: v.id });
+  const wait = voiceRetryMs({ tries: v.tries, talk, id: v.id });
   quietVoice();
   v.sounding = false;
-  if (!again) {
-    if (talk.on && talk.id === v.id) failedTalk = v.id;
-    stopVoice();
-  } else {
+  if (wait < 0) stopVoice();
+  else {
     v.tries += 1;
-    later('voiceRetry', () => { if (voice === v) playVoice(v); }, TALK_RETRY_MS);
+    later('voiceRetry', () => { if (voice === v) playVoice(v); }, wait);
   }
   talkFollow();
 }
@@ -779,7 +781,7 @@ function setTalking(on) {
  */
 function talkFollow() {
   const t = Date.now(), enabled = !!session && !talkOff;
-  const plan = talkPlan({ enabled, talk, own, failed: failedTalk, now: t });
+  const plan = talkPlan({ enabled, talk, own, now: t });
   if (plan.play && (!voice || voice.id !== plan.play)) {
     if (hold.id !== plan.play) hold = { id: plan.play, at: t };
     const wait = hold.at + TALK_HOLD_MS - t;
@@ -843,7 +845,6 @@ function stopTalk() {
   stopVoice();
   cancel(...TALK_TIMERS);
   talk = { on: false };
-  failedTalk = '';
   hold = { id: '', at: 0 };
   if (talking) {
     talking = false;

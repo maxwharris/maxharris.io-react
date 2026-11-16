@@ -1,6 +1,6 @@
 // The engine's talk-over against a stand-in browser (npm test): <audio> elements the test plays, ends and breaks, the
 // catalog's events stream spoken by the test, fetch answering the radio's routes, and one clock the test moves. What a
-// listener hears when Max talks: his last words after the catalog says he stopped.
+// listener hears when Max talks: his last words after the catalog says he stopped, and Max again after a dropped stream.
 import { test, mock, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -120,6 +120,7 @@ const asks = (id) => audios.flatMap((a) => a.asked).filter((s) => s === `/catalo
 /** The talk's element starts to sound (Chrome: once it holds about 32 KB), reaches the end of its stream, or breaks. */
 function sound(el) { el.sounding = true; el.fire('playing'); }
 function end(el) { el.ended = true; el.paused = true; el.sounding = false; el.fire('ended'); }
+function breaks(el) { el.error = { code: 2 }; el.paused = true; el.sounding = false; el.fire('error'); }
 const talking = () => engine.getSnapshot().talking;
 const music = () => audios.find((a) => !a.paused && /^\/media\//.test(a.getAttribute('src') || ''));
 
@@ -244,4 +245,67 @@ test('power off during the end of a talk is silence at once', async () => {
   engine.powerOff();
   assert.equal(el.getAttribute('src'), null);
   assert.equal(talking(), false);
+});
+
+// ---------------------------------------------------------------- a stream that breaks
+test('a talk stream that keeps breaking is asked for again, further apart, for as long as the talk is on', async () => {
+  await tuneIn();
+  const { id, el } = await onAir();
+  sound(el);
+  await advance(3000);
+  end(el); // the connection dropped: the element played out what it held, and ended
+  assert.equal(talking(), false, 'the music back up meanwhile');
+  await advance(1100);
+  assert.equal(asks(id), 2, 'asked again 1 s later');
+  sound(el);
+  await advance(2000);
+  assert.equal(talking(), true);
+  end(el); // dropped again, 2 s on (a phone between cells)
+  await advance(2900);
+  assert.equal(asks(id), 2, 'not again at once');
+  await advance(200);
+  assert.equal(asks(id), 3, 'asked again 3 s later, the talk still on');
+  breaks(el); // the network still out: refused at once
+  await advance(7900);
+  assert.equal(asks(id), 3);
+  await advance(200);
+  assert.equal(asks(id), 4, 'then 8 s later');
+  breaks(el);
+  await advance(15100);
+  assert.equal(asks(id), 5, 'then 15 s');
+  breaks(el);
+  await advance(30100);
+  assert.equal(asks(id), 6, 'then every 30 s');
+  breaks(el);
+  await advance(30100);
+  assert.equal(asks(id), 7);
+  sound(el); // the network is back: Max again
+  await advance(100);
+  assert.equal(talking(), true);
+  await advance(21000); // steady for a while: a break now is tried again after a second
+  end(el);
+  await advance(1100);
+  assert.equal(asks(id), 8);
+  breaks(el);
+  say({ on: false }); // over while the radio waits to ask again: nothing more is asked for
+  await advance(60000);
+  assert.equal(asks(id), 8);
+  assert.equal(el.getAttribute('src'), null);
+  assert.equal(talking(), false);
+});
+
+test('a talk stream that never starts is asked for again too', async () => {
+  await tuneIn();
+  const { id } = await onAir();
+  await advance(15000); // nothing from the element: it fails on its first check past 15 s
+  assert.equal(asks(id), 1);
+  await advance(2000); // and is asked for again a second after that
+  assert.equal(asks(id), 2);
+  await advance(17000); // nothing again: failed, and waiting 3 s this time
+  assert.equal(asks(id), 2);
+  await advance(2000);
+  assert.equal(asks(id), 3);
+  sound(voiceEl());
+  await advance(100);
+  assert.equal(talking(), true);
 });

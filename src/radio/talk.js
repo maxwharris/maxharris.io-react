@@ -45,12 +45,12 @@ export function heardOwn(own, id, on, now) {
  * What a radio does about the talk: {play: the talk to play (its id) or null, echo: this browser's radio admin is live
  * (the music dips, and nothing plays: Max never hears himself a few seconds late)}.
  *   enabled: the radio is on and takes talk-over (not the embed with ?talk=0);
- *   talk: the catalog's word (normalizeTalk); own: heardOwn's; failed: a talk this radio gave up on; now: Date.now().
+ *   talk: the catalog's word (normalizeTalk); own: heardOwn's; now: Date.now().
  */
-export function talkPlan({ enabled, talk, own = NO_OWN, failed = '', now }) {
+export function talkPlan({ enabled, talk, own = NO_OWN, now }) {
   if (!enabled) return { play: null, echo: false };
   const echo = !!own.live && now - own.at < OWN_MS;
-  const play = talk && talk.on && !own.ids.includes(talk.id) && talk.id !== failed ? talk.id : null;
+  const play = talk && talk.on && !own.ids.includes(talk.id) ? talk.id : null;
   return { play, echo };
 }
 
@@ -68,8 +68,16 @@ export function playsOut({ enabled, talk, own = NO_OWN, echo = false, voice }) {
 /** The music's share of the knob: a third while Max talks (drops wait meanwhile), DROP_SHARE under a drop, else all. */
 export const musicShare = ({ talking, drop }) => (talking ? TALK_SHARE : drop ? DROP_SHARE : 1);
 
-/** The talk's element failed (an error, its stream ended, a stall): one more try while the catalog still says it is on. */
-export const retryVoice = ({ tries, talk, id }) => tries < 1 && !!talk && talk.on === true && talk.id === id;
+/**
+ * The talk's element failed (an error, its stream ended, a stall): it asks for the stream again this long after each
+ * failure in a row, the last wait repeating, for as long as the catalog says that talk is on, so a phone moving between
+ * cells or a dropped connection gets Max back once the network is. Sounding steadily for a while starts the count again
+ * (engine.js). At most one request every 30 s, far inside the catalog's limits for a listener.
+ */
+export const TALK_RETRY_MS = [1000, 3000, 8000, 15000, 30000];
+/** How long the element waits before asking again after failure number tries in a row (from 0); -1: that talk is not on. */
+export const voiceRetryMs = ({ tries, talk, id }) =>
+  !!talk && talk.on === true && talk.id === id ? TALK_RETRY_MS[Math.min(Math.max(0, Math.floor(tries) || 0), TALK_RETRY_MS.length - 1)] : -1;
 
 /** Whose word about the talk is taken: the events stream's always; a queue read's only while that stream is not live. */
 export const takesTalk = (source, eventsLive) => source === 'events' || !eventsLive;

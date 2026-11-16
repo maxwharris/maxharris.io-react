@@ -18,7 +18,7 @@
 //   ?talk=on    a talk from "another device": the mock talks itself (a buzzing test voice), as if Max were live elsewhere,
 //               so the admin's go live meets a 409 (take over), and the radios play it
 //   ?talk=off   the live talk ends, as the catalog ends one (its sender's next chunk gets 410)
-//   ?talk=drop  every listener's stream breaks off while the talk stays live (a dropped connection: radios try once more)
+//   ?talk=drop  every listener's stream breaks off while the talk stays live (a dropped connection: radios ask again)
 
 import crypto from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
