@@ -142,7 +142,7 @@ async function onAir() {
 afterEach(() => engine.powerOff());
 
 // ---------------------------------------------------------------- the talk's end
-test('a talk the catalog ends plays on to his last word; the dip and max live last until then', async () => {
+test('a talk the catalog ends plays on to his last word; the dip and the on-air lamp last until then', async () => {
   await tuneIn();
   const { id, el } = await onAir();
   sound(el);

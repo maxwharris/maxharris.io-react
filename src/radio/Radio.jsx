@@ -82,7 +82,7 @@ function Seg({ pattern, text, className }) {
   );
 }
 
-const Ind = ({ on, box, blink, children }) => <span className={`mr-ind${box ? ' box' : ''}${on ? ' on' : ''}${blink ? ' mr-blink' : ''}`}>{children}</span>;
+const Ind = ({ on, box, children }) => <span className={`mr-ind${box ? ' box' : ''}${on ? ' on' : ''}`}>{children}</span>;
 
 const PWR_ICON = <svg className="mr-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" /><path d="M6.7 7a7.4 7.4 0 1 0 10.6 0" /></svg>;
 const REL_ICON = <svg className="mr-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.2 5.4 13h13.2z" /><path d="M5.4 17.6h13.2" /></svg>;
@@ -118,7 +118,7 @@ export default function Radio({ context = 'window' }) {
     rt = shownView === 'text' ? '999.9 fm  maxradio' : title;
   }
   const sr0 = on && s.song ? `now playing ${title.toLowerCase()}, maxradio 999.9 fm` : SR[status] || '';
-  // Max on the mic: talkface.js says what the display, ta and the screen reader's line show instead
+  // Max on the mic: talkface.js lights the on-air lamp and says so on the screen reader's line
   const face = talkFace(pw && !!s.talking, { view: shownView, main, big: title, rt, sr: sr0 });
   const { view, sr } = face;
   const texts = { main: vfdText(face.main), big: vfdText(face.big), rt: vfdText(face.rt), flash: vfdText(flash) };
@@ -201,6 +201,7 @@ export default function Radio({ context = 'window' }) {
             <button type="button" className="mr-key mr-k-disp" aria-label={`display: ${s.disp}`} onClick={onDisp}><span className="mr-lg">disp</span></button>
             <button type="button" className="mr-key mr-k-illum" aria-label={`illumination: ${s.illum}`} onClick={onIllum}><span className="mr-lg">illum</span></button>
             <span className="mr-ir" aria-hidden="true" />
+            <span className="mr-print mr-p-live" aria-hidden="true">live</span>
             <span className="mr-print mr-p-model" aria-hidden="true">mx-999r</span>
             <div className="mr-presets" role="group" aria-label="presets">
               {PRESETS.map((n) => (
@@ -214,7 +215,7 @@ export default function Radio({ context = 'window' }) {
               <div className="mr-rec"><canvas ref={recCv} /></div>
               <div className="mr-d-top">
                 <Ind on={pw} box>fm1</Ind><Ind on={pw}>p1</Ind><Ind on={on}>st</Ind><Ind on={on}>rds</Ind>
-                <Ind on={face.ta.on} box={face.ta.box} blink={face.ta.blink}>ta</Ind>
+                <Ind on={on}>ta</Ind>
                 <Ind on={on && s.volume < 0.6}>loud</Ind>
                 <span className="mr-sp" />
                 <Seg pattern="88:88" text={clock.time} className="mr-s-clk" />

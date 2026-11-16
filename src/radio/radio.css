@@ -63,6 +63,7 @@
 .mr-face > .mr-p-rds { right: calc(32 * var(--mm)); top: calc(1.35 * var(--mm)); }
 .mr-face > .mr-p-model { right: calc(4 * var(--mm)); top: calc(41.6 * var(--mm)); }
 .mr-face > .mr-p-vol { left: calc(20 * var(--mm)); top: calc(42.2 * var(--mm)); transform: translateX(-50%); }
+.mr-face > .mr-p-live { left: calc(158.3 * var(--mm)); top: calc(41.3 * var(--mm)); } /* beside the IR window, its on-air lamp */
 
 /* rubber keys: the legends glow in the illumination colour while the radio is on */
 .mr-key {
@@ -248,6 +249,7 @@
   .mr-face > .mr-p-rds { right: calc(4 * var(--mm)); top: calc(2.2 * var(--mm)); }
   .mr-face > .mr-p-model { right: calc(4 * var(--mm)); top: calc(70.4 * var(--mm)); }
   .mr-face > .mr-p-vol { left: calc(18.5 * var(--mm)); top: calc(75 * var(--mm)); }
+  .mr-face > .mr-p-live { left: calc(114.8 * var(--mm)); top: calc(67.1 * var(--mm)); transform: translateX(-50%); } /* under the lamp: no room beside it */
   .mr-face > .mr-k-rel { left: 3em; top: 1.2em; width: 13em; height: 5em; }
   .mr-face > .mr-knob { left: 4em; top: 44.4em; width: 29em; height: 29em; }
   .mr-face > .mr-presets { left: 37em; top: 45.5em; width: 45.5em; height: 20.6em; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8em; }

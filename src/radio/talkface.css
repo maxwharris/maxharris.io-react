@@ -1,5 +1,9 @@
-/* The faceplate while Max is on the mic, option A (talkface.js): ta lit and boxed, blinking about once a second like a
-   traffic announcement cutting in. The glow goes out with the letters on the dark beat. With reduced motion radio.css
-   stops every animation, which leaves it lit and steady. */
-.mr-rad .mr-ind.mr-blink { animation: mr-ta 1s steps(1) infinite; }
-@keyframes mr-ta { 50% { color: var(--ghost); filter: none; } }
+/* The faceplate while Max is on the mic, option B (talkface.js): the red IR window under illum lit as an on-air lamp,
+   a hot centre with a glow around it, fading up as his voice starts and down after his last word. With reduced motion
+   radio.css cuts the fade, which leaves it simply on or off. The printed live beside it is in radio.css. */
+.mr-face > .mr-ir::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .35s ease;
+  background: radial-gradient(ellipse at 50% 38%, #ffd2c8 0, #ff5a43 30%, #d81e0f 62%, #7d0b05 100%);
+  box-shadow: inset 0 .1em .3em rgba(255,255,255,.55), 0 0 1.4em .45em rgba(255,58,36,.55), 0 0 .4em .1em rgba(255,90,60,.8);
+}
+.mr-rad.mr-onair .mr-face > .mr-ir::after { opacity: 1; }
