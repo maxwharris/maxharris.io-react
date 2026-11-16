@@ -307,8 +307,9 @@ export function createAdmin() {
         after: i > 0 ? c.up[i - 1] : null,
         before: i + 1 < c.up.length ? c.up[i + 1] : null,
       };
-      const rest = c.m.order.filter((x) => x !== id);
-      apply(c.m, savedOrder(c.onAirId, c.up.filter((x) => x !== id), rest));
+      // The order the catalog will have: the DELETE leaves the rest where they were (it plays the same, round from the song
+      // on air). An undo or an add straight after compares its order against this one, and saves it when they differ.
+      apply(c.m, c.m.order.filter((x) => x !== id));
       enqueue({ kind: 'op', run: () => api.removeSong(crateId, id) });
       setUndo(rec);
       show({ error: '' });
