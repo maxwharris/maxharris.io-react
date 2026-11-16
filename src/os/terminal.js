@@ -121,7 +121,12 @@ export function runCommand(raw, ctx) {
       else say(c === 'cd' ? `cd: ${a}: try open ${a}` : `open: ${a}: not found. try ls work.`);
       break;
     }
-    case 'radio': tuneRadio(ctx, say); break;
+    case 'radio':
+      // radio admin: Max's editor for the radio's queue (src/radio/admin), signed in through the catalog. Not in help or
+      // completion; it is his. Anything else after radio tunes in as before.
+      if (a === 'admin') { say('opening the radio admin...', 'c2'); actions.open('radioadmin', {}, ctx.origin()); }
+      else tuneRadio(ctx, say);
+      break;
     case 'whoami': out(`you: a guest\nhost: <span class="c3">${esc(owner.name)}</span>, ${esc(owner.title)}`); break;
     case 'about': out(owner.about.map((l) => '- ' + esc(l)).join('\n')); break;
     case 'contact':

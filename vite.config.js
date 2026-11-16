@@ -8,6 +8,9 @@ const here = (p) => fileURLToPath(new URL(p, import.meta.url))
 export default defineConfig(async ({ command }) => ({
   plugins: [
     react(),
+    // RADIO_ADMIN_MOCK=1 npm run dev: the catalog routes the radio admin calls (crates, search, reorder, the radio's list)
+    // answered from a library in memory (scripts/radio-admin-mock.js). Dev server only, like the radio's mock below.
+    command === 'serve' && process.env.RADIO_ADMIN_MOCK === '1' && (await import('./scripts/radio-admin-mock.js')).radioAdminMock(),
     // RADIO_MOCK=1 npm run dev: the radio's catalog routes answered here with short test songs (scripts/radio-mock.js).
     // Loaded only by the dev server with that set, so none of it can reach a build.
     command === 'serve' && process.env.RADIO_MOCK === '1' && (await import('./scripts/radio-mock.js')).radioMock(),
