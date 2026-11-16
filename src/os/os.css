@@ -131,9 +131,12 @@ html.os-on,html.os-on body{margin:0;height:100%;overflow:hidden;background:#1630
 .os.watching #wins{transform:scale(.93);opacity:.12;pointer-events:none}
 .os.watching #wins .win{pointer-events:none}
 .os.watching #desk{opacity:0;pointer-events:none}
-/* six desk icons since the radio's (seven with secrets.txt): packed closer below 900px tall so they clear the crown */
+/* six desk icons since the radio's (seven with secrets.txt): packed closer below 900px tall so they clear the crown, and
+   closer still below 700px (a laptop's browser window), where the radio's label clears it down to about 525px tall and
+   secrets.txt's to about 590px; each label stays nearer its own disc than the next */
 @media (max-height:900px){#desk{top:56px;gap:0}.dicon{padding:4px 4px 6px;gap:5px}}
 @media (max-height:790px){.dicon .disc{--s:44px}}
+@media (max-height:700px){.dicon{padding:1px 4px 5px;gap:2px}.dicon .disc{--s:38px}.dicon .lbl{font-size:12px;padding:2px 8px}}
 .win{position:absolute;pointer-events:auto;transition:left .55s cubic-bezier(.2,.8,.2,1),top .55s cubic-bezier(.2,.8,.2,1),width .55s cubic-bezier(.2,.8,.2,1),height .55s cubic-bezier(.2,.8,.2,1)}
 .win.dragging{transition:width .55s cubic-bezier(.2,.8,.2,1),height .55s cubic-bezier(.2,.8,.2,1)}
 .win[hidden]{display:none}
