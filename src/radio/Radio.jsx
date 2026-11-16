@@ -9,7 +9,9 @@
 // The engine (engine.js) and its hook (useRadio.js) decide everything: this lays out what they say and passes the taps
 // back, and display.js draws the canvases. Inside, 1em is 1 mm of a real head unit (178 by 50 mm, one DIN; 124 by 80,
 // folded, where it is narrow), scaled to fit where it lives. context: 'window' (the desktop's window: the faceplate alone,
-// floating, with the window's bar under it; Max, 11/13/26), 'phone' (the phone's sheet), 'page' (the pop-out tab at /radio/, centred and scaled to fit).
+// floating, with the window's bar under it; Max, 11/13/26), 'phone' (the phone's sheet), 'page' (the pop-out tab at /radio/, centred and scaled to fit),
+// 'embed' (the stream's browser source at /radio/embed/: the faceplate filling a transparent page) and 'display' (the
+// same with ?display: only the dot-matrix display, filling it; embed.css).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { radio, useDial, useRadio, useStationClock, useVolumeKnob } from './useRadio.js';
@@ -158,7 +160,8 @@ export default function Radio({ context = 'window' }) {
     radio.power();
     setAttach(true);
   };
-  const page = context === 'page';
+  // on a page of its own (the pop-out, the embed) there is nowhere to release it to
+  const alone = context === 'page' || context === 'embed' || context === 'display';
 
   return (
     <div className={`mr mr-${context}`}>
@@ -179,9 +182,9 @@ export default function Radio({ context = 'window' }) {
             <span className="mr-print mr-p-mos" aria-hidden="true">mosfet 50w×4</span>
             <span className="mr-logo" aria-hidden="true">max<i>radio</i></span>
             <span className="mr-print mr-p-rds" aria-hidden="true">rds · mp3/wma</span>
-            <button type="button" className="mr-key mr-k-rel" disabled={page}
-              aria-label={page ? 'release: the radio is in its own tab' : 'release: open the radio in its own tab'}
-              title={page ? undefined : 'open the radio in its own tab'} onClick={() => radio.popOut()}>
+            <button type="button" className="mr-key mr-k-rel" disabled={alone}
+              aria-label={alone ? 'release: the radio is in its own tab' : 'release: open the radio in its own tab'}
+              title={alone ? undefined : 'open the radio in its own tab'} onClick={() => radio.popOut()}>
               {REL_ICON}<span className="mr-lg">rel</span>
             </button>
             <div className="mr-knob" {...knob.props} style={{ '--ang': `${knob.turn}deg` }}>

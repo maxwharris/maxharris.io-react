@@ -1,0 +1,23 @@
+/* The embed (radio/embed/, embed.jsx): a transparent page for an OBS browser source with the radio filling it at any
+   size (no 5.4 px cap, never folded), with room for the faceplate's shadow; or, with ?display, the dot-matrix display
+   alone with room for its glow. radio.css draws everything; this only places it. */
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+#radio-root { position: relative; height: 100%; display: flex; }
+.mr-embed, .mr-display { flex: 1; }
+.mr-embed .mr-host, .mr-display .mr-host { container-name: mr-fit; }
+.mr-embed .mr-rad, .mr-display .mr-rad { font-size: min(calc(100cqw / var(--rw)), calc(100cqh / var(--rh))); }
+
+/* the faceplate, 178 x 50 mm, and its shadow: 2 mm at each side, 1 above, 3.4 below */
+.mr-embed .mr-rad { --rw: 182; --rh: 54.4; }
+.mr-embed .mr-face, .mr-embed .mr-chassis { left: 2em; top: 1em; }
+
+/* the display, 102 x 27.6 mm at 41.5 x 7.5 on the faceplate, and 2.5 mm round it for its glow; the rest of the face
+   and its keys are not drawn */
+.mr-display .mr-rad { --rw: 107; --rh: 32.6; }
+.mr-display .mr-face { left: -39em; top: -5em; background: none; box-shadow: none; }
+.mr-display .mr-face > :not(.mr-vfd) { display: none; }
+.mr-tap {
+  position: fixed; inset: 0; z-index: 10; appearance: none; -webkit-appearance: none; margin: 0; padding: 0; border: 0;
+  background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.mr-tap:focus-visible { outline: 2px solid #4d8dff; outline-offset: -4px; }

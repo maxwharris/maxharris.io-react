@@ -14,8 +14,9 @@ export default defineConfig(async ({ command }) => ({
   ].filter(Boolean),
   build: {
     rollupOptions: {
-      // two pages: the desktop, and the radio on its own at /radio/ (REL pops it out), which loads no desktop code
-      input: { main: here('./index.html'), radio: here('./radio/index.html') },
+      // three pages: the desktop; the radio on its own at /radio/ (REL pops it out); and /radio/embed/, the radio for
+      // Max's stream (an OBS browser source). Neither radio page loads any desktop code.
+      input: { main: here('./index.html'), radio: here('./radio/index.html'), embed: here('./radio/embed/index.html') },
       output: {
         assetFileNames: (assetInfo) => {
           if (assetInfo.names?.[0]?.endsWith('.mjs')) {
