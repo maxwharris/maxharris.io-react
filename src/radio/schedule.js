@@ -19,7 +19,7 @@ export const rotationMs = (songs) => songs.reduce((n, s) => n + s.durationMs, 0)
  * {id, durationMs} with durationMs a whole number of ms above 0. Returns {song, index, offsetMs, startedAt, endsAt, next,
  * slot}, or null with nothing to play. index is the song's place in the queue; startedAt and endsAt are station-clock
  * ms; slot counts the songs started since the anchor (the anchor's song is 0, -1 the one before it, and so on; a carried
- * song is -1), so it steps by one from song to song, which is what the announcer drops alternate on.
+ * song is -1), so it steps by one from song to song, which is what the announcer drops' pattern counts.
  */
 export function onAir(state, nowMs) {
   const songs = (state && state.songs) || [];
@@ -84,13 +84,16 @@ const DROP_TAIL_MS = 2000;
 
 /**
  * The announcer drop over one song on air (an onAir result or a timeline entry): {clip, atMs, endsAt}, clip being the
- * index into clips ([{durationMs}], the recordings, which alternate song by song: "alternating between the two"), atMs
- * and endsAt station-clock ms. null when the song is too short to carry one.
+ * index into clips ([{durationMs}], the recordings), atMs and endsAt station-clock ms; null for a song without one.
+ * Max's pattern (11/15/26): "song 1-recording 1, song 2- none, song 3-recording 2, song 4- none, repeat", counted by
+ * slot from the anchor song (slot 0). The song carried through an edit (slot -1) has none, so the anchor song after it
+ * opens with recording 1. A song too short to carry its drop has none either, and the count goes on.
  */
 export function dropFor(entry, clips) {
   if (!entry || !clips || !clips.length) return null;
-  const n = clips.length;
-  const clip = ((entry.slot % n) + n) % n;
+  const m = ((entry.slot % 4) + 4) % 4;
+  if (m % 2) return null;
+  const clip = (m / 2) % clips.length;
   const startedAt = entry.startedAt ?? entry.startsAt;
   const atMs = startedAt + DROP_AT_MS;
   const endsAt = atMs + clips[clip].durationMs;

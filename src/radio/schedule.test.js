@@ -107,15 +107,28 @@ test('timeline: consecutive entries from the song on air', () => {
   assert.deepEqual(timeline({ songs: [] }, 0, 5), []);
 });
 
-test('announcer drops: alternate song by song, a few seconds in, never over the end', () => {
+test('announcer drops: every other song, recording 1 then recording 2, a few seconds in, never over the end', () => {
+  // Max, 11/15/26: "song 1-recording 1, song 2- none, song 3-recording 2, song 4- none, repeat"
   const clips = [{ durationMs: 4937 }, { durationMs: 5277 }];
-  const s = { songs: [A, B, C], anchor: { at: 1000000, songId: 2 }, carry: null };
-  const [b, c, a] = timeline(s, 1000000, 3);
-  assert.deepEqual(dropFor(b, clips), { clip: 0, atMs: 1000000 + DROP_AT_MS, endsAt: 1000000 + DROP_AT_MS + 4937 });
-  assert.deepEqual(dropFor(c, clips), { clip: 1, atMs: 1020000 + DROP_AT_MS, endsAt: 1020000 + DROP_AT_MS + 5277 });
-  assert.equal(dropFor(a, clips), null, 'a 10 s song is too short for one');
-  // the carried song (slot -1) takes the other clip from the anchor song's
-  const carried = onAir({ songs: [A, B, C], anchor: { at: 2000000, songId: 1 }, carry: { songId: 3, startedAt: 1970000, endsAt: 2000000 } }, 1970000);
-  assert.equal(dropFor(carried, clips).clip, 1);
+  const L = { id: 4, durationMs: 60000 };
+  const s = { songs: [L, B, C, A], anchor: { at: 1000000, songId: 4 }, carry: null };
+  const tl = timeline(s, 1000000, 8);
+  assert.deepEqual(tl.map((e) => { const d = dropFor(e, clips); return d && d.clip; }), [0, null, 1, null, 0, null, 1, null]);
+  assert.deepEqual(dropFor(tl[0], clips), { clip: 0, atMs: 1000000 + DROP_AT_MS, endsAt: 1000000 + DROP_AT_MS + 4937 });
+  assert.deepEqual(dropFor(tl[2], clips), { clip: 1, atMs: 1080000 + DROP_AT_MS, endsAt: 1080000 + DROP_AT_MS + 5277 });
+  // an onAir result reads the same as its timeline entry
+  assert.deepEqual(dropFor(onAir(s, 1085000), clips), dropFor(tl[2], clips));
+  // a song too short for its drop has none, and the count goes on: slot 0 is A (10 s), slot 2 is B with recording 2
+  const short = timeline({ songs: [A, L, B], anchor: { at: 0, songId: 1 }, carry: null }, 0, 3);
+  assert.deepEqual(short.map((e) => { const d = dropFor(e, clips); return d && d.clip; }), [null, null, 1]);
+  // the song carried through an edit (slot -1) has none; the anchor song after it opens with recording 1
+  const edited = { songs: [A, B, C], anchor: { at: 2000000, songId: 2 }, carry: { songId: 3, startedAt: 1970000, endsAt: 2000000 } };
+  assert.equal(dropFor(onAir(edited, 1975000), clips), null);
+  assert.equal(dropFor(onAir(edited, 2000000), clips).clip, 0);
+  // before the anchor the pattern runs back the same way: slot -2 carries recording 2, slot -4 recording 1
+  const back = timeline(s, 1000000 - rotationMs(s.songs), 4);
+  assert.deepEqual(back.map((e) => e.slot), [-4, -3, -2, -1]);
+  assert.deepEqual(back.map((e) => { const d = dropFor(e, clips); return d && d.clip; }), [0, null, 1, null]);
   assert.equal(dropFor(null, clips), null);
+  assert.equal(dropFor(tl[0], []), null);
 });

@@ -2,7 +2,8 @@
 // /peaks/:id) with five short test songs, so the radio can be tried before the catalog serves them and a boundary comes
 // round in seconds. Two of them do what real previews may: 'night drive' runs longer than the schedule says (cut at the
 // boundary) and 'low tide' ends early (quiet until it). Only 'sign on' (16 s) and 'long play' (20 s) are long enough for
-// an announcer drop (8 s in, schedule.js dropFor), and they play one after the other, so their drops take turns. The
+// an announcer drop (8 s in, on every other song: schedule.js dropFor), and they play one after the other, so one of
+// them carries it each time round. The
 // tones are made once into .radio-mock/ (gitignored): AAC in MP4 like the catalog's previews when ffmpeg is installed,
 // else WAV. vite.config.js loads this file only in the dev server with RADIO_MOCK=1, so nothing of it reaches a build.
 //
