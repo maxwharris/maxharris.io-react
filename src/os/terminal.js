@@ -99,7 +99,7 @@ export function runCommand(raw, ctx) {
       out('<span class="c3">commands</span>\n' + [
         ['help', 'this list'], ['ls [work|personal]', 'see what is here'], ['open <name>', 'open a project or app'],
         ['whoami', 'who is at the keyboard'], ['about', 'the short version'], ['contact', 'how to reach max'], ['radio', '999.9 fm, maxradio'],
-        ['neofetch', 'system summary'], ['theme [light|dark]', 'switch the glass'], ['scene [neon|classic|ink|...]', 'change the board'],
+        ['neofetch', 'system summary'], ['theme [light|dark]', 'switch the glass'], ['scene [meadow|neon|...]', 'change the scene'],
         ['history', 'what you typed'], ['clear', 'clean slate'], ['sudo', 'go on, try it'], ['exit', 'close the terminal'],
       ].map(([k, d]) => `  <span class="c1">${esc(pad(k, 29))}</span>${esc(d)}`).join('\n'));
       break;

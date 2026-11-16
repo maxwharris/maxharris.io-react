@@ -20,9 +20,10 @@
 // could not be read anyway); Web Audio only makes the static, and the level meter and the record read the song's
 // waveform (GET /catalog/api/radio/peaks/:id) at the live position instead of the sound.
 //
-// The announcer drops (Max, 11/15/26: "should play over tracks maybe once per track (towards the beginning) alternating
-// between the two") play on an element of their own, on the station clock like the songs (schedule.js dropFor), so a
-// listener tuning in during one joins it partway. Where element volume works the music dips under them.
+// The announcer drops, near the start of every other song, the two recordings taking turns (Max, 11/15/26: "song
+// 1-recording 1, song 2- none, song 3-recording 2, song 4- none, repeat"), play on an element of their own, on the
+// station clock like the songs (schedule.js dropFor), so a listener tuning in during one joins it partway. Where element
+// volume works the music dips under them.
 
 import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
@@ -154,7 +155,7 @@ function refresh() {
 }
 
 // A song's slot in the schedule: the same song at the same start is the same slot. slot (schedule.js) counts songs from
-// the anchor, which the drops alternate on; n is the station it was worked out from.
+// the anchor, which the drops' pattern counts; n is the station it was worked out from.
 const slotOf = (x) => ({ song: x.song, startedAt: x.startedAt, endsAt: x.endsAt, slot: x.slot, n: stationN });
 const sameSlot = (a, b) => !!a && !!b && a.song.id === b.song.id && a.startedAt === b.startedAt;
 const liveSlot = () => { const x = onAir(station, now()); return x ? slotOf(x) : null; };
@@ -488,11 +489,14 @@ function heard(m) {
     // one that is not sounding yet and was switched on earlier lets go now; one that is sounding plays on until the
     // new one actually plays
     if ((st === 'tuning' || st === 'blocked' || st === 'offair') && newerThanMine(m)) release();
+  } else if (m.type === 'queue') {
+    // the radio admin in this browser saved an edit: the queue now, not at the next read
+    if (st === 'on') poll();
   }
 }
 
 // ---------------------------------------------------------------- the announcer drops
-// One over each song long enough for it, DROP_AT_MS in (schedule.js), the two recordings taking turns song by song. The
+// One over every other song (schedule.js dropFor: recording 1, none, recording 2, none), DROP_AT_MS in. The
 // clip plays on its own element in step with the station clock: tuning in during one joins it partway, and after its
 // end there is nothing. The music dips to DUCK under it with short ramps where element volume works; on iOS (which keeps
 // volume in the listener's hands) it plays over the music. The next drop's clip loads ahead.

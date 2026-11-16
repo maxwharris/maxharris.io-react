@@ -15,6 +15,20 @@ export const POLL_MS = 10000;
 export const UNDO_MS = 6000;
 const NONE = new Set();
 
+// After a saved edit the radios in this browser (the desktop's, a pop-out page) read the queue again at once over their
+// shared channel (engine.js, heard), so Max hears his edit without waiting for their next read; other listeners pick it
+// up at theirs. One channel a page, made when first needed.
+let chan = null;
+function nudgeRadios() {
+  try {
+    if (!chan && typeof BroadcastChannel === 'function') {
+      chan = new BroadcastChannel('maxradio');
+      if (typeof chan.unref === 'function') chan.unref(); // under node (the tests) an open channel would hold the run open
+    }
+    if (chan) chan.postMessage({ type: 'queue', id: 'admin', at: Date.now() });
+  } catch { /* no channel: the radios read the queue on their own soon enough */ }
+}
+
 const anchorOf = (a) => (a && Number.isFinite(Number(a.at)) && a.songId != null ? { at: Number(a.at), songId: a.songId } : null);
 const carryOf = (c) => (c && c.songId != null && Number.isFinite(Number(c.startedAt)) && Number.isFinite(Number(c.endsAt))
   ? { songId: c.songId, startedAt: Number(c.startedAt), endsAt: Number(c.endsAt) }
@@ -212,6 +226,7 @@ export function createAdmin() {
     if (failed) { refused(failed); return; }
     settleFrom = seq + 1;
     read();
+    nudgeRadios();
   }
 
   // The catalog said no (or could not be reached): back to what it has, and a plain line saying why.

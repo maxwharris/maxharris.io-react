@@ -8,8 +8,10 @@
 //        the playable list changes (src/radio/admin/queue.js, reanchor): on this read, and at once after every change to
 //        the radio crate, so the admin's view moves like the real thing.
 // A change needs X-Catalog: 1 and an Origin of this host, as the catalog's (lib/guard.js). Any other /catalog/api route
-// answers 404 here, so nothing reaches the live catalog; the radio's audio (/catalog/api/radio/play, /peaks) is left to
-// RADIO_MOCK=1 when that is on too. vite.config.js loads this file only in the dev server with RADIO_ADMIN_MOCK=1, so
+// answers 404 here, so nothing reaches the live catalog. The radio's audio (/catalog/api/radio/play, /peaks) is passed on
+// to RADIO_MOCK=1 when that is on too, but its tones are for its own songs (9001-9005), not these, so with both mocks on
+// the radio itself shows no signal: try the radio with RADIO_MOCK=1 alone. vite.config.js loads this file only in the
+// dev server with RADIO_ADMIN_MOCK=1, so
 // none of it can reach a build.
 //
 // Switches while it runs (each answers the mock's state as JSON, the song on air included):
@@ -282,7 +284,7 @@ async function handle(req, res, next) {
   try {
     const r = await api(req, res, p.slice('/catalog/api'.length) || '/', url);
     if (r === 'pass') {
-      // the radio's audio: RADIO_MOCK=1 answers it when it is on, else nothing does
+      // the radio's audio: passed on to RADIO_MOCK=1 when it is on (which has tones only for its own songs), else 404
       if (process.env.RADIO_MOCK === '1') next();
       else fail(res, 404, 'That song is not on the radio.');
     }

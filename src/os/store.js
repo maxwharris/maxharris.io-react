@@ -38,7 +38,8 @@ export const KINDS = {
   trash: { w: 480, h: 560, title: () => 'trash' },
   sys: { w: 430, h: 560, title: () => 'about maxOS' },
   secrets: { w: 440, h: 400, title: () => 'secrets.txt' },
-  // maxradio (src/radio): opened by typing radio in the terminal, never from the dock or the home grid. The window is the
+  // maxradio (src/radio): opened by typing radio in the terminal, or from its desktop icon or the phone's home grid
+  // (radioIcon.js), never from the dock. The window is the
   // faceplate alone, floating, so it keeps the faceplate's shape (178 x 50 mm), at most its largest size (5.4 px a mm)
   radio: { w: 560, h: 158, aspect: 178 / 50, max: 961, title: () => 'radio' },
   // the radio's admin (src/radio/admin): Max's editor for its queue, signed in through the catalog; typed as radio admin
