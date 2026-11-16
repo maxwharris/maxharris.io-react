@@ -57,9 +57,10 @@ export const search = (q, signal) => call('GET', `/search?q=${encodeURIComponent
 // ---------------------------------------------------------------- the talk-over (mic.js): Max live over the radio
 /**
  * Starts a talk: {id, startedAt, sampleRate (24000), chunkMs (250)}. A talk already live answers 409 (a CatalogError whose
- * data.live is {id, since}); takeOver ends that one first and starts this one.
+ * data.live is {id, since}); takeOver ends that one first and starts this one. signal: an AbortSignal (mic.js gives up on
+ * a catalog that does not answer), which rejects with the browser's AbortError.
  */
-export const startTalk = (takeOver = false) => call('POST', '/radio/talk', takeOver ? { takeOver: true } : {});
+export const startTalk = (takeOver = false, signal = undefined) => call('POST', '/radio/talk', takeOver ? { takeOver: true } : {}, signal);
 
 /**
  * One chunk of the talk's voice (raw s16le PCM, mono, 24 kHz) as number seq. Never throws: {outcome: 'ok', 'retry' (no

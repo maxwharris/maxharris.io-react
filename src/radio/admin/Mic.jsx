@@ -1,7 +1,8 @@
 // The radio admin's mic card: option 1 from the lead's demo (11/16/26, "a mic card under the song on air"). Ready, a
 // round mic button with go live, the microphone's name and a line on the delay and headphones; live, a red stop button,
-// on the mic with the time on, and the level. Also asking for the mic, the mic refused (and how to allow it), a talk live
-// in another tab (take over), and off air with a plain line. mic.js does the work; this lays it out (mic.css).
+// on the mic with the time on, and the level. Also asking for the mic, going live (the button already a stop, pulsing:
+// a tap stays off air), the mic refused (and how to allow it), a talk live in another tab (take over), and off air with a
+// plain line. mic.js does the work; this lays it out (mic.css).
 //
 // Admin.jsx only places <Mic />, so the demo's option 2 (a mic button in the window's header) or 3 (hold to talk) is a
 // change to this file and its CSS.
@@ -27,7 +28,7 @@ const READY = 'talk over the radio. everyone hears you about 3 s later; wear hea
 const COPY = {
   ready: { h: 'go live', p: READY, act: 'go live: talk over the radio' },
   asking: { h: 'asking for the mic', p: 'say yes when your browser asks to use the microphone.', act: 'asking for the mic' },
-  starting: { h: 'going live', p: READY, act: 'going live' },
+  starting: { h: 'going live', p: READY, act: 'cancel: stay off air' },
   live: { h: "you're live", p: '', act: 'stop: go off air' },
   blocked: { h: 'the mic is blocked', p: 'allow the microphone for this site in your browser (the icon by the address, or its site settings), then tap the mic to try again.', act: 'try again' },
   nomic: { h: 'no microphone found', p: 'plug one in or pick one in your sound settings, then tap the mic to try again.', act: 'try again' },
@@ -79,13 +80,10 @@ function Mic() {
     mic.open();
     return () => mic.close();
   }, [mic]);
-  const live = s.phase === 'live', wait = s.phase === 'asking' || s.phase === 'starting';
+  // the round button stops from the moment the talk is being started (mic.js, tap): a catalog slow to answer is never a trap
+  const live = s.phase === 'live', asking = s.phase === 'asking', stops = live || s.phase === 'starting';
   const now = useNow(live);
   const c = COPY[s.phase] || COPY.ready;
-  const press = () => {
-    if (live) mic.stop();
-    else if (!wait) mic.start(s.phase === 'elsewhere');
-  };
 
   let eye;
   if (live) eye = <><span className="ra-onmic"><i />on the mic</span><span className="ra-clock">{clock(Math.max(0, now - s.since))}</span></>;
@@ -96,8 +94,8 @@ function Mic() {
 
   return (
     <section className={`ra-mic ${s.phase}`} aria-label="mic">
-      <button type="button" className="ra-mic-b" aria-label={c.act} aria-disabled={wait || undefined} onClick={press}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">{live ? STOP : MIC}</svg>
+      <button type="button" className="ra-mic-b" aria-label={c.act} aria-disabled={asking || undefined} onClick={mic.tap}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">{stops ? STOP : MIC}</svg>
       </button>
       <div className="ra-mic-t">
         <p className="ra-eye">{eye}</p>

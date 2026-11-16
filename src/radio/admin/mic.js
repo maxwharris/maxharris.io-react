@@ -7,7 +7,9 @@
 // /radio/talk starts a talk, each chunk goes to /radio/talk/:id/audio in order, at most four at a time (uplink.js), and
 // DELETE ends it. The sending follows the worklet's messages, not a timer, so a tab in the background keeps sending. A 410
 // means the catalog ended the talk (another tab took over, 30 minutes, or 4 s without audio); if the window closes while
-// live, the talk ends with it (and the catalog would end it by itself 4 s later anyway).
+// live, the talk ends with it (and the catalog would end it by itself 4 s later anyway). Going live never hangs with the
+// mic open: a start the catalog has not answered in 10 s is off air ('could not reach the catalog'), and a tap on the
+// round button while going live stops at once (tap()); a talk the catalog starts after that is ended as it answers.
 //
 // The radios in this browser hear about it on the one-radio channel, 'maxradio' ({type: 'talking', id: 'admin', talkId,
 // on, at}): they dip the music and never play this talk themselves, so Max does not hear himself a few seconds late. It is
@@ -20,6 +22,7 @@ import { low } from './queue.js';
 const WORKLET = new URL('./talk-worklet.js', import.meta.url);
 const SAY_EVERY = 8; // chunks: the radios here hear 'talking' again every 2 s
 const LONGEST_MS = 30 * 60 * 1000; // the catalog ends a talk after 30 minutes
+const START_MS = 10000; // the catalog not answering a start this long: off air, the mic let go
 
 /** The device's name as the card shows it: lowercase, without the browser's "Default - ". */
 const nameOf = (label) => low(String(label || '').replace(/^default\s*-\s*/i, '').trim());
@@ -37,9 +40,9 @@ function micRefused(err) {
   if (name === 'NotReadableError' || name === 'TrackStartError' || name === 'AbortError') return { phase: 'busy' };
   return { phase: 'offair', why: 'the mic would not start in this browser.' };
 }
-/** The catalog's no to starting a talk, as a plain line. */
+/** The catalog's no to starting a talk, as a plain line (no answer in time is the browser's AbortError). */
 function startRefused(err) {
-  if (!err || err.status === 0) return 'could not reach the catalog.';
+  if (!err || err.status === 0 || err.name === 'AbortError') return 'could not reach the catalog.';
   if (err.signin) return 'sign in to the catalog again, then try again.';
   if (err.status >= 500) return 'the catalog could not start the talk just now.';
   return `the catalog did not start it: ${low(err.message).replace(/[.\s]+$/, '')}.`;
@@ -203,14 +206,19 @@ export function createMic() {
     }
     if (my !== run) { teardown(c); return; }
     let talk;
+    // given up on after START_MS, unless stopped meanwhile: then a late answer still comes, and its talk is ended below
+    const ctl = new AbortController();
+    const late = setTimeout(() => { if (my === run) ctl.abort(); }, START_MS);
     try {
-      talk = await startTalk(takeOver);
+      talk = await startTalk(takeOver, ctl.signal);
     } catch (err) {
       if (my !== run) return;
       teardown(c);
       if (err && err.status === 409) emit({ phase: 'elsewhere', elsewhere: liveOf(err.data) });
       else emit({ phase: 'offair', why: startRefused(err) });
       return;
+    } finally {
+      clearTimeout(late);
     }
     if (!talk || typeof talk.id !== 'string' || !talk.id) {
       if (my === run) { teardown(c); emit({ phase: 'offair', why: 'the catalog gave no talk to send to.' }); }
@@ -295,6 +303,15 @@ export function createMic() {
     },
     start,
     stop,
+    /**
+     * A tap on the round button (call it inside the tap): stop while going live or live; nothing while the browser asks
+     * for the mic (its own prompt is the thing to answer); else go live, taking over from a talk live elsewhere.
+     */
+    tap() {
+      const p = snap.phase;
+      if (p === 'live' || p === 'starting') stop();
+      else if (p !== 'asking') start(p === 'elsewhere');
+    },
     /** Back to ready from a refusal or a talk live elsewhere. */
     cancel() {
       if (!cur) emit({ phase: 'ready', why: '', elsewhere: null });

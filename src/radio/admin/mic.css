@@ -15,7 +15,9 @@
 .ra-mic-b:active{transform:scale(.96)}
 .ra-mic-b svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .ra-mic-b svg rect{fill:currentColor;stroke:none}
-.ra-mic.asking .ra-mic-b,.ra-mic.starting .ra-mic-b{cursor:progress;animation:ra-mic-wait .9s ease-in-out infinite alternate}
+.ra-mic.asking .ra-mic-b{cursor:progress}
+.ra-mic.asking .ra-mic-b,.ra-mic.starting .ra-mic-b{animation:ra-mic-wait .9s ease-in-out infinite alternate}
+.ra-mic.starting .ra-mic-b svg{width:20px;height:20px}
 @keyframes ra-mic-wait{to{opacity:.5}}
 .ra-mic.live{background:linear-gradient(135deg,rgba(224,59,44,.17),transparent 64%),var(--plate)}
 .ra-mic.live .ra-mic-b{background:#e03b2c;color:#fff;box-shadow:0 0 0 6px rgba(224,59,44,.2),0 0 0 13px rgba(224,59,44,.08),0 10px 22px -12px rgba(0,0,0,.6)}
