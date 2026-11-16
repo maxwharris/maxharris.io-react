@@ -82,7 +82,7 @@ function Mic() {
     mic.open();
     return () => mic.close();
   }, [mic]);
-  // the round button stops from the moment the talk is being started (mic.js, tap): a catalog slow to answer is never a trap
+  // the round button stops from the moment the talk is being started (mic.js, tap): a slow catalog is never a trap
   const live = s.phase === 'live', asking = s.phase === 'asking', stops = live || s.phase === 'starting';
   const now = useNow(live);
   const c = COPY[s.phase] || COPY.ready;

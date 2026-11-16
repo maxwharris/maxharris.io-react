@@ -669,7 +669,7 @@ function skipDrop() {
 let talk = { on: false }; // the catalog's word (talk.js, normalizeTalk)
 let talkOff = false; // the embed with ?talk=0
 let own = NO_OWN; // what this browser's radio admin said (talk.js, heardOwn)
-let voice = null; // {id, tries, sounding, down, ending, t0, since, progress, pos}: the talk V plays (ending: over, playing out)
+let voice = null; // {id, tries, sounding, down, ending, t0, since, progress, pos}: the talk V plays (ending: playing out)
 let hold = { id: '', at: 0 }; // when this radio first heard that talk was on (TALK_HOLD_MS)
 let talking = false; // the snapshot's talking: V sounds, or this browser's admin is live
 let es = null; // the events stream
@@ -690,7 +690,7 @@ function voiceEl() {
       if (!v.sounding) { v.sounding = true; v.since = v.progress; talkFollow(); }
     });
     on('timeupdate', (v) => { if (V.currentTime !== v.pos) { v.pos = V.currentTime; v.progress = performance.now(); } });
-    // the stream ends with the talk (and the catalog's word follows), or it broke off
+    // the stream's end: the talk's (the catalog said so first, and V played out his last words), or it broke off
     on('ended', voiceFailed);
     on('error', voiceFailed);
   }
@@ -755,7 +755,10 @@ function voiceFailed(v) {
   }
   talkFollow();
 }
-/** Once a second while V has a talk: not starting, or stuck, is failing; a retry that has played a while is forgiven. */
+/**
+ * Once a second while V has a talk: not starting, or stuck, is failing; a retry that has sounded a while starts the
+ * waits over.
+ */
 function voiceTick() {
   const v = voice;
   if (!v || !V) { cancel('voiceTick'); return; }

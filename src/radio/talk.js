@@ -83,7 +83,7 @@ export const musicShare = ({ talking, drop }) => (talking ? TALK_SHARE : drop ? 
  * (engine.js). At most one request every 30 s, far inside the catalog's limits for a listener.
  */
 export const TALK_RETRY_MS = [1000, 3000, 8000, 15000, 30000];
-/** How long the element waits before asking again after failure number tries in a row (from 0); -1: that talk is not on. */
+/** How long the element waits to ask again after failure number tries in a row (from 0); -1: that talk is not on. */
 export const voiceRetryMs = ({ tries, talk, id }) =>
   !!talk && talk.on === true && talk.id === id ? TALK_RETRY_MS[Math.min(Math.max(0, Math.floor(tries) || 0), TALK_RETRY_MS.length - 1)] : -1;
 

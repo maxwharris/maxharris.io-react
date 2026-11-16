@@ -1,6 +1,6 @@
-// The radio admin's mic going live, against a stand-in browser (npm test): a catalog that does not answer the start leaves
-// the card off air after 10 s with the mic let go, and a tap on the round button while going live stops at once, a late
-// answer's talk ended as it comes.
+// The radio admin's mic going live, against a stand-in browser (npm test): a catalog that does not answer the start
+// leaves the card off air after 10 s with the mic let go, and a tap on the round button while going live stops at once,
+// a late answer's talk ended as it comes.
 import { test, mock, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -34,7 +34,7 @@ Object.defineProperty(globalThis, 'navigator', {
 globalThis.AudioWorkletNode = class { constructor() { this.port = { onmessage: null, postMessage() {} }; } connect() {} disconnect() {} };
 globalThis.BroadcastChannel = class { constructor() { this.onmessage = null; } postMessage() {} close() {} };
 
-// The catalog: a start is answered when the test says (or never), as the browser's fetch would take an abort; the rest 204.
+// The catalog: a start answered when the test says (or never), aborted as the browser's fetch would be; the rest 204.
 const requests = [];
 globalThis.fetch = (url, init = {}) => {
   const req = { url: String(url), method: init.method || 'GET', signal: init.signal, answer: null };
@@ -53,7 +53,7 @@ const { createMic } = await import('./mic.js');
 const flush = async () => { for (let i = 0; i < 4; i++) await new Promise((r) => setImmediate(r)); };
 const ID = 'AbCdEfGhIjKlMnOpQrSt_-';
 let mic = null;
-/** The card up, go live (the round button's tap, or start itself): the mic is granted, and the catalog asked for a talk. */
+/** The card up, go live (the round button's tap, or start itself): the mic granted, and the catalog asked for a talk. */
 async function goLive(tap = true) {
   mic = createMic();
   mic.open();
