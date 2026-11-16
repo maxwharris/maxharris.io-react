@@ -1,15 +1,17 @@
-// The world behind the windows: a circuit board, generated and drawn live on a canvas. Chips,
-// passives and connectors are placed first, then buses of traces are routed out of their pins on
-// a grid with 45-degree bends, ending in vias. The board itself is drawn once into an offscreen
-// layer; each frame only adds what moves: signals running along the traces, and the traces under
-// the pointer lighting up like a probe touched them. Seeded, so the same board comes back.
+// The world behind the windows, drawn live on a canvas: the meadow by default (meadow.js), or a
+// circuit board in one of five looks. Chips, passives and connectors are placed first, then buses
+// of traces are routed out of their pins on a grid with 45-degree bends, ending in vias. The board
+// itself is drawn once into an offscreen layer; each frame only adds what moves: signals running
+// along the traces, and the traces under the pointer lighting up like a probe touched them.
+// Seeded, so the same board comes back.
+import { createMeadow } from './meadow';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rng = (s) => () => (s = (s * 16807) % 2147483647) / 2147483647;
 
-export const SCENES = ['neon', 'classic', 'ink', 'relief', 'gold'];
-// which glass suits each board when the visitor has not picked one
-export const SCENE_DARK = { neon: true, classic: true, ink: false, relief: false, gold: false };
+export const SCENES = ['meadow', 'neon', 'classic', 'ink', 'relief', 'gold'];
+// which glass suits each scene when the visitor has not picked one
+export const SCENE_DARK = { meadow: false, neon: true, classic: true, ink: false, relief: false, gold: false };
 
 const LOOKS = {
   neon: {
@@ -65,9 +67,11 @@ const DY = [0, 1, 1, 1, 0, -1, -1, -1];
 
 const LABELS = ['DO NOT LICK', 'MADE IN NYC', 'maxOS 26 REV C', 'MAX HARRIS 2026', 'HELLO', 'NO USER SERVICEABLE PARTS', 'v26.10', '© maxharris.io'];
 
-export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' } = {}) {
+export function createScene(canvas, { reduced = () => false, env: env0 = 'meadow' } = {}) {
   const ctx = canvas.getContext('2d', { alpha: false });
-  let env = LOOKS[env0] ? env0 : 'neon';
+  let env = SCENES.includes(env0) ? env0 : 'meadow';
+  // the meadow is a world of its own; the five boards are one generated board drawn in different looks
+  const meadow = createMeadow({ reduced });
   let W = 0, H = 0, dpr = 1, U = 1, g = 10;
   let board = null; // geometry, independent of the look
   let layer = null, prevLayer = null, fade0 = 0; // the drawn board, and the one it is fading from
@@ -414,8 +418,25 @@ export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' 
     dpr = Math.min(window.devicePixelRatio || 1, maxDpr, Math.sqrt(10e6 / (W * H)));
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
-    rebuild();
+    if (LOOKS[env]) {
+      rebuild();
+      meadow.drop();
+    } else {
+      // the board is built again for the new size when one is picked
+      board = null;
+      layer = prevLayer = null;
+      pulses.length = 0;
+      meadow.resize(W, H, dpr);
+    }
     draw(performance.now());
+  }
+  // a still of the canvas as it is, to fade from when the meadow comes or goes
+  function still() {
+    const cv = document.createElement('canvas');
+    cv.width = canvas.width;
+    cv.height = canvas.height;
+    cv.getContext('2d', { alpha: false }).drawImage(canvas, 0, 0);
+    return cv;
   }
   const onResize = () => { clearTimeout(resizeT); resizeT = setTimeout(resize, 120); };
 
@@ -452,6 +473,16 @@ export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' 
     const dt = Math.min(0.06, (now - lastT) / 1000 || 0);
     lastT = now;
     t = now / 1000;
+    if (!LOOKS[env]) {
+      meadow.draw(ctx, now, dt);
+      if (prevLayer) {
+        const k = clamp((now - fade0) / 700, 0, 1);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        if (k >= 1) prevLayer = null;
+        else { ctx.globalAlpha = 1 - k; ctx.drawImage(prevLayer, 0, 0); ctx.globalAlpha = 1; }
+      }
+      return;
+    }
     const L = LOOKS[env];
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
@@ -520,7 +551,8 @@ export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' 
     prevNow = now;
     if (document.hidden) { pace = 0; return; }
     pace = pace ? pace * 0.97 + step * 0.03 : step;
-    if (now - lastDraw < gap) return;
+    // the meadow's clouds drift slowly enough for 20 frames a second, until something quicker moves
+    if (now - lastDraw < (LOOKS[env] ? gap : Math.max(gap, meadow.busy() ? 33 : 50))) return;
     lastDraw = now;
     const t0 = performance.now();
     draw(now);
@@ -552,7 +584,7 @@ export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' 
       window.addEventListener('resize', onResize);
       watchDpr();
       // the silkscreen font may arrive after the first paint
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (board) { layer = paint(env); draw(performance.now()); } });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (board && LOOKS[env]) { layer = paint(env); draw(performance.now()); } });
       if (!reduced()) { loopOn = true; raf = requestAnimationFrame(frame); }
     },
     stop() {
@@ -563,27 +595,47 @@ export function createScene(canvas, { reduced = () => false, env: env0 = 'neon' 
       if (dprWatch) dprWatch();
     },
     set(name) {
-      if (!LOOKS[name] || name === env) return;
+      if (!SCENES.includes(name) || name === env) return;
+      const was = LOOKS[env];
       env = name;
-      prevLayer = reduced() ? null : layer;
+      // fade from what was on screen: the last board's drawing, or a still of the meadow or of the board it gives way to
+      prevLayer = reduced() ? null : was && LOOKS[name] ? layer : still();
       fade0 = performance.now();
-      layer = paint(env);
+      if (LOOKS[name]) {
+        if (!board) { board = generate(); pulses.length = 0; }
+        layer = paint(env);
+        meadow.drop();
+      } else {
+        layer = null;
+        pulses.length = 0;
+        flashes.length = 0;
+        meadow.resize(W, H, dpr);
+      }
       if (reduced()) draw(performance.now());
     },
     get env() { return env; },
     look(nx, ny) {
+      if (!LOOKS[env]) { meadow.look(nx, ny); return; }
       px = (nx + 0.5) * W;
       py = (ny + 0.5) * H;
       probeOn = true;
       if (reduced()) kick(0);
     },
     poke(x, y) {
+      if (!LOOKS[env]) { meadow.poke(x, y); kick(1500); return; }
       for (const id of traceNear(x, y, 90 * U).slice(0, 18)) spawn(id, (260 + Math.random() * 220) * U);
       flashes.push({ x, y, t0: performance.now() / 1000 });
       kick(1500);
     },
-    star() { for (let i = 0; i < 12; i++) spawn(Math.floor(Math.random() * board.traces.length)); kick(1200); },
-    fireworks() { surgeUntil = performance.now() / 1000 + 4; },
+    star() {
+      if (!LOOKS[env]) { meadow.star(); return; }
+      for (let i = 0; i < 12; i++) spawn(Math.floor(Math.random() * board.traces.length));
+      kick(1200);
+    },
+    fireworks() {
+      if (!LOOKS[env]) { meadow.fireworks(); return; }
+      surgeUntil = performance.now() / 1000 + 4;
+    },
     redraw() { draw(performance.now()); },
   };
 }

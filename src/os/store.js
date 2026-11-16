@@ -197,7 +197,7 @@ export function arrange(s) {
 }
 
 // ---------- reducer ----------
-// the board starts half dimmed and blurred behind the windows; the crown turns it either way
+// the world starts half dimmed and blurred behind the windows; the crown turns it either way
 export const IMM0 = 0.5;
 
 export function initialState() {
@@ -206,7 +206,7 @@ export function initialState() {
   return {
     wins: {}, order: [], z: 30, top: null, n: 0, solo: null, phone: false,
     theme: theme === 'light' || theme === 'dark' ? theme : null,
-    scene: SCENES.includes(scene) ? scene : 'relief',
+    scene: SCENES.includes(scene) ? scene : 'meadow',
     imm: IMM0, trash: TRASH0, secrets: false,
     overlay: null, homeTab: 'apps', menu: null, toast: null,
     watching: false, saver: false,
