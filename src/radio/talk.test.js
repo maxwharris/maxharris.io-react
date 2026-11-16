@@ -2,7 +2,7 @@
 // browser never plays his voice back.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeTalk, sameTalk, heardOwn, talkPlan, musicShare, retryVoice, takesTalk, NO_OWN, OWN_MS, TALK_SHARE, DROP_SHARE } from './talk.js';
+import { normalizeTalk, sameTalk, heardOwn, talkPlan, playsOut, musicShare, retryVoice, takesTalk, NO_OWN, OWN_MS, TALK_SHARE, DROP_SHARE } from './talk.js';
 
 const ID = 'AbCdEfGhIjKlMnOpQrSt_-';
 const OTHER = 'zzzzzzzzzzzzzzzzzzzzzz';
@@ -68,6 +68,21 @@ test("Max's own browser dips but never plays his talk back", () => {
   assert.deepEqual(talkPlan({ enabled: true, talk: on, own: off, now }), { play: null, echo: false });
   // a talk from another device or tab of another browser is played as anyone's would be
   assert.deepEqual(talkPlan({ enabled: true, talk: normalizeTalk({ on: true, id: OTHER }), own: off, now }), { play: OTHER, echo: false });
+});
+
+test('a talk the catalog says is over plays on to the end of its stream, his last words', () => {
+  const voice = { id: ID, down: false };
+  const off = { on: false };
+  assert.equal(playsOut({ enabled: true, talk: off, voice }), true);
+  // the radio switched off, or the element waiting to try again (it holds nothing): stop
+  assert.equal(playsOut({ enabled: false, talk: off, voice }), false);
+  assert.equal(playsOut({ enabled: true, talk: off, voice: { id: ID, down: true } }), false);
+  assert.equal(playsOut({ enabled: true, talk: off, voice: null }), false);
+  // another talk on (it takes over), or this browser's radio admin live: nothing of the last one plays on
+  assert.equal(playsOut({ enabled: true, talk: normalizeTalk({ on: true, id: OTHER }), voice }), false);
+  assert.equal(playsOut({ enabled: true, talk: off, echo: true, voice }), false);
+  // this browser's own talk never plays here at all
+  assert.equal(playsOut({ enabled: true, talk: off, own: heardOwn(NO_OWN, ID, false, 1), voice }), false);
 });
 
 test('the music dips to a third under the talk, which outranks a drop', () => {

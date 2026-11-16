@@ -54,6 +54,17 @@ export function talkPlan({ enabled, talk, own = NO_OWN, failed = '', now }) {
   return { play, echo };
 }
 
+/**
+ * Whether the talk a radio is playing (voice: {id, down}) plays on to the end of its stream once it is no longer to be
+ * played: only after the catalog has said no talk is on. His last words are still in the listener's player then (Chrome
+ * holds about 4.5 s of a live MP3 before it starts), and the stream ends right after them. Not with the radio off, while
+ * this browser's radio admin is live (nothing of Max plays here then), for this browser's own talk, or while the element
+ * waits to try again (it holds nothing). A talk coming on meanwhile is talkPlan's play, and replaces it.
+ */
+export function playsOut({ enabled, talk, own = NO_OWN, echo = false, voice }) {
+  return !!enabled && !echo && !!voice && !voice.down && !(talk && talk.on) && !own.ids.includes(voice.id);
+}
+
 /** The music's share of the knob: a third while Max talks (drops wait meanwhile), DROP_SHARE under a drop, else all. */
 export const musicShare = ({ talking, drop }) => (talking ? TALK_SHARE : drop ? DROP_SHARE : 1);
 

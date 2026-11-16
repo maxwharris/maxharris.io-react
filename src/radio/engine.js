@@ -36,7 +36,7 @@
 import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
 import { stretch, levelAt } from './record/peaks.js';
-import { NO_OWN, OWN_MS, heardOwn, musicShare, normalizeTalk, retryVoice, sameTalk, takesTalk, talkPlan } from './talk.js';
+import { NO_OWN, OWN_MS, heardOwn, musicShare, normalizeTalk, playsOut, retryVoice, sameTalk, takesTalk, talkPlan } from './talk.js';
 
 export const API = '/catalog/api/radio';
 export const PAGE_URL = '/radio/';
@@ -71,6 +71,9 @@ const TALK_START_MS = 15000; // the talk's stream not sounding this long after i
 const TALK_STALL_MS = 6000; // sounding, then no progress for this long: failing (the catalog ends a talk after 4 s of silence)
 const TALK_RETRY_MS = 1000; // a failing talk stream is asked for again once, after this (unless the talk ended meanwhile)
 const TALK_STEADY_MS = 20000; // sounding this long after a retry: it has its retry back
+// The catalog said the talk is over: its stream plays on to its end, his last words (Chrome holds about 4.5 s of it), and
+// then 'ended' lets the music back up. A stream still playing this long after that word is let go anyway.
+const TALK_TAIL_MS = 12000;
 // A talk that has just come on is asked for this much later: the catalog's word and the radio admin's 'talking' (in Max's
 // own browser) arrive at about the same moment, and the admin's must win, so his radio never asks for his voice. The
 // stream starts about half a second back, so a listener loses nothing by it.
@@ -655,20 +658,22 @@ function skipDrop() {
 // Max on the mic (the radio admin, admin/mic.js). While the radio is on it follows the catalog's word on the talk (the
 // events stream, and each read of the queue while that stream is not live) and plays a talk that is on, from its live MP3,
 // on V. Once V sounds the music dips to a third, or is muted where element volume does not work (iOS keeps the volume in
-// the listener's hands), and comes back as the talk ends. A failing stream gets one more try while the talk is still on;
-// then this radio leaves that talk be. Max's own browser never plays his talk: his radio admin says 'talking' on the
-// channel (heard), so the radios here dip without it. The embed with ?talk=0 takes no part.
+// the listener's hands), and comes back after his last word: the catalog says the talk is over as Max stops, seconds
+// before a listener hears the end of it, so V plays its stream on to its end first (talk.js, playsOut). A failing stream
+// gets one more try while the talk is still on; then this radio leaves that talk be. Max's own browser never plays his
+// talk: his radio admin says 'talking' on the channel (heard), so the radios here dip without it. The embed with ?talk=0
+// takes no part.
 let talk = { on: false }; // the catalog's word (talk.js, normalizeTalk)
 let talkOff = false; // the embed with ?talk=0
 let own = NO_OWN; // what this browser's radio admin said (talk.js, heardOwn)
-let voice = null; // {id, tries, sounding, down, t0, since, progress, pos}: the talk V plays
+let voice = null; // {id, tries, sounding, down, ending, t0, since, progress, pos}: the talk V plays (ending: over, playing out)
 let hold = { id: '', at: 0 }; // when this radio first heard that talk was on (TALK_HOLD_MS)
 let failedTalk = ''; // a talk this radio gave up on
 let talking = false; // the snapshot's talking: V sounds, or this browser's admin is live
 let es = null; // the events stream
 let esLive = false; // it has said where the talk stands since it last (re)connected
 let esTries = 0;
-const TALK_TIMERS = ['voiceTick', 'voiceRetry', 'voiceHold', 'own', 'events'];
+const TALK_TIMERS = ['voiceTick', 'voiceRetry', 'voiceTail', 'voiceHold', 'own', 'events'];
 
 /** Where element volume does not work, the music is muted under the talk instead (and plays on, in place). */
 const musicMuted = () => talking && !snap.volumeWorks;
@@ -710,8 +715,14 @@ function playVoice(v) {
 }
 function startVoice(id) {
   stopVoice();
-  voice = { id, tries: 0, sounding: false, down: false, t0: 0, since: 0, progress: 0, pos: -1 };
+  voice = { id, tries: 0, sounding: false, down: false, ending: false, t0: 0, since: 0, progress: 0, pos: -1 };
   playVoice(voice);
+}
+/** The catalog said V's talk is over: V plays on to the end of its stream ('ended' stops it), TALK_TAIL_MS at most. */
+function endVoice(v) {
+  if (v.ending) return;
+  v.ending = true;
+  later('voiceTail', () => { if (voice === v) { stopVoice(); talkFollow(); } }, TALK_TAIL_MS);
 }
 /** V silent and empty (its request to the catalog closes with it). */
 function quietVoice() {
@@ -721,7 +732,7 @@ function quietVoice() {
   if (el.getAttribute('src')) { el.removeAttribute('src'); try { el.load(); } catch { /* nothing to drop */ } }
 }
 function stopVoice() {
-  cancel('voiceTick', 'voiceRetry');
+  cancel('voiceTick', 'voiceRetry', 'voiceTail');
   voice = null;
   quietVoice();
 }
@@ -762,18 +773,24 @@ function setTalking(on) {
   set({ talking: on });
 }
 
-/** Everything the talk-over does, from what is known now: which talk V plays, and whether the music dips. */
+/**
+ * Everything the talk-over does, from what is known now: which talk V plays (a talk the catalog says is over plays on to
+ * the end of its stream, playsOut), and whether the music dips.
+ */
 function talkFollow() {
-  const t = Date.now();
-  const plan = talkPlan({ enabled: !!session && !talkOff, talk, own, failed: failedTalk, now: t });
+  const t = Date.now(), enabled = !!session && !talkOff;
+  const plan = talkPlan({ enabled, talk, own, failed: failedTalk, now: t });
   if (plan.play && (!voice || voice.id !== plan.play)) {
     if (hold.id !== plan.play) hold = { id: plan.play, at: t };
     const wait = hold.at + TALK_HOLD_MS - t;
     if (wait > 0) later('voiceHold', talkFollow, wait + 5);
     else startVoice(plan.play);
-  } else if (!plan.play) {
+  } else if (plan.play) {
+    if (voice.ending) { voice.ending = false; cancel('voiceTail'); } // its talk is on after all
+  } else {
     cancel('voiceHold');
-    if (voice) stopVoice();
+    if (voice && playsOut({ enabled, talk, own, echo: plan.echo, voice })) endVoice(voice);
+    else if (voice) stopVoice();
   }
   setTalking(plan.echo || !!(voice && voice.sounding));
   // the radio admin here going quiet (its window closed with no word) ends the dip once its last word runs out
