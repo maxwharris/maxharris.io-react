@@ -41,6 +41,8 @@ export const KINDS = {
   // maxradio (src/radio): opened by typing radio in the terminal, never from the dock or the home grid. The window is the
   // faceplate alone, floating, so it keeps the faceplate's shape (178 x 50 mm), at most its largest size (5.4 px a mm)
   radio: { w: 560, h: 158, aspect: 178 / 50, max: 961, title: () => 'radio' },
+  // the radio's admin (src/radio/admin): Max's editor for its queue, signed in through the catalog; typed as radio admin
+  radioadmin: { w: 520, h: 640, title: () => 'radio admin' },
 };
 export const titleOf = (win) => KINDS[win.kind].title(win.opts);
 
@@ -58,6 +60,7 @@ export const kindVisual = (win) => {
   if (win.kind === 'sys') return ['sys', 'mark'];
   if (win.kind === 'secrets') return ['sys', 'file'];
   if (win.kind === 'radio') return ['radio', 'radio'];
+  if (win.kind === 'radioadmin') return ['radio', 'queue'];
   return [win.kind, (APP[win.kind] || {}).glyph];
 };
 
@@ -82,8 +85,8 @@ const GAP = 28; // between columns
 const ROW_GAP = 60; // between stacked windows, leaving room for the top one's grab bar
 const ORN = 48; // room on the left for a window's tab ornament
 const MAX_SHOWN = 6;
-const MIN_W = { about: 360, files: 460, project: 520, mail: 380, terminal: 420, scenes: 380, trash: 380, sys: 360, secrets: 360, radio: 520 };
-const MIN_H = { about: 300, files: 320, project: 340, mail: 300, terminal: 220, scenes: 280, trash: 260, sys: 280, secrets: 200, radio: 146 };
+const MIN_W = { about: 360, files: 460, project: 520, mail: 380, terminal: 420, scenes: 380, trash: 380, sys: 360, secrets: 360, radio: 520, radioadmin: 400 };
+const MIN_H = { about: 300, files: 320, project: 340, mail: 300, terminal: 220, scenes: 280, trash: 260, sys: 280, secrets: 200, radio: 146, radioadmin: 340 };
 const STAY_TALL = { project: 3, files: 2, about: 1 }; // reluctance to be stacked
 
 export function stage() {

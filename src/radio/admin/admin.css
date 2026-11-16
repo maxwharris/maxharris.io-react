@@ -1,0 +1,163 @@
+/* The radio admin (Admin.jsx), inside its maxOS window: the desktop's glass, plates, fonts and accent (os.css), in light
+   and dark glass alike. Loaded with the editor, so none of it is in the desktop's own stylesheet. */
+.ra{--ra-lift:#f7f9fa;position:relative;display:flex;flex-direction:column;width:100%;max-width:780px;min-height:100%;margin:0 auto;padding-bottom:22px}
+.os[data-theme="dark"] .ra{--ra-lift:#2a3037}
+
+/* header */
+.ra-pill{flex:none;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px 0 10px;border-radius:99px;background:var(--plate);font:500 12px/1 var(--mono);color:var(--ink-2);white-space:nowrap}
+.ra-pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.ra-pill.on{color:var(--accent);background:var(--accent-soft)}
+.ra-pill.on i{animation:ra-beat 2.4s ease-in-out infinite}
+.ra-pill.busy i{animation:ra-blink .7s ease-in-out infinite alternate}
+.ra-pill.off i{opacity:.45}
+@keyframes ra-beat{0%,100%{box-shadow:0 0 0 0 var(--accent-soft)}50%{box-shadow:0 0 0 5px transparent}}
+@keyframes ra-blink{to{opacity:.2}}
+
+/* a line when the catalog refused an edit */
+.ra-err{display:flex;align-items:flex-start;gap:10px;margin:0 20px 12px;padding:10px 8px 10px 14px;border-radius:18px;background:var(--accent-soft);font-size:13px;line-height:1.45;color:var(--ink);animation:ra-in .25s ease}
+.ra-err>.ic{width:18px;height:18px;color:var(--accent);margin-top:1px}
+.ra-err p{flex:1;min-width:0}
+.ra-err .ra-x{margin:-6px 0}
+@keyframes ra-in{from{opacity:0;transform:translateY(-4px)}}
+
+/* a song's record, in its colours: the label, a mark on it to see it turn, the grooves, and a light that stays put */
+.ra-rec{--d:26px;--rb:#16181c;--rf:#e9e7e1;position:relative;flex:none;width:var(--d);height:var(--d);border-radius:50%;box-shadow:0 0 0 1px var(--line),0 6px 14px -8px rgba(0,0,0,.6)}
+.ra-rec i{position:absolute;inset:0;border-radius:50%;background:
+  radial-gradient(circle at 50% 30%,var(--rb) 0 4.5%,transparent 5.2%),
+  radial-gradient(circle,var(--rb) 0 5%,var(--rf) 5.6% 31%,transparent 32%),
+  repeating-radial-gradient(circle,rgba(255,255,255,.08) 0 .7px,rgba(0,0,0,.2) .7px 1.4px,transparent 1.4px 2.5px),
+  var(--rb)}
+.ra-rec::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:conic-gradient(from 200deg,transparent 0 5%,rgba(255,255,255,.3) 11%,transparent 19% 50%,rgba(255,255,255,.16) 57%,transparent 65%)}
+.ra-rec.big{--d:58px;box-shadow:0 0 0 1px var(--line),0 12px 24px -12px rgba(0,0,0,.7)}
+.ra-rec.spin i{animation:ra-spin 1.8s linear infinite}
+.ra-rec.none{box-shadow:none;border:1.5px dashed var(--ink-3);opacity:.55}
+.ra-rec.none i,.ra-rec.none::after{display:none}
+@keyframes ra-spin{to{transform:rotate(1turn)}}
+
+/* on air */
+.ra-air{margin:0 20px;padding:16px 18px 14px;border-radius:24px;background:linear-gradient(135deg,var(--accent-soft),transparent 62%),var(--plate)}
+.ra-air.off{background:var(--plate)}
+.ra-air-top{display:flex;align-items:center;gap:15px}
+.ra-air-t{flex:1;min-width:0}
+.ra-eye{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;font:500 11.5px/1 var(--mono);color:var(--ink-3)}
+.ra-live{display:inline-flex;align-items:center;gap:7px;color:var(--accent);letter-spacing:.04em}
+.ra-air.off .ra-live{color:var(--ink-3)}
+.ra-live i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:ra-beat 2.4s ease-in-out infinite}
+.ra-clock{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ra-air h3{font-size:18px;font-weight:620;letter-spacing:-.012em;line-height:1.22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ra-air.off h3{font-size:16px}
+.ra-cr{margin-top:2px;font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ra-bar{height:4px;margin-top:15px;border-radius:4px;background:var(--plate-hi);overflow:hidden}
+.ra-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent);transform-origin:left;transition:transform 1s linear}
+.ra-times{display:flex;justify-content:space-between;margin-top:8px;font:500 11.5px/1 var(--mono);color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* add from the catalog */
+.ra-find{margin:14px 20px 0}
+.ra-field{display:flex;align-items:center;gap:10px;height:44px;padding:0 6px 0 15px;border-radius:99px;background:var(--plate);border:1px solid var(--line);transition:border-color .2s,background-color .2s;cursor:text}
+.ra-field:focus-within{border-color:var(--accent);background:var(--plate-hi)}
+.ra-field>.ic{width:18px;height:18px;color:var(--ink-3)}
+.ra-field input{flex:1;min-width:0;height:100%;border:0;outline:none;background:none;font:inherit;font-size:14.5px;color:var(--ink)}
+.ra-field input::placeholder{color:var(--ink-3);opacity:1}
+.ra-field input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.ra-x{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--ink-3)}
+.ra-x:hover{color:var(--ink);background-color:var(--plate-hi)}
+.ra-x .ic{width:15px;height:15px;stroke-width:2}
+.ra-res{margin-top:8px;padding:4px 6px;border-radius:20px;background:var(--plate);transition:opacity .2s}
+.ra-res.busy{opacity:.6}
+.ra-res ul{list-style:none;margin:0;padding:0}
+.ra-hit{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 6px 6px 8px}
+.ra-hit + .ra-hit{border-top:1px solid var(--line)}
+.ra-hi{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--plate-hi);color:var(--ink-3)}
+.ra-hi .ic{width:15px;height:15px}
+.ra-add{min-height:32px;padding:0 13px 0 10px;font-size:13px;gap:6px}
+.ra-add .ic{width:15px;height:15px;stroke-width:2}
+.ra-has{display:inline-flex;align-items:center;gap:6px;padding:0 8px;font:500 12px/1 var(--mono);color:var(--ink-3);white-space:nowrap}
+.ra-has .ic{width:15px;height:15px;stroke-width:2;color:var(--accent)}
+.ra-note{padding:11px 10px;font:500 12.5px/1.4 var(--mono);color:var(--ink-3)}
+
+/* up next */
+.ra-up{margin:20px 0 16px}
+.ra-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 26px 8px}
+.ra-h h3,.ra-h span{font:500 12px/1 var(--mono);color:var(--ink-3);letter-spacing:.03em}
+.ra-q{position:relative;margin:0 14px}
+.ra-list{position:relative;list-style:none;margin:0;padding:0}
+.ra-row{position:relative;display:flex;align-items:center;gap:10px;min-height:56px;padding:6px 4px 6px 2px;border-radius:16px;transition:background-color .15s}
+.ra-row::after{content:"";position:absolute;left:46px;right:10px;bottom:0;height:1px;background:var(--line)}
+.ra-row:last-child::after,.ra-row.lift::after{display:none}
+@media (hover:hover){.ra-row:hover{background-color:var(--plate)}}
+.ra-q.dragging .ra-row:not(.lift){background-color:transparent}
+.ra-row.lift{z-index:3;background:var(--ra-lift);box-shadow:0 22px 44px -16px rgba(0,0,0,.55),0 0 0 1px var(--edge),0 0 0 3px var(--accent-soft);transition:none}
+.ra-q.dragging,.ra-q.dragging *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+.ra-handle{width:34px;height:42px;flex:none;display:grid;place-items:center;border-radius:12px;color:var(--ink-3);cursor:grab;touch-action:none}
+.ra-handle:hover{color:var(--ink);background-color:var(--plate-hi)}
+.ra-row.lift .ra-handle{color:var(--accent)}
+.ra-handle .ic{width:18px;height:18px}
+.ra-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ra-t b{font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ra-t small{font-size:12px;line-height:1.35;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ra-at2{display:none}
+.ra-at{flex:none;padding:0 4px;font:500 12px/1 var(--mono);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ra-at.tag{padding:6px 9px;border-radius:99px;background:var(--plate);font-size:11px;color:var(--ink-3)}
+.ra-row.dim .ra-t b{color:var(--ink-3)}
+.ra-row.wait .ra-at.tag{animation:ra-blink .7s ease-in-out infinite alternate}
+.ra-ib{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--ink-3);transition:color .15s,background-color .15s,opacity .15s}
+.ra-ib:hover{color:var(--ink);background-color:var(--plate-hi)}
+.ra-ib.ra-remove:hover{color:var(--accent)}
+.ra-ib[disabled]{opacity:.28;cursor:default;background:none;color:var(--ink-3)}
+.ra-ib .ic{width:18px;height:18px}
+/* while a row is dragged, the rows it passes slide aside, and the slot they open (the accent) is where it lands */
+.ra-list.shifting>.ra-row:not(.lift){transition:transform .2s cubic-bezier(.2,.8,.2,1),background-color .15s}
+.ra-slot{position:absolute;left:0;right:0;top:0;z-index:1;border-radius:16px;border:2px dashed var(--accent);background:var(--accent-soft);opacity:0;pointer-events:none;transition:transform .2s cubic-bezier(.2,.8,.2,1),opacity .15s}
+.ra-slot.show{opacity:1}
+.ra-round{display:flex;align-items:center;gap:8px;margin:4px 26px 0;padding-top:10px;font:500 12px/1.4 var(--mono);color:var(--ink-3)}
+.ra-round .ic{width:16px;height:16px;flex:none}
+.ra-none{margin:0 26px;padding:14px 0 4px;font-size:13.5px;color:var(--ink-3)}
+
+/* undo, at the bottom of the window while it lasts */
+.ra-undo{position:sticky;bottom:16px;z-index:5;align-self:center;display:flex;align-items:center;gap:14px;max-width:calc(100% - 40px);margin:auto 20px 0;padding:6px 6px 6px 18px;border-radius:99px;background:var(--glass-hi);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--edge);box-shadow:0 18px 40px -16px rgba(0,0,0,.5);font-size:13.5px;animation:ra-rise .3s cubic-bezier(.2,.9,.3,1.2)}
+.ra-undo span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ra-undo b{font-weight:620}
+.ra-undo .btn{flex:none;min-height:34px;padding:0 14px 0 11px;gap:6px}
+.ra-undo .btn .ic{width:16px;height:16px}
+@keyframes ra-rise{from{opacity:0;transform:translateY(10px)}}
+
+/* signed out, no radio crate, the catalog out of reach */
+.ra-gate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px 34px 48px;text-align:center}
+.ra-gi{width:66px;height:66px;margin-bottom:6px;display:grid;place-items:center;border-radius:50%;background:var(--plate);color:var(--accent)}
+.ra-gi .ic{width:28px;height:28px;stroke-width:1.5}
+.ra-gate h3{font-size:20px;font-weight:620;letter-spacing:-.012em}
+.ra-gate p{max-width:34ch;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.ra-gate .row{justify-content:center;margin-top:8px}
+.ra-gate .btn .ic{width:16px;height:16px}
+.ra-gate .ra-gerr{color:var(--accent)}
+.ra-skel{display:flex;flex-direction:column;gap:10px;padding:0 20px}
+.ra-skel i{height:56px;border-radius:16px;background:var(--plate);animation:ra-fade 1.2s ease-in-out infinite alternate}
+.ra-skel i:first-child{height:124px;border-radius:24px}
+@keyframes ra-fade{to{opacity:.4}}
+
+/* narrow windows: each song's start time joins its line */
+@container (max-width:440px){
+  .ra-at{display:none}
+  .ra-at2{display:inline}
+  .ra-air{padding:14px 15px 12px}
+}
+
+/* the phone's sheet */
+@media (max-width:759px),(pointer:coarse) and (max-width:900px){
+  .ra-air,.ra-find,.ra-err{margin-left:16px;margin-right:16px}
+  .ra-q{margin:0 8px}
+  .ra-h{padding:0 20px 8px}
+  .ra-round,.ra-none{margin-left:20px;margin-right:20px}
+  .ra-row{min-height:62px;gap:6px}
+  .ra-row::after{left:48px}
+  .ra-handle{width:44px;height:50px}
+  .ra-ib{width:44px;height:44px}
+  .ra-field{height:48px}
+  .ra-field input{font-size:16px}
+  .ra-undo{bottom:max(16px,env(safe-area-inset-bottom))}
+  .ra{padding-bottom:max(22px,env(safe-area-inset-bottom))}
+}
+@media (prefers-reduced-motion:reduce){
+  .ra-rec.spin i,.ra-live i,.ra-pill i,.ra-skel i,.ra-row.wait .ra-at.tag{animation:none}
+  .ra-bar i{transition:none}
+}
