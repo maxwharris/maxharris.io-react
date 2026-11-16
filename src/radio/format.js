@@ -92,19 +92,22 @@ export function stationKey(st) {
   ].join('|');
 }
 
+const NO = /^(0|false|no|off)$/i;
 /**
  * The embed's address (radio/embed/): ?display for the display strip alone (the whole faceplate without it), ?volume=0..100
- * for the knob and ?illum=<a colour in illums> for the light, each optional. {display, volume (0..1 or null), illum or
- * null}; anything else in a value is ignored.
+ * for the knob, ?illum=<a colour in illums> for the light, and ?talk=0 to leave Max's talk-over out (on his stream his own
+ * mic already carries his voice; the radio would double it), each optional. {display, volume (0..1 or null), illum or
+ * null, talk}; anything else in a value is ignored.
  */
 export function embedOptions(search, illums = []) {
   const q = new URLSearchParams(search || '');
   const d = q.get('display');
-  const display = d !== null && !/^(0|false|no|off)$/i.test(d.trim());
+  const display = d !== null && !NO.test(d.trim());
   const v = num(String(q.get('volume') ?? '').trim());
   const volume = Number.isFinite(v) ? Math.round(Math.min(100, Math.max(0, v))) / 100 : null;
   const i = String(q.get('illum') ?? '').trim().toLowerCase();
-  return { display, volume, illum: illums.includes(i) ? i : null };
+  const t = q.get('talk');
+  return { display, volume, illum: illums.includes(i) ? i : null, talk: !(t !== null && NO.test(t.trim())) };
 }
 
 /**

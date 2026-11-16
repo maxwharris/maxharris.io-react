@@ -1,0 +1,5 @@
+/* The faceplate while Max is on the mic, option A (talkface.js): ta lit and boxed, blinking about once a second like a
+   traffic announcement cutting in. The glow goes out with the letters on the dark beat. With reduced motion radio.css
+   stops every animation, which leaves it lit and steady. */
+.mr-rad .mr-ind.mr-blink { animation: mr-ta 1s steps(1) infinite; }
+@keyframes mr-ta { 50% { color: var(--ghost); filter: none; } }

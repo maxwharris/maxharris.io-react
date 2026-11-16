@@ -1,0 +1,64 @@
+// maxradio's talk-over, the pure parts (no DOM; talk.test.js). Max goes live in the radio admin (admin/mic.js) and every
+// radio hears him about 3 s later, over the music (Max, 11/15/26: "broadcast input radio-admin panel to all radio viewers
+// live ... so the user can talk over the radio like announcer"). The catalog says when a talk is on (GET
+// /catalog/api/radio's talk field, and the events stream /catalog/api/radio/events) and streams it as a live MP3
+// (/catalog/api/radio/talk/:id/stream.mp3); engine.js plays it on an element of its own and dips the music under it.
+// This decides what a radio plays and how far the music dips.
+
+/** The music's share of the knob while a talk sounds (Max was told "about a third"): down in 250 ms, up in 450 ms after. */
+export const TALK_SHARE = 1 / 3;
+/** And under an announcer drop. */
+export const DROP_SHARE = 0.4;
+/** How long the word of this browser's radio admin that it is live holds without being said again (it says so every 2 s). */
+export const OWN_MS = 6000;
+/** At most this many of this browser's own talks are remembered (never played back here). */
+const OWN_KEEP = 8;
+
+const ID = /^[A-Za-z0-9_-]{8,64}$/; // the catalog's ids are 22 url-safe characters; the id goes into a path
+
+/** The catalog's talk state as far as a radio can use it: {on: false}, or {on: true, id, since}. Anything else is off. */
+export function normalizeTalk(x) {
+  if (!x || x.on !== true || typeof x.id !== 'string' || !ID.test(x.id)) return { on: false };
+  const since = Number(x.since);
+  return { on: true, id: x.id, since: Number.isFinite(since) ? since : 0 };
+}
+
+/** Whether two words about the talk say the same thing. */
+export const sameTalk = (a, b) => !!a && !!b && a.on === b.on && (!a.on || (a.id === b.id && a.since === b.since));
+
+/** Nothing heard yet from this browser's radio admin. */
+export const NO_OWN = Object.freeze({ live: null, at: 0, ids: Object.freeze([]) });
+
+/**
+ * This browser's radio admin said one of its talks is on or off ('talking' on the 'maxradio' channel). own: {live (the
+ * talk it is sending now, or null), at (when it last said so, Date.now() ms), ids (every talk it said was its own)}.
+ * Returns the new one. An off keeps the id, so a catalog that says it is on a moment longer still never plays it here.
+ */
+export function heardOwn(own, id, on, now) {
+  if (typeof id !== 'string' || !id) return own;
+  const ids = own.ids.includes(id) ? own.ids : [...own.ids.slice(1 - OWN_KEEP), id];
+  if (on) return { live: id, at: now, ids };
+  return own.live === id ? { live: null, at: 0, ids } : { ...own, ids };
+}
+
+/**
+ * What a radio does about the talk: {play: the talk to play (its id) or null, echo: this browser's radio admin is live
+ * (the music dips, and nothing plays: Max never hears himself a few seconds late)}.
+ *   enabled: the radio is on and takes talk-over (not the embed with ?talk=0);
+ *   talk: the catalog's word (normalizeTalk); own: heardOwn's; failed: a talk this radio gave up on; now: Date.now().
+ */
+export function talkPlan({ enabled, talk, own = NO_OWN, failed = '', now }) {
+  if (!enabled) return { play: null, echo: false };
+  const echo = !!own.live && now - own.at < OWN_MS;
+  const play = talk && talk.on && !own.ids.includes(talk.id) && talk.id !== failed ? talk.id : null;
+  return { play, echo };
+}
+
+/** The music's share of the knob: a third while Max talks (drops wait meanwhile), DROP_SHARE under a drop, else all. */
+export const musicShare = ({ talking, drop }) => (talking ? TALK_SHARE : drop ? DROP_SHARE : 1);
+
+/** The talk's element failed (an error, its stream ended, a stall): one more try while the catalog still says it is on. */
+export const retryVoice = ({ tries, talk, id }) => tries < 1 && !!talk && talk.on === true && talk.id === id;
+
+/** Whose word about the talk is taken: the events stream's always; a queue read's only while that stream is not live. */
+export const takesTalk = (source, eventsLive) => source === 'events' || !eventsLive;

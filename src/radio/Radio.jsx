@@ -7,8 +7,9 @@
 // seek, previous or next anywhere, on purpose.
 //
 // The engine (engine.js) and its hook (useRadio.js) decide everything: this lays out what they say and passes the taps
-// back, and display.js draws the canvases. Inside, 1em is 1 mm of a real head unit (178 by 50 mm, one DIN; 124 by 80,
-// folded, where it is narrow), scaled to fit where it lives. context: 'window' (the desktop's window: the faceplate alone,
+// back, and display.js draws the canvases; while Max is on the mic (the talk-over), talkface.js says what changes.
+// Inside, 1em is 1 mm of a real head unit (178 by 50 mm, one DIN; 124 by 80, folded, where it is narrow), scaled to fit
+// where it lives. context: 'window' (the desktop's window: the faceplate alone,
 // floating, with the window's bar under it; Max, 11/13/26), 'phone' (the phone's sheet), 'page' (the pop-out tab at /radio/, centred and scaled to fit),
 // 'embed' (the stream's browser source at /radio/embed/: the faceplate filling a transparent page) and 'display' (the
 // same with ?display: only the dot-matrix display, filling it; embed.css).
@@ -18,7 +19,9 @@ import { radio, useDial, useRadio, useStationClock, useVolumeKnob } from './useR
 import { titleLine } from './format.js';
 import { Display } from './display.js';
 import { illumColor, segCells, vfdText } from './vfd.js';
+import { talkFace } from './talkface.js';
 import './radio.css';
+import './talkface.css';
 
 const POWERED = new Set(['tuning', 'on', 'blocked', 'offair']);
 const PRESETS = [1, 2, 3, 4, 5, 6];
@@ -79,7 +82,7 @@ function Seg({ pattern, text, className }) {
   );
 }
 
-const Ind = ({ on, box, children }) => <span className={`mr-ind${box ? ' box' : ''}${on ? ' on' : ''}`}>{children}</span>;
+const Ind = ({ on, box, blink, children }) => <span className={`mr-ind${box ? ' box' : ''}${on ? ' on' : ''}${blink ? ' mr-blink' : ''}`}>{children}</span>;
 
 const PWR_ICON = <svg className="mr-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" /><path d="M6.7 7a7.4 7.4 0 1 0 10.6 0" /></svg>;
 const REL_ICON = <svg className="mr-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.2 5.4 13h13.2z" /><path d="M5.4 17.6h13.2" /></svg>;
@@ -100,7 +103,7 @@ export default function Radio({ context = 'window' }) {
   const status = s.status, on = status === 'on', pw = POWERED.has(status);
   // what the display shows: the station (999.9 and maxradio), the song in big dots (while there is one), or the clock in
   // the big digits
-  const view = !pw ? 'off' : s.disp === 'text' && on ? 'text' : s.disp === 'clock' ? 'clock' : 'station';
+  const shownView = !pw ? 'off' : s.disp === 'text' && on ? 'text' : s.disp === 'clock' ? 'clock' : 'station';
   // a moment on the display (display.js puts it where it fits whole): what DISP or ILLUM picked, the engine's (vol 24,
   // no station), or rel opening the tab while this one plays on
   const local = said && (!s.flash || s.flash === said.after) ? said.text : '';
@@ -111,13 +114,16 @@ export default function Radio({ context = 'window' }) {
   else if (status === 'blocked') { main = 'push pwr'; rt = 'push pwr to tune in'; }
   else if (status === 'offair') { main = 'no signal'; rt = s.reason === 'unreachable' ? 'searching for 999.9 fm' : 'maxradio is off air'; }
   else if (on) {
-    main = view === 'text' ? title : 'maxradio';
-    rt = view === 'text' ? '999.9 fm  maxradio' : title;
+    main = shownView === 'text' ? title : 'maxradio';
+    rt = shownView === 'text' ? '999.9 fm  maxradio' : title;
   }
-  const texts = { main: vfdText(main), big: vfdText(title), rt: vfdText(rt), flash: vfdText(flash) };
+  const sr0 = on && s.song ? `now playing ${title.toLowerCase()}, maxradio 999.9 fm` : SR[status] || '';
+  // Max on the mic: talkface.js says what the display, ta and the screen reader's line show instead
+  const face = talkFace(pw && !!s.talking, { view: shownView, main, big: title, rt, sr: sr0 });
+  const { view, sr } = face;
+  const texts = { main: vfdText(face.main), big: vfdText(face.big), rt: vfdText(face.rt), flash: vfdText(flash) };
   const lit = illumColor(s.illum);
   const ampm = (clock.ampm || '').toLowerCase(), tz = (clock.tz || 'et').toLowerCase();
-  const sr = on && s.song ? `now playing ${title.toLowerCase()}, maxradio 999.9 fm` : SR[status] || '';
 
   useLayoutEffect(() => {
     const d = new Display({ root: rad.current, main: mainCv.current, big: bigCv.current, rt: rtCv.current, rec: recCv.current, meter: meter.current });
@@ -168,7 +174,7 @@ export default function Radio({ context = 'window' }) {
       <div className="mr-host">
         <div
           ref={rad}
-          className={`mr-rad${boot ? ' mr-boot' : ''}${attach ? ' mr-attach' : ''}`}
+          className={`mr-rad${boot ? ' mr-boot' : ''}${attach ? ' mr-attach' : ''}${face.cls ? ` ${face.cls}` : ''}`}
           role="group"
           aria-label="maxradio 999.9 fm"
           data-state={status}
@@ -207,7 +213,8 @@ export default function Radio({ context = 'window' }) {
             <div className="mr-vfd" aria-hidden="true">
               <div className="mr-rec"><canvas ref={recCv} /></div>
               <div className="mr-d-top">
-                <Ind on={pw} box>fm1</Ind><Ind on={pw}>p1</Ind><Ind on={on}>st</Ind><Ind on={on}>rds</Ind><Ind on={on}>ta</Ind>
+                <Ind on={pw} box>fm1</Ind><Ind on={pw}>p1</Ind><Ind on={on}>st</Ind><Ind on={on}>rds</Ind>
+                <Ind on={face.ta.on} box={face.ta.box} blink={face.ta.blink}>ta</Ind>
                 <Ind on={on && s.volume < 0.6}>loud</Ind>
                 <span className="mr-sp" />
                 <Seg pattern="88:88" text={clock.time} className="mr-s-clk" />

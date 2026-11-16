@@ -105,9 +105,9 @@ test('the station key changes with the queue, the anchor or the carry, and not w
 
 test("the embed's address: the display alone, the knob and the light, each optional", () => {
   const illums = ['blue', 'amber'];
-  assert.deepEqual(embedOptions('', illums), { display: false, volume: null, illum: null });
-  assert.deepEqual(embedOptions('?display', illums), { display: true, volume: null, illum: null });
-  assert.deepEqual(embedOptions('?display=1&volume=65&illum=Amber', illums), { display: true, volume: 0.65, illum: 'amber' });
+  assert.deepEqual(embedOptions('', illums), { display: false, volume: null, illum: null, talk: true });
+  assert.deepEqual(embedOptions('?display', illums), { display: true, volume: null, illum: null, talk: true });
+  assert.deepEqual(embedOptions('?display=1&volume=65&illum=Amber', illums), { display: true, volume: 0.65, illum: 'amber', talk: true });
   assert.equal(embedOptions('?display=0', illums).display, false);
   assert.equal(embedOptions('?volume=150', illums).volume, 1);
   assert.equal(embedOptions('?volume=-3', illums).volume, 0);
@@ -115,4 +115,14 @@ test("the embed's address: the display alone, the knob and the light, each optio
   assert.equal(embedOptions('?volume=loud', illums).volume, null);
   assert.equal(embedOptions('?volume=', illums).volume, null);
   assert.equal(embedOptions('?illum=pink', illums).illum, null);
+});
+
+test("the embed's address: talk=0 leaves Max's talk-over out, anything else keeps it", () => {
+  for (const q of ['?talk=0', '?talk=false', '?talk=no', '?talk=off', '?talk=OFF', '?display&talk=0&illum=amber', '?talk= 0 ']) {
+    assert.equal(embedOptions(q, ['amber']).talk, false, q);
+  }
+  for (const q of ['', '?talk', '?talk=1', '?talk=yes', '?talk=', '?display&illum=amber']) {
+    assert.equal(embedOptions(q, ['amber']).talk, true, q);
+  }
+  assert.deepEqual(embedOptions('?display&illum=amber&volume=100&talk=0', ['amber']), { display: true, volume: 1, illum: 'amber', talk: false });
 });

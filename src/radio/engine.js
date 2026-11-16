@@ -24,10 +24,19 @@
 // 1-recording 1, song 2- none, song 3-recording 2, song 4- none, repeat"), play on an element of their own, on the
 // station clock like the songs (schedule.js dropFor), so a listener tuning in during one joins it partway. Where element
 // volume works the music dips under them.
+//
+// The talk-over: Max goes live in the radio admin (admin/mic.js) and every radio hears him about 3 s later, over the
+// music (Max, 11/15/26: "so the user can talk over the radio like announcer"; he picked "works everywhere", locked
+// iPhones included). The catalog says when a talk is on (GET /radio's talk field, and its events stream, open while the
+// radio is on) and streams it as a live MP3 (/radio/talk/:id/stream.mp3), which plays on an element of its own, unlocked
+// with the others in the tap that tunes in, so it can start later on its own. Once it sounds the music dips to a third
+// (talk.js), or where element volume does not work (iPhone, iPad) is muted, playing on in place; a drop due meanwhile is
+// left out. Max's own browser dips but never plays his talk: his radio admin says so on the one-radio channel.
 
 import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
 import { stretch, levelAt } from './record/peaks.js';
+import { NO_OWN, OWN_MS, heardOwn, musicShare, normalizeTalk, retryVoice, sameTalk, takesTalk, talkPlan } from './talk.js';
 
 export const API = '/catalog/api/radio';
 export const PAGE_URL = '/radio/';
@@ -55,10 +64,18 @@ const HISS_MS = 4000; // the static under a slow tune gives up after this
 const TIMEOUT_MS = 12000; // any request, and waiting for a song to start
 const RETRY_MS = [0, 1000, 3000]; // a failing song: fetch its link again and rejoin, this long apart, then NO SIGNAL
 const BACKOFF_MS = [2000, 4000, 8000, 15000, 30000, 60000]; // NO SIGNAL: try again this long apart
-const DUCK = 0.4; // the music's share of the knob under a drop
-const DUCK_MS = 250; // the dip, ending as the voice starts
+const DUCK_MS = 250; // the dip under a drop or the talk (talk.js, musicShare), ending as the voice starts
 const UNDUCK_MS = 450; // and back up once it is over
 const DROP_LATE_MS = 300; // a drop with less than this left is not started
+const TALK_START_MS = 15000; // the talk's stream not sounding this long after it was asked for: failing
+const TALK_STALL_MS = 6000; // sounding, then no progress for this long: failing (the catalog ends a talk after 4 s of silence)
+const TALK_RETRY_MS = 1000; // a failing talk stream is asked for again once, after this (unless the talk ended meanwhile)
+const TALK_STEADY_MS = 20000; // sounding this long after a retry: it has its retry back
+// A talk that has just come on is asked for this much later: the catalog's word and the radio admin's 'talking' (in Max's
+// own browser) arrive at about the same moment, and the admin's must win, so his radio never asks for his voice. The
+// stream starts about half a second back, so a listener loses nothing by it.
+const TALK_HOLD_MS = 400;
+const EVENTS_AGAIN_MS = [5000, 15000, 30000, 60000, 120000]; // the events stream refused (not dropped): open it again
 const KEEP = { volume: 'maxradio.volume', disp: 'maxradio.disp', illum: 'maxradio.illum' };
 
 const BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -104,6 +121,7 @@ let snap = {
   popping: false, // REL pressed: playing on until the new tab says it plays
   reason: '', // offair: 'empty' or 'unreachable'
   waves: 0, // counts waveforms as they arrive, so the record redraws
+  talking: false, // Max is on the mic: his talk sounds on this radio (in his own browser: he is live), the music dips
 };
 const listeners = new Set();
 function set(patch) {
@@ -146,6 +164,7 @@ function refresh() {
       try { data = await getJSON(API); } catch { return false; }
       cal = calibrate(cal, Number(data && data.now), t0, Date.now());
       station = normalizeStation(data);
+      setTalk(normalizeTalk(data && data.talk), 'poll'); // heeded while the events stream is not live
       const k = stationKey(station);
       if (k !== stationAt) { stationAt = k; stationN++; }
       return true;
@@ -202,6 +221,7 @@ export const peaksOf = (id) => (waves.get(id) || {}).s || null;
 // ---------------------------------------------------------------- the elements
 let A = null, B = null; // the music: the song on air, and the next one loading
 let D = null; // the announcer drops, never the music's
+let V = null; // the talk-over: Max on the mic, the catalog's live MP3 of him
 let cur = null; // {slot, el}: on air on this radio; el is null while its song loads
 let pre = null; // {slot, el}: the next song, loading ahead of its boundary
 let leaving = null; // the last song's element: muted at its boundary, stopped once the next one sounds
@@ -258,13 +278,13 @@ function unlock(el) {
 }
 
 // The knob is a log-ish taper: half way round is about -12 dB, as a real volume pot. The music's share also carries
-// its fades and the dip under a drop; the drop's own element takes the knob as it is.
+// its fades and the dip under a drop or the talk; the drop's and the talk's own elements take the knob as it is.
 const taper = (v) => v * v;
 const fades = new Map(); // element -> {g, timer}: a fade's share of the volume, 0..1
-const duck = { g: 1, timer: 0 }; // the music's share while a drop plays
+const duck = { g: 1, timer: 0 }; // the music's share while a drop or the talk plays (talk.js, musicShare)
 function applyVolume(el) {
   if (!el || !snap.volumeWorks) return;
-  const f = fades.get(el), share = el === D ? 1 : (f ? f.g : 1) * duck.g;
+  const f = fades.get(el), share = el === D || el === V ? 1 : (f ? f.g : 1) * duck.g;
   try { el.volume = Math.min(1, Math.max(0, taper(snap.volume) * share)); } catch { /* not settable */ }
 }
 function fadeTo(el, to, ms) {
@@ -282,7 +302,10 @@ function fadeTo(el, to, ms) {
   }, 25);
 }
 const gainOf = (el, g) => { const f = fades.get(el) || { g: 1, timer: 0 }; clearInterval(f.timer); f.g = g; fades.set(el, f); applyVolume(el); };
-/** The dip under a drop, on both music elements (iOS: none, the drop plays over the music). */
+/**
+ * The dip under a drop or the talk, on both music elements (iOS: none; a drop plays over the music, and the talk mutes
+ * it instead, musicMuted). `to` is talk.js's musicShare for what is on now.
+ */
 function duckTo(to, ms) {
   clearInterval(duck.timer);
   duck.timer = 0;
@@ -465,21 +488,30 @@ function mediaClear() {
 // says so ("claim"); once it actually plays it says so again ("playing"), and every other radio that is on lets go
 // (released). So REL leaves this radio playing until the new tab sounds, and a tab the browser kept quiet (PUSH PWR)
 // takes nothing from the one still playing. The newest switch-on wins. The embed stays out of it: it is never released
-// and never releases another radio (Max's stream plays on whatever he listens to meanwhile).
+// and never releases another radio (Max's stream plays on whatever he listens to meanwhile); it only listens for the
+// radio admin's 'talking', as every radio here does (the talk-over, below).
 let chan = null;
 function listen() {
-  if (embedded || chan || !BROWSER || typeof BroadcastChannel !== 'function') return;
+  if (chan || !BROWSER || typeof BroadcastChannel !== 'function') return;
   try {
     chan = new BroadcastChannel('maxradio');
     chan.onmessage = (e) => heard(e.data);
   } catch { chan = null; }
 }
 function post(type) {
+  if (embedded) return;
   try { if (chan) chan.postMessage({ type, id: SELF, at: claimAt }); } catch { /* the channel closed */ }
 }
 const newerThanMine = (m) => !claimAt || m.at > claimAt || (m.at === claimAt && m.id > SELF);
 function heard(m) {
   if (!m || m.id === SELF || typeof m.at !== 'number') return;
+  if (m.type === 'talking') {
+    // the radio admin in this browser is live (or stopped): dip, and never play that talk here
+    own = heardOwn(own, m.talkId, m.on === true, Date.now());
+    talkFollow();
+    return;
+  }
+  if (embedded) return;
   const st = snap.status;
   if (m.type === 'playing') {
     if (st === 'off' || st === 'released') return;
@@ -498,9 +530,13 @@ function heard(m) {
 // ---------------------------------------------------------------- the announcer drops
 // One over every other song (schedule.js dropFor: recording 1, none, recording 2, none), DROP_AT_MS in. The
 // clip plays on its own element in step with the station clock: tuning in during one joins it partway, and after its
-// end there is nothing. The music dips to DUCK under it with short ramps where element volume works; on iOS (which keeps
-// volume in the listener's hands) it plays over the music. The next drop's clip loads ahead.
-let drop = null; // {songId, startedAt, clip, atMs, endsAt, on}: the drop over the song on air (on: sounding)
+// end there is nothing. The music dips under it (talk.js, musicShare) with short ramps where element volume works; on iOS
+// (which keeps volume in the listener's hands) it plays over the music. The next drop's clip loads ahead. While Max is on
+// the mic there are none: one sounding stops, and one due meanwhile is left out (not started late once he stops).
+let drop = null; // {songId, startedAt, clip, atMs, endsAt, on, dipping}: the drop over the song on air (on: sounding)
+let skipped = ''; // the drop left out for the talk, as dropKey: never started again
+const dropKey = (songId, startedAt) => `${songId}@${startedAt}`;
+const dropDips = () => !!drop && (drop.on || drop.dipping);
 
 function dropEl() {
   if (!D && BROWSER && typeof Audio === 'function') {
@@ -537,28 +573,35 @@ function planDrop(g) {
   cancel(...DROP_TIMERS);
   if (drop && drop.on) stopDrop();
   const p = dropFor(cur.slot, DROPS), t = now();
-  if (!p || t >= p.endsAt - DROP_LATE_MS) {
+  if (!p || t >= p.endsAt - DROP_LATE_MS || skipped === dropKey(song.id, startedAt)) {
     drop = null;
-    if (duck.g !== 1) duckTo(1, UNDUCK_MS); // a dip already on its way down for a drop no longer due
+    duckTo(musicShare({ talking, drop: false }), UNDUCK_MS); // a dip already on its way down for a drop no longer due
     loadDrop(nextDropClip());
     return;
   }
-  drop = { songId: song.id, startedAt, ...p, on: false };
+  drop = { songId: song.id, startedAt, ...p, on: false, dipping: false };
   loadDrop(p.clip);
-  if (t < p.atMs - DUCK_MS) later('duck', () => { if (g === gen && drop && !drop.on) duckTo(DUCK, DUCK_MS); }, p.atMs - DUCK_MS - t);
+  if (t < p.atMs - DUCK_MS) {
+    later('duck', () => {
+      if (g !== gen || !drop || drop.on || talking) return; // Max on the mic: it will be left out at its moment
+      drop.dipping = true;
+      duckTo(musicShare({ talking, drop: true }), DUCK_MS);
+    }, p.atMs - DUCK_MS - t);
+  }
   later('drop', () => startDrop(g), p.atMs - t);
 }
 /** The drop's moment (or a listener tuning in during it): the clip from where the station clock says it is. */
 function startDrop(g) {
   const d = drop, el = dropEl();
   if (g !== gen || !d || d.on || !el || !cur || !cur.el || snap.status !== 'on') return;
+  if (talking) { skipDrop(); return; } // due while Max is on the mic: left out
   const t = now();
-  if (t >= d.endsAt - DROP_LATE_MS) { drop = null; duckTo(1, UNDUCK_MS); return; }
+  if (t >= d.endsAt - DROP_LATE_MS) { drop = null; duckTo(musicShare({ talking, drop: false }), UNDUCK_MS); return; }
   const src = DROPS[d.clip].src;
   if (el.getAttribute('src') !== src) el.src = src;
   d.on = true;
   cancel('duck');
-  duckTo(DUCK, DUCK_MS);
+  duckTo(musicShare({ talking, drop: true }), DUCK_MS);
   applyVolume(el);
   const place = () => {
     if (drop !== d) return;
@@ -574,7 +617,7 @@ function startDrop(g) {
       if (drop !== d) return; // stopped meanwhile
       drop = null; // refused, or the clip would not load: no drop this time
       cancel('dropEnd');
-      duckTo(1, UNDUCK_MS);
+      duckTo(musicShare({ talking, drop: false }), UNDUCK_MS);
     });
   }
   later('dropEnd', () => finishDrop(d), d.endsAt - t);
@@ -583,19 +626,213 @@ function startDrop(g) {
 function finishDrop(d) {
   if (drop !== d) return;
   drop = null;
-  duckTo(1, UNDUCK_MS);
+  duckTo(musicShare({ talking, drop: false }), UNDUCK_MS);
   // the clip ends on its own; one still sounding a moment later (it started late) stops there
   later('dropStop', () => {
     if (D && !isUnlock(D) && !D.paused) { try { D.pause(); } catch { /* gone */ } }
     loadDrop(nextDropClip());
   }, 400);
 }
-/** Playback moved on (a boundary, a retune, power off): no drop, the music at its full share. */
+/** Playback moved on (a boundary, a retune, power off): no drop, the music at its full share (a third under the talk). */
 function stopDrop() {
   cancel(...DROP_TIMERS);
   drop = null;
   if (D && !isUnlock(D) && !D.paused) { try { D.pause(); } catch { /* gone */ } }
-  duckTo(1, 0);
+  duckTo(musicShare({ talking, drop: false }), 0);
+}
+/** Max went live over a drop, or its moment came while he talks: it stops, and is not started again for this song. */
+function skipDrop() {
+  const d = drop;
+  if (!d) return;
+  skipped = dropKey(d.songId, d.startedAt);
+  cancel(...DROP_TIMERS);
+  drop = null;
+  if (D && !isUnlock(D) && !D.paused) { try { D.pause(); } catch { /* gone */ } }
+  loadDrop(nextDropClip());
+}
+
+// ---------------------------------------------------------------- the talk-over
+// Max on the mic (the radio admin, admin/mic.js). While the radio is on it follows the catalog's word on the talk (the
+// events stream, and each read of the queue while that stream is not live) and plays a talk that is on, from its live MP3,
+// on V. Once V sounds the music dips to a third, or is muted where element volume does not work (iOS keeps the volume in
+// the listener's hands), and comes back as the talk ends. A failing stream gets one more try while the talk is still on;
+// then this radio leaves that talk be. Max's own browser never plays his talk: his radio admin says 'talking' on the
+// channel (heard), so the radios here dip without it. The embed with ?talk=0 takes no part.
+let talk = { on: false }; // the catalog's word (talk.js, normalizeTalk)
+let talkOff = false; // the embed with ?talk=0
+let own = NO_OWN; // what this browser's radio admin said (talk.js, heardOwn)
+let voice = null; // {id, tries, sounding, down, t0, since, progress, pos}: the talk V plays
+let hold = { id: '', at: 0 }; // when this radio first heard that talk was on (TALK_HOLD_MS)
+let failedTalk = ''; // a talk this radio gave up on
+let talking = false; // the snapshot's talking: V sounds, or this browser's admin is live
+let es = null; // the events stream
+let esLive = false; // it has said where the talk stands since it last (re)connected
+let esTries = 0;
+const TALK_TIMERS = ['voiceTick', 'voiceRetry', 'voiceHold', 'own', 'events'];
+
+/** Where element volume does not work, the music is muted under the talk instead (and plays on, in place). */
+const musicMuted = () => talking && !snap.volumeWorks;
+
+function voiceEl() {
+  if (!V && BROWSER && typeof Audio === 'function') {
+    V = new Audio();
+    V.preload = 'auto';
+    const on = (ev, fn) => V.addEventListener(ev, () => { if (voice && !voice.down && !isUnlock(V) && V.getAttribute('src')) fn(voice); });
+    on('playing', (v) => {
+      v.progress = performance.now();
+      if (!v.sounding) { v.sounding = true; v.since = v.progress; talkFollow(); }
+    });
+    on('timeupdate', (v) => { if (V.currentTime !== v.pos) { v.pos = V.currentTime; v.progress = performance.now(); } });
+    // the stream ends with the talk (and the catalog's word follows), or it broke off
+    on('ended', voiceFailed);
+    on('error', voiceFailed);
+  }
+  return V;
+}
+
+/** Ask for the talk's live stream on V and play it (inside or outside a tap: prime() unlocked V). */
+function playVoice(v) {
+  const el = voiceEl();
+  if (!el || voice !== v) return;
+  if (isUnlock(el) && !el.paused && !el.ended) { later('voiceRetry', () => playVoice(v), 100); return; } // its few ms of silence first
+  v.down = false;
+  v.sounding = false;
+  v.t0 = performance.now();
+  v.progress = v.t0;
+  v.pos = -1;
+  el.muted = false;
+  applyVolume(el);
+  el.src = `${API}/talk/${encodeURIComponent(v.id)}/stream.mp3`;
+  let p = null;
+  try { p = el.play(); } catch { p = null; }
+  if (p && p.catch) p.catch((e) => { if (voice === v && !(e && e.name === 'AbortError') && el.getAttribute('src')) voiceFailed(v); });
+  every('voiceTick', voiceTick, 1000);
+}
+function startVoice(id) {
+  stopVoice();
+  voice = { id, tries: 0, sounding: false, down: false, t0: 0, since: 0, progress: 0, pos: -1 };
+  playVoice(voice);
+}
+/** V silent and empty (its request to the catalog closes with it). */
+function quietVoice() {
+  const el = V;
+  if (!el || isUnlock(el)) return;
+  if (!el.paused) { try { el.pause(); } catch { /* gone */ } }
+  if (el.getAttribute('src')) { el.removeAttribute('src'); try { el.load(); } catch { /* nothing to drop */ } }
+}
+function stopVoice() {
+  cancel('voiceTick', 'voiceRetry');
+  voice = null;
+  quietVoice();
+}
+/** V failed (an error, the stream's end, a stall): the music comes back, and one more try while the talk is still on. */
+function voiceFailed(v) {
+  if (voice !== v || v.down) return;
+  v.down = true;
+  const again = retryVoice({ tries: v.tries, talk, id: v.id });
+  quietVoice();
+  v.sounding = false;
+  if (!again) {
+    if (talk.on && talk.id === v.id) failedTalk = v.id;
+    stopVoice();
+  } else {
+    v.tries += 1;
+    later('voiceRetry', () => { if (voice === v) playVoice(v); }, TALK_RETRY_MS);
+  }
+  talkFollow();
+}
+/** Once a second while V has a talk: not starting, or stuck, is failing; a retry that has played a while is forgiven. */
+function voiceTick() {
+  const v = voice;
+  if (!v || !V) { cancel('voiceTick'); return; }
+  if (v.down) return; // waiting to try again
+  const t = performance.now();
+  if (V.currentTime !== v.pos) { v.pos = V.currentTime; v.progress = t; }
+  if (v.sounding ? t - v.progress > TALK_STALL_MS : t - v.t0 > TALK_START_MS) { voiceFailed(v); return; }
+  if (v.tries && v.sounding && t - v.since > TALK_STEADY_MS) v.tries = 0;
+}
+
+/** The music under the talk: down to a third (or muted) while it sounds; a drop sounding then stops. */
+function setTalking(on) {
+  if (on === talking) return;
+  talking = on;
+  if (on && dropDips()) skipDrop();
+  if (!snap.volumeWorks) for (const el of [A, B]) if (el && el !== leaving) el.muted = on;
+  duckTo(musicShare({ talking: on, drop: dropDips() }), on ? DUCK_MS : UNDUCK_MS);
+  set({ talking: on });
+}
+
+/** Everything the talk-over does, from what is known now: which talk V plays, and whether the music dips. */
+function talkFollow() {
+  const t = Date.now();
+  const plan = talkPlan({ enabled: !!session && !talkOff, talk, own, failed: failedTalk, now: t });
+  if (plan.play && (!voice || voice.id !== plan.play)) {
+    if (hold.id !== plan.play) hold = { id: plan.play, at: t };
+    const wait = hold.at + TALK_HOLD_MS - t;
+    if (wait > 0) later('voiceHold', talkFollow, wait + 5);
+    else startVoice(plan.play);
+  } else if (!plan.play) {
+    cancel('voiceHold');
+    if (voice) stopVoice();
+  }
+  setTalking(plan.echo || !!(voice && voice.sounding));
+  // the radio admin here going quiet (its window closed with no word) ends the dip once its last word runs out
+  if (plan.echo) later('own', talkFollow, own.at + OWN_MS - t + 20);
+  else cancel('own');
+}
+/** A word from the catalog about the talk: from the events stream, or a read of the queue (which waits while that is live). */
+function setTalk(t, source) {
+  if (!takesTalk(source, esLive) || sameTalk(talk, t)) return;
+  talk = t;
+  talkFollow();
+}
+
+/** The catalog's events stream (GET /radio/events): where the talk stands on connecting, and at every change. */
+function openEvents() {
+  if (es || talkOff || !session || !BROWSER || typeof EventSource !== 'function') return;
+  cancel('events');
+  let src;
+  try { src = new EventSource(`${API}/events`); } catch { return; }
+  es = src;
+  src.addEventListener('talk', (e) => {
+    if (es !== src) return;
+    let d = null;
+    try { d = JSON.parse(e.data); } catch { d = null; }
+    esLive = true;
+    esTries = 0;
+    setTalk(normalizeTalk(d), 'events');
+  });
+  src.onerror = () => {
+    if (es !== src) return;
+    esLive = false; // a dropped stream reconnects by itself (retry: 3000); the queue's reads stand in meanwhile
+    if (src.readyState === 2) {
+      // closed for good: the answer was not a stream (an error, or a catalog without the route yet). Again later.
+      es = null;
+      try { src.close(); } catch { /* closed */ }
+      later('events', openEvents, EVENTS_AGAIN_MS[Math.min(esTries++, EVENTS_AGAIN_MS.length - 1)]);
+    }
+  };
+}
+function closeEvents() {
+  cancel('events');
+  if (es) { try { es.close(); } catch { /* closed */ } }
+  es = null;
+  esLive = false;
+}
+
+/** Power off, release, push pwr: no talk, no events, the music unmuted; what is known starts afresh next time. */
+function stopTalk() {
+  closeEvents();
+  stopVoice();
+  cancel(...TALK_TIMERS);
+  talk = { on: false };
+  failedTalk = '';
+  hold = { id: '', at: 0 };
+  if (talking) {
+    talking = false;
+    if (!snap.volumeWorks) for (const el of [A, B]) if (el && el !== leaving) el.muted = false;
+    set({ talking: false });
+  }
 }
 
 // ---------------------------------------------------------------- playing the schedule
@@ -632,7 +869,7 @@ async function begin(g, slot, how) {
       return;
     }
     if (g !== gen) { if (loading === el) loading = null; return; }
-    el.muted = false;
+    el.muted = musicMuted(); // Max on the mic where volume cannot dip: the song starts muted, in place
     el.src = at(url, (now() - slot.startedAt) / 1000 + START_LEAD); // a little ahead: it takes a moment to start
   }
   gainOf(el, how === 'switch' ? 1 : 0);
@@ -717,7 +954,7 @@ async function preload(g) {
   let url;
   try { url = await linkFor(slot.song.id); } catch { return; } // the boundary tries again
   if (g !== gen || !cur || el === cur.el || el === loading || el === leaving) return;
-  el.muted = false;
+  el.muted = musicMuted();
   gainOf(el, 1);
   el.src = at(url, x.offsetMs / 1000);
   pre = { slot, el };
@@ -903,6 +1140,7 @@ function endSession() {
   session = null;
   gen++;
   cancel(...PLAYBACK_TIMERS);
+  stopTalk();
   stopDrop();
   stopAll();
   hissStop();
@@ -924,6 +1162,7 @@ function release() {
 
 function onVisible() {
   if (document.visibilityState !== 'visible' || !session) return;
+  if (!es) openEvents(); // waiting to open it again: now
   if (snap.status === 'offair') { reconnect(); return; }
   poll();
   tick();
@@ -939,8 +1178,8 @@ function wire() {
 // ---------------------------------------------------------------- what the faceplate and the terminal call
 /**
  * Call this synchronously inside the tap or keypress that tunes in (the terminal's Enter, the power button, the radio's
- * icon), so the browser lets the page play afterwards: each idle element, the drops' included, plays a few silent
- * samples, and the static's audio context starts. It never interrupts the song playing, or a drop.
+ * icon), so the browser lets the page play afterwards: each idle element, the drops' and the talk's included, plays a
+ * few silent samples, and the static's audio context starts. It never interrupts the song playing, a drop, or the talk.
  */
 export function prime() {
   if (!BROWSER) return;
@@ -948,6 +1187,8 @@ export function prime() {
   for (const el of els()) if (el && !busy.has(el)) unlock(el);
   const d = dropEl();
   if (d && !(drop && drop.on)) unlock(d);
+  const v = voiceEl();
+  if (v && !(voice && v.getAttribute('src') && !isUnlock(v))) unlock(v); // so a talk can start later with no tap (iOS)
   wakeStatic();
   mediaHandlers();
 }
@@ -968,6 +1209,8 @@ export function powerOn() {
   hissStart();
   every('poll', poll, POLL_MS);
   every('tick', tick, 1000);
+  openEvents(); // where the talk stands, and every change (the first read of the queue says so too)
+  talkFollow(); // the radio admin here may be live already: dip from the start
   refresh().then((ok) => {
     if (s !== session) return;
     if (!ok) { offair('unreachable'); return; }
@@ -1000,10 +1243,12 @@ export function tuneIn() {
 /**
  * The embed for Max's stream (radio/embed/, an OBS browser source): call once, before it powers on. It takes no part
  * in the one-radio channel and sets no Media Session; volume (0..1) and illum (one of ILLUMS) come from its address and
- * outrank what the visit kept. Anything else is left as it is.
+ * outrank what the visit kept, and talk: false (?talk=0) leaves the talk-over out (his stream mic already carries his
+ * voice). Anything else is left as it is.
  */
-export function embed({ volume = null, illum = null } = {}) {
+export function embed({ volume = null, illum = null, talk: withTalk = true } = {}) {
   embedded = true;
+  talkOff = withTalk === false;
   const patch = {};
   if (Number.isFinite(volume)) patch.volume = Math.round(Math.min(1, Math.max(0, volume)) * 100) / 100;
   if (ILLUMS.includes(illum)) patch.illum = illum;
@@ -1033,7 +1278,7 @@ export function setVolume(v) {
   if (volume !== snap.volume) {
     set({ volume });
     keep(KEEP.volume, volume);
-    for (const el of [...els(), D]) applyVolume(el);
+    for (const el of [...els(), D, V]) applyVolume(el);
     if (hiss && ctx) { try { hiss.g.gain.setTargetAtTime(0.0001 + 0.05 * taper(volume), ctx.currentTime, 0.05); } catch { /* ended */ } }
   }
   flash(snap.volumeWorks ? `vol ${Math.round(volume * 30)}` : 'device vol', 1100);
