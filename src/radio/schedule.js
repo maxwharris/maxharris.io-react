@@ -1,101 +1,99 @@
-// maxradio's station clock (Max, 11/13/26: "follow an algorithm following current time of day (according to EST) and
-// playlist size"; "it should work like a real radio without a single broadcast source, instead an algorithm").
+// maxradio's station clock: the queue in Max's order, looping (Max, 11/15/26: "view the live queue and add to/edit
+// queue ... drag to reorder queue"; he picked edits taking effect when the song on air ends).
 //
-// There is no broadcast and no stored state. Every listener's page runs this on the server-calibrated clock and the
-// crate as GET /catalog/api/radio lists it, so every device works out the same song at the same offset, to the
-// millisecond, and anyone tuning in joins mid-song. Pure: no DOM, no network, no randomness but the seeded one.
-//
-// The station signed on at 00:00 Eastern on 11/13/26 and has played ever since, one rotation (every song once) after
-// another. It runs on through midnight rather than starting over, so nothing is ever cut at midnight and every song
-// keeps getting airtime even once the crate is longer than a day.
-//
-// A playlist edit changes the rotation's length, so the schedule moves; the engine keeps the song it is playing to its
-// end (unless that song left the crate) and then follows the new schedule, joining mid-song like anyone tuning in.
-//
-// Every device must agree, so change nothing here without changing every listener at once (the tests pin it).
-
-/** 00:00 Eastern (EST, UTC-5) on 11/13/26: the station's sign-on. */
-export const SIGN_ON = Date.UTC(2026, 10, 13, 5, 0, 0);
-
-/** The seeded generator: mulberry32, exactly as written in the spec. Returns 0 <= x < 1. */
-export function mulberry32(a) {
-  return function () {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a >>> 15, 1 | a);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-
-/** MurmurHash3's finaliser: scatters neighbouring rotation numbers across the seed space. */
-export function fmix32(h) {
-  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
-  h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
-  h ^= h >>> 16;
-  return h >>> 0;
-}
-
-/** The seed of rotation k. */
-export const seed32 = (k) => fmix32(((k | 0) ^ 0x9E3779B9) >>> 0);
-
-/** Rotation k's shuffle of the crate order (n >= 3), before the fix that keeps a song from playing twice in a row. */
-export function rawOrder(songs, k) {
-  const a = songs.slice();
-  const rand = mulberry32(seed32(k));
-  for (let i = a.length - 1; i >= 1; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    const x = a[i]; a[i] = a[j]; a[j] = x;
-  }
-  return a;
-}
-
-/**
- * The order rotation k plays the songs in. One song: itself. Two: crate order every time (A B A B ..., never the same
- * song twice in a row). Three or more: a seeded shuffle; if it would open with the song the last rotation closed with,
- * its first two swap. With three or more songs that swap never moves the last song, so a rotation's raw last song is
- * its real last song and nothing chains back through earlier rotations.
- */
-export function order(songs, k) {
-  const n = songs.length;
-  if (n <= 2) return songs.slice();
-  const a = rawOrder(songs, k);
-  const before = rawOrder(songs, k - 1)[n - 1];
-  if (a[0].id === before.id) { const x = a[0]; a[0] = a[1]; a[1] = x; }
-  return a;
-}
+// No program runs the queue and nothing broadcasts. The catalog keeps the radio crate's order and, since the order last
+// changed, two small facts (GET /catalog/api/radio):
+//   anchor {at, songId}: the moment the current order took over, and the song it took over with;
+//   carry {songId, startedAt, endsAt} or null: the song that was on air at that change, which plays on to its end
+//   (endsAt = anchor.at), so an edit never cuts the song on air.
+// From the anchor the queue plays in order, every song once a rotation, round and round. Every listener's page runs this
+// on the server-calibrated clock, so every device works out the same song at the same point, to the millisecond, and
+// anyone tuning in joins mid-song. The catalog runs the same walk (backend/lib/radio.js) to set the next anchor when the
+// order changes; the shared cases in schedule.test.js pin both. Pure: no DOM, no network, no randomness.
 
 /** One rotation's length in ms: every song once. */
 export const rotationMs = (songs) => songs.reduce((n, s) => n + s.durationMs, 0);
 
 /**
- * What is on air at nowMs (station clock, epoch ms). songs: the radio crate in crate order, each {id, durationMs} with
- * durationMs a whole number of ms above 0. Returns {song, index, offsetMs, startedAt, endsAt, next, rotation}, or null
- * when the crate is empty. index is the song's place in its rotation; startedAt and endsAt are station-clock ms.
+ * What is on air at nowMs (station clock, epoch ms). state: {songs, anchor, carry}, songs being the queue in order, each
+ * {id, durationMs} with durationMs a whole number of ms above 0. Returns {song, index, offsetMs, startedAt, endsAt, next,
+ * slot}, or null with nothing to play. index is the song's place in the queue; startedAt and endsAt are station-clock
+ * ms; slot counts the songs started since the anchor (the anchor's song is 0, -1 the one before it, and so on; a carried
+ * song is -1), so it steps by one from song to song, which is what the announcer drops alternate on.
  */
-export function onAir(songs, nowMs) {
-  const n = songs ? songs.length : 0;
+export function onAir(state, nowMs) {
+  const songs = (state && state.songs) || [];
+  const n = songs.length;
   if (!n || !Number.isFinite(nowMs)) return null;
   const L = rotationMs(songs);
   if (!(L > 0)) return null;
-  const t = nowMs - SIGN_ON;
+  const at = state.anchor && Number.isFinite(state.anchor.at) ? state.anchor.at : 0;
+  let i0 = state.anchor ? songs.findIndex((s) => s.id === state.anchor.songId) : 0;
+  if (i0 < 0) i0 = 0;
+
+  // the song that was on air when the order changed plays on to its end
+  const c = state.carry;
+  if (c && nowMs < c.endsAt) {
+    const ci = songs.findIndex((s) => s.id === c.songId);
+    if (ci >= 0) {
+      const offsetMs = Math.min(Math.max(0, nowMs - c.startedAt), Math.max(0, c.endsAt - c.startedAt - 1e-6));
+      return { song: songs[ci], index: ci, offsetMs, startedAt: c.startedAt, endsAt: c.endsAt, next: songs[i0], slot: -1 };
+    }
+  }
+
+  const t = nowMs - at;
   let k = Math.floor(t / L);
   let r = t - k * L;
-  // a quotient that rounded up or down across a whole number: put r back in [0, L)
+  // a quotient that rounded across a whole number: put r back in [0, L)
   if (r < 0) { k -= 1; r += L; } else if (r >= L) { k += 1; r -= L; }
-  const ord = order(songs, k);
-  // Where each song starts, in whole ms: endsAt = now + (d - offset) worked out from the rotation's start, so it is
-  // exact even when now carries a fraction of a ms, and onAir(endsAt) is the next song at offset 0.
-  let start = SIGN_ON + k * L;
-  for (let i = 0; i < n; i++) {
-    const d = ord[i].durationMs;
+  // Where each song starts, in whole ms from the rotation's start, so endsAt is exact even when now carries a fraction
+  // of a ms, and onAir(endsAt) is the next song at offset 0.
+  let start = at + k * L;
+  for (let j = 0; j < n; j++) {
+    const i = (i0 + j) % n;
+    const d = songs[i].durationMs;
     // the last song takes any rounding left over, so a time is never off the end of its rotation
-    if (r < d || i === n - 1) {
+    if (r < d || j === n - 1) {
       const offsetMs = Math.min(Math.max(0, nowMs - start), d - 1e-6);
-      const next = i + 1 < n ? ord[i + 1] : order(songs, k + 1)[0];
-      return { song: ord[i], index: i, offsetMs, startedAt: start, endsAt: start + d, next, rotation: k };
+      return { song: songs[i], index: i, offsetMs, startedAt: start, endsAt: start + d, next: songs[(i + 1) % n], slot: k * n + j };
     }
     r -= d;
     start += d;
   }
   return null;
+}
+
+/**
+ * The live queue: the song on air at nowMs and the count - 1 after it, each {song, index, startsAt, endsAt, slot}.
+ * Empty with nothing to play.
+ */
+export function timeline(state, nowMs, count = 10) {
+  const out = [];
+  let x = onAir(state, nowMs);
+  while (x && out.length < count) {
+    out.push({ song: x.song, index: x.index, startsAt: x.startedAt, endsAt: x.endsAt, slot: x.slot });
+    x = onAir(state, x.endsAt);
+  }
+  return out;
+}
+
+/** Where in a song its announcer drop starts (Max, 11/15/26: "once per track (towards the beginning)"). */
+export const DROP_AT_MS = 8000;
+/** A drop needs this much of the song left after it, so it never runs into the next song. */
+const DROP_TAIL_MS = 2000;
+
+/**
+ * The announcer drop over one song on air (an onAir result or a timeline entry): {clip, atMs, endsAt}, clip being the
+ * index into clips ([{durationMs}], the recordings, which alternate song by song: "alternating between the two"), atMs
+ * and endsAt station-clock ms. null when the song is too short to carry one.
+ */
+export function dropFor(entry, clips) {
+  if (!entry || !clips || !clips.length) return null;
+  const n = clips.length;
+  const clip = ((entry.slot % n) + n) % n;
+  const startedAt = entry.startedAt ?? entry.startsAt;
+  const atMs = startedAt + DROP_AT_MS;
+  const endsAt = atMs + clips[clip].durationMs;
+  if (endsAt + DROP_TAIL_MS > entry.endsAt) return null;
+  return { clip, atMs, endsAt };
 }
