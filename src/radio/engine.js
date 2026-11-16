@@ -16,9 +16,9 @@
 // the newest order, and once more as the boundary passes, so an edit made in those last seconds takes over at once
 // rather than at the next read, a minute into the song. An edit never cuts the song on air (the catalog carries it to
 // its end; Max, 11/15/26: edits take effect when the song on air ends); only taking that song out of the queue retunes
-// at once. The music never goes through Web Audio (iOS stops it in the background, and S3 sends no CORS headers, so it
-// could not be read anyway); Web Audio only makes the static, and the level meter and the record read the song's
-// waveform (GET /catalog/api/radio/peaks/:id) at the live position instead of the sound.
+// at once. Web Audio makes the static, and only on iPhone and iPad does the music go through it, so the talk can dip it
+// there (the mix, below); the level meter and the record read the song's waveform (GET /catalog/api/radio/peaks/:id)
+// at the live position instead of the sound.
 //
 // The announcer drops, near the start of every other song, the two recordings taking turns (Max, 11/15/26: "song
 // 1-recording 1, song 2- none, song 3-recording 2, song 4- none, repeat"), play on an element of their own, on the
@@ -30,14 +30,15 @@
 // talk over the radio like announcer"; he picked "works everywhere", locked iPhones included). The catalog says when a
 // talk is on (GET /radio's talk field, and its events stream, open while the radio is on) and streams it as a live MP3
 // (/radio/talk/:id/stream.mp3), which plays on an element of its own, unlocked with the others in the tap that tunes in,
-// so it can start later on its own. Once it sounds the music dips to a third (talk.js), or where element volume does not
-// work (iPhone, iPad) is muted, playing on in place, until his last word has played; a drop due meanwhile is left out.
-// Max's own browser dips but never plays his talk: his radio admin says so on the one-radio channel.
+// so it can start later on its own. Once it sounds the music dips to half under it (talk.js; Max, 11/16/26: it should
+// overlap his voice, not cut out), by element volume, or on iPhone and iPad through Web Audio (the mix); where neither
+// can be done it is muted, playing on in place. Either way until his last word has played; a drop due meanwhile is left
+// out. Max's own browser dips but never plays his talk: his radio admin says so on the one-radio channel.
 
 import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
 import { stretch, levelAt } from './record/peaks.js';
-import { NO_OWN, OWN_MS, heardOwn, musicShare, normalizeTalk, playsOut, sameTalk, takesTalk, talkPlan, voiceRetryMs } from './talk.js';
+import { NO_OWN, OWN_MS, TALK_SHARE, heardOwn, musicShare, normalizeTalk, playsOut, sameTalk, takesTalk, talkPlan, voiceRetryMs } from './talk.js';
 
 export const API = '/catalog/api/radio';
 export const PAGE_URL = '/radio/';
@@ -274,7 +275,7 @@ function unlockSource() {
 const isUnlock = (el) => !!unlockUrl && el.src === unlockUrl;
 function unlock(el) {
   try {
-    el.muted = false;
+    hush(el, false);
     el.src = unlockSource();
     const p = el.play();
     if (p && p.catch) p.catch(() => {});
@@ -308,8 +309,9 @@ function fadeTo(el, to, ms) {
 }
 const gainOf = (el, g) => { const f = fades.get(el) || { g: 1, timer: 0 }; clearInterval(f.timer); f.g = g; fades.set(el, f); applyVolume(el); };
 /**
- * The dip under a drop or the talk, on both music elements (iOS: none; a drop plays over the music, and the talk mutes
- * it instead, musicMuted). `to` is talk.js's musicShare for what is on now.
+ * The dip under a drop or the talk, on both music elements, where element volume works. `to` is talk.js's musicShare
+ * for what is on now. iPhone and iPad have none of it: a drop plays over the music, and the talk dips it through Web
+ * Audio instead (mixDip), or where that cannot be done mutes it (musicMuted).
  */
 function duckTo(to, ms) {
   clearInterval(duck.timer);
@@ -350,7 +352,7 @@ function stopEl(el) {
   if (f) clearInterval(f.timer);
   fades.delete(el);
   if (!el.paused) { try { el.pause(); } catch { /* gone */ } }
-  el.muted = false;
+  hush(el, false);
   if (el.getAttribute('src')) { el.removeAttribute('src'); try { el.load(); } catch { /* nothing to drop */ } }
 }
 function stopAll() {
@@ -397,14 +399,17 @@ const ON = {
 
 // ---------------------------------------------------------------- the static
 let ctx = null, noise = null, hiss = null;
-/** The static's audio context, started (inside a tap, or where the browser plays without one). */
+/**
+ * The static's audio context (and on iPhone and iPad the music's, the mix), started inside a tap or where the browser
+ * plays without one. iOS also has 'interrupted' (a call, Siri), which resume() asks to leave.
+ */
 function wakeStatic() {
   try {
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (AC) ctx = new AC();
     }
-    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    if (ctx && ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume().catch(() => {});
   } catch { ctx = null; }
 }
 function hissStart(ms = HISS_MS) {
@@ -454,9 +459,105 @@ function hissStop(quick = false) {
     h.src.stop(t + end + 0.02);
     h.src.onended = () => {
       try { h.src.disconnect(); h.g.disconnect(); } catch { /* gone */ }
-      // a context left running costs an audio thread: rest it between bursts
-      if (!hiss && ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+      // a context left running costs an audio thread: rest it between bursts, unless the music plays through it
+      if (!hiss && ctx && ctx.state === 'running' && (mix.state === 'off' || mix.state === 'no')) ctx.suspend().catch(() => {});
     };
+  } catch { /* the context went away */ }
+}
+
+// ---------------------------------------------------------------- the mix: the music through Web Audio (iPhone, iPad)
+// Safari on iPhone keeps an element's volume in the listener's hands (WebKit locks it on small screens; this radio takes
+// iPads for the same), so there the music cannot dip under the talk by element volume, and was muted under it instead.
+// Max (11/16/26): the music should play on under his voice. So on those devices the two music elements play through
+// the static's audio context: each into a gain of its own (its mute: WebKit may take a routed element's sound ahead of
+// the element's own muted) and both into one more, the dip under the talk (mixDip; drops still play over the music
+// there, undipped, as before). Two things make that safe, and without either nothing is routed and the talk mutes the
+// music as before:
+// - navigator.audioSession set to 'playback' (iOS 16.4 on), which keeps an audio context running when Safari goes to
+//   the background or the phone locks (WebKit: AudioContext::shouldOverrideBackgroundPlaybackRestriction). Without it
+//   iOS stops the context there, and routed music would go silent on a locked phone, where an <audio> plays on.
+// - the catalog's bucket answering this page with CORS headers (catalog docs/bucket-cors.json): a routed element whose
+//   sound would taint the page plays silence (WebKit zeroes its MediaElementAudioSourceNode). One request, before the
+//   first song, checks it (mixReady), and decides for the life of the page.
+// Once routed, an element stays routed (the Web Audio API has no way back), so the context then stays running while the
+// radio is on (hissStop leaves it), rests at power off, and wakes in the tap that tunes in (prime).
+const mix = { state: 'off', ready: null, music: null, routes: new Map() }; // state: off (not tried), checking, on, no
+const mixing = () => mix.state === 'on';
+
+/** Whether the music could play through Web Audio here: no element volume, and an audio session to keep it playing. */
+function mixPossible() {
+  if (!BROWSER || snap.volumeWorks || embedded) return false;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    return !!AC && typeof AC.prototype.createMediaElementSource === 'function' && !!navigator.audioSession;
+  } catch { return false; }
+}
+
+/**
+ * Settle the mix, once per page, before the first song's element gets its link (url, a presigned link to the song): a
+ * GET of it, its body let go as soon as the headers are in, tells whether the bucket answers this page with CORS. Then
+ * both music elements are routed (CORS loads from here on), or never. Resolves when settled; every caller waits on the
+ * same check, so no element loads a song outside CORS that is routed after.
+ */
+function mixReady(url) {
+  if (!mix.ready) mix.ready = settleMix(url);
+  return mix.ready;
+}
+async function settleMix(url) {
+  if (!mixPossible() || !ctx) { mix.state = 'no'; return; }
+  mix.state = 'checking';
+  let ok = false;
+  try {
+    const ac = typeof AbortController === 'function' ? new AbortController() : null;
+    const r = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store', ...(ac ? { signal: ac.signal } : {}) });
+    ok = !!r && r.ok;
+    if (ac) ac.abort();
+  } catch { ok = false; }
+  if (!ok || !ctx) { mix.state = 'no'; return; }
+  try {
+    const music = ctx.createGain();
+    music.gain.value = talking ? TALK_SHARE : 1;
+    music.connect(ctx.destination);
+    mix.music = music;
+    for (const el of els()) {
+      if (!el) continue;
+      el.crossOrigin = 'anonymous';
+      const src = ctx.createMediaElementSource(el), gain = ctx.createGain();
+      gain.gain.value = el.muted ? 0 : 1;
+      src.connect(gain);
+      gain.connect(music);
+      mix.routes.set(el, { src, gain });
+    }
+    mix.state = 'on';
+  } catch {
+    // whatever got routed plays through the context, which must keep running for it; the rest plays as before
+    mix.state = mix.routes.size ? 'on' : 'no';
+  }
+  if (mixing() && ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume().catch(() => {});
+}
+
+/** A music element's mute: the element's own, and where it plays through the mix, its gain's too. */
+function hush(el, on) {
+  if (!el) return;
+  el.muted = on;
+  const r = mix.routes.get(el);
+  if (r) { try { r.gain.gain.value = on ? 0 : 1; } catch { /* the context went away */ } }
+}
+
+/** The radio is off (or another tab took it): the music's context rests; the tap that tunes in wakes it (prime). */
+function restMix() {
+  if (mixing() && ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+}
+
+/** The dip under the talk where the music plays through the mix: to `to` of full, over `ms`. */
+function mixDip(to, ms) {
+  if (!mixing() || !mix.music || !ctx) return;
+  try {
+    const g = mix.music.gain, t = ctx.currentTime;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    if (ms > 0) g.linearRampToValueAtTime(to, t + ms / 1000);
+    else g.setValueAtTime(to, t);
   } catch { /* the context went away */ }
 }
 
@@ -638,7 +739,7 @@ function finishDrop(d) {
     loadDrop(nextDropClip());
   }, 400);
 }
-/** Playback moved on (a boundary, a retune, power off): no drop, the music at its full share (a third under the talk). */
+/** Playback moved on (a boundary, a retune, power off): no drop, the music at its full share (half under the talk). */
 function stopDrop() {
   cancel(...DROP_TIMERS);
   drop = null;
@@ -659,8 +760,8 @@ function skipDrop() {
 // ---------------------------------------------------------------- the talk-over
 // Max on the mic (the radio admin, admin/mic.js). While the radio is on it follows the catalog's word on the talk (the
 // events stream, and each read of the queue while that stream is not live) and plays a talk that is on, from its live MP3,
-// on V. Once V sounds the music dips to a third, or is muted where element volume does not work (iOS keeps the volume in
-// the listener's hands), and comes back after his last word: the catalog says the talk is over as Max stops, seconds
+// on V. Once V sounds the music dips to half (by element volume, or through the mix on iPhone and iPad; muted where
+// neither works), and comes back after his last word: the catalog says the talk is over as Max stops, seconds
 // before a listener hears the end of it, so V plays its stream on to its end first (talk.js, playsOut). A failing stream
 // is asked for again for as long as the catalog says the talk is on, 1, 3, 8 and 15 s after failures in a row, then
 // every 30 s (talk.js, voiceRetryMs), so a dropped connection gets Max back once the network is. Max's own browser never
@@ -677,8 +778,8 @@ let esLive = false; // it has said where the talk stands since it last (re)conne
 let esTries = 0;
 const TALK_TIMERS = ['voiceTick', 'voiceRetry', 'voiceTail', 'voiceHold', 'own', 'events'];
 
-/** Where element volume does not work, the music is muted under the talk instead (and plays on, in place). */
-const musicMuted = () => talking && !snap.volumeWorks;
+/** Where neither element volume nor the mix can dip it, the music is muted under the talk instead (playing on, in place). */
+const musicMuted = () => talking && !snap.volumeWorks && !mixing();
 
 function voiceEl() {
   if (!V && BROWSER && typeof Audio === 'function') {
@@ -769,13 +870,14 @@ function voiceTick() {
   if (v.tries && v.sounding && t - v.since > TALK_STEADY_MS) v.tries = 0;
 }
 
-/** The music under the talk: down to a third (or muted) while it sounds; a drop sounding then stops. */
+/** The music under the talk: down to half (or muted, musicMuted) while it sounds; a drop sounding then stops. */
 function setTalking(on) {
   if (on === talking) return;
   talking = on;
   if (on && dropDips()) skipDrop();
-  if (!snap.volumeWorks) for (const el of [A, B]) if (el && el !== leaving) el.muted = on;
+  if (!snap.volumeWorks && !mixing()) for (const el of [A, B]) if (el && el !== leaving) hush(el, on);
   duckTo(musicShare({ talking: on, drop: dropDips() }), on ? DUCK_MS : UNDUCK_MS);
+  mixDip(on ? TALK_SHARE : 1, on ? DUCK_MS : UNDUCK_MS);
   set({ talking: on });
 }
 
@@ -852,7 +954,8 @@ function stopTalk() {
   hold = { id: '', at: 0 };
   if (talking) {
     talking = false;
-    if (!snap.volumeWorks) for (const el of [A, B]) if (el && el !== leaving) el.muted = false;
+    if (!snap.volumeWorks && !mixing()) for (const el of [A, B]) if (el && el !== leaving) hush(el, false);
+    mixDip(1, 0);
     set({ talking: false });
   }
 }
@@ -891,7 +994,9 @@ async function begin(g, slot, how) {
       return;
     }
     if (g !== gen) { if (loading === el) loading = null; return; }
-    el.muted = musicMuted(); // Max on the mic where volume cannot dip: the song starts muted, in place
+    await mixReady(url); // the first song decides whether the music plays through Web Audio here (iPhone, iPad)
+    if (g !== gen) { if (loading === el) loading = null; return; }
+    hush(el, musicMuted()); // Max on the mic where the music cannot dip: the song starts muted, in place
     el.src = at(url, (now() - slot.startedAt) / 1000 + START_LEAD); // a little ahead: it takes a moment to start
   }
   gainOf(el, how === 'switch' ? 1 : 0);
@@ -922,6 +1027,14 @@ async function begin(g, slot, how) {
   }
   if (loading === el) loading = null;
   if (g !== gen) { stopEl(el); return; }
+  // Through the mix a song sounds only while the audio context runs. One left suspended (it rested at power off, and no
+  // tap woke it) is asked to resume; if the browser will not without a tap, PUSH PWR asks for one. ('interrupted', a
+  // call or Siri, is iOS's own to end.)
+  if (mix.routes.has(el) && ctx && ctx.state === 'suspended') {
+    try { await Promise.race([ctx.resume(), new Promise((r) => { setTimeout(r, 1000); })]); } catch { /* refused */ }
+    if (g !== gen) { stopEl(el); return; }
+    if (ctx.state === 'suspended') { blocked(); return; }
+  }
   handOver(g, el, slot, how);
 }
 
@@ -976,7 +1089,9 @@ async function preload(g) {
   let url;
   try { url = await linkFor(slot.song.id); } catch { return; } // the boundary tries again
   if (g !== gen || !cur || el === cur.el || el === loading || el === leaving) return;
-  el.muted = musicMuted();
+  await mixReady(url); // settled by the first song already: only ever a moment
+  if (g !== gen || !cur || el === cur.el || el === loading || el === leaving) return;
+  hush(el, musicMuted());
   gainOf(el, 1);
   el.src = at(url, x.offsetMs / 1000);
   pre = { slot, el };
@@ -1034,7 +1149,7 @@ function boundary(g) {
   if (cur.el) {
     // Muted rather than paused: it plays on silently until the next song sounds, because iOS lets a page that is
     // playing start its next song from the lock screen, and not one that has gone quiet.
-    cur.el.muted = true;
+    hush(cur.el, true);
     leaving = cur.el;
     later('leave', dropLeaving, 8000);
   }
@@ -1058,7 +1173,7 @@ function retune() {
   const g = ++gen;
   halt();
   if (pre) { stopEl(pre.el); pre = null; }
-  if (cur && cur.el) { cur.el.muted = true; leaving = cur.el; later('leave', dropLeaving, 8000); }
+  if (cur && cur.el) { hush(cur.el, true); leaving = cur.el; later('leave', dropLeaving, 8000); }
   cur = { slot: slotOf(x), el: null };
   attempts = 0;
   set({ status: 'tuning', song: null, next: null });
@@ -1177,6 +1292,7 @@ function blocked() {
 }
 function release() {
   endSession();
+  restMix();
   claimAt = 0;
   set({ status: 'released', song: null, next: null, popping: false, reason: '' });
   mediaClear();
@@ -1211,6 +1327,11 @@ export function prime() {
   if (d && !(drop && drop.on)) unlock(d);
   const v = voiceEl();
   if (v && !(voice && v.getAttribute('src') && !isUnlock(v))) unlock(v); // so a talk can start later with no tap (iOS)
+  // iPhone, iPad: a playback audio session, so the context the music may play through (the mix) keeps running with the
+  // phone locked, as an <audio> does; set before the context starts
+  if (mix.state !== 'no' && mixPossible()) {
+    try { if (navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch { /* left as it was */ }
+  }
   wakeStatic();
   mediaHandlers();
 }
@@ -1244,6 +1365,7 @@ export function powerOn() {
 /** Silence: audio (a drop's too), timers and polling stop. */
 export function powerOff() {
   endSession();
+  restMix();
   claimAt = 0;
   set({ status: 'off', song: null, next: null, popping: false, reason: '' });
   mediaShow(null);

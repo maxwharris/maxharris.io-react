@@ -82,10 +82,10 @@ test('a talk the catalog says is over plays on to the end of its stream, his las
   assert.equal(playsOut({ enabled: true, talk: off, own: heardOwn(NO_OWN, ID, false, 1), voice }), false);
 });
 
-test('the music dips to a third under the talk, which outranks a drop', () => {
-  assert.equal(TALK_SHARE, 1 / 3);
-  assert.equal(musicShare({ talking: true, drop: false }), 1 / 3);
-  assert.equal(musicShare({ talking: true, drop: true }), 1 / 3);
+test('the music dips to half under the talk, which outranks a drop', () => {
+  assert.equal(TALK_SHARE, 1 / 2);
+  assert.equal(musicShare({ talking: true, drop: false }), 1 / 2);
+  assert.equal(musicShare({ talking: true, drop: true }), 1 / 2);
   assert.equal(musicShare({ talking: false, drop: true }), DROP_SHARE);
   assert.equal(musicShare({ talking: false, drop: false }), 1);
 });

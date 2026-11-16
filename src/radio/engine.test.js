@@ -149,7 +149,7 @@ test('a talk the catalog ends plays on to his last word; the dip and the on-air 
   await advance(10000);
   assert.equal(talking(), true);
   const dipped = music().volume;
-  assert.ok(Math.abs(dipped - 0.8 * 0.8 / 3) < 0.01, `the music at a third of the knob, ${dipped}`);
+  assert.ok(Math.abs(dipped - 0.8 * 0.8 / 2) < 0.01, `the music at half the knob, ${dipped}`);
   say({ on: false }); // Max tapped stop: the catalog says so at once, while Chrome still holds about 4.5 s of him
   await advance(4000);
   assert.equal(el.getAttribute('src'), `/catalog/api/radio/talk/${id}/stream.mp3`, 'his last words still playing');

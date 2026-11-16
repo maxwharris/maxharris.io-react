@@ -13,8 +13,13 @@
  */
 export const TALK_LAG_S = 3;
 
-/** The music's share of the knob while a talk sounds (Max was told "about a third"): down in 250 ms, up in 450 ms after. */
-export const TALK_SHARE = 1 / 3;
+/**
+ * The music's share while a talk sounds: half, 6 dB down, so it plays on under his voice (Max, 11/16/26: a third, 9.5 dB,
+ * was "too quiet"; the music should overlap the voice). His voice sits about 3 dB over a typical song dipped so, and
+ * the two together seldom pass full scale (measured on the radio's songs: under 0.2% of samples on the loudest, where
+ * no dip clipped up to 7%). Down in 250 ms, up in 450 ms after. Element volume where it works, the mix on iPhone and iPad.
+ */
+export const TALK_SHARE = 1 / 2;
 /** And under an announcer drop. */
 export const DROP_SHARE = 0.4;
 /** How long the word of this browser's radio admin that it is live holds without being said again (it says so every 2 s). */
@@ -73,7 +78,7 @@ export function playsOut({ enabled, talk, own = NO_OWN, echo = false, voice }) {
   return !!enabled && !echo && !!voice && !voice.down && !(talk && talk.on) && !own.ids.includes(voice.id);
 }
 
-/** The music's share of the knob: a third while Max talks (drops wait meanwhile), DROP_SHARE under a drop, else all. */
+/** The music's share of the knob: TALK_SHARE while Max talks (drops wait meanwhile), DROP_SHARE under a drop, else all. */
 export const musicShare = ({ talking, drop }) => (talking ? TALK_SHARE : drop ? DROP_SHARE : 1);
 
 /**
