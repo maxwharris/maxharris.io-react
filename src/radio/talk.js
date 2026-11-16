@@ -1,9 +1,17 @@
 // maxradio's talk-over, the pure parts (no DOM; talk.test.js). Max goes live in the radio admin (admin/mic.js) and every
-// radio hears him about 3 s later, over the music (Max, 11/15/26: "broadcast input radio-admin panel to all radio viewers
-// live ... so the user can talk over the radio like announcer"). The catalog says when a talk is on (GET
+// radio hears him about 5 s later (TALK_LAG_S), over the music (Max, 11/15/26: "broadcast input radio-admin panel to all
+// radio viewers live ... so the user can talk over the radio like announcer"). The catalog says when a talk is on (GET
 // /catalog/api/radio's talk field, and the events stream /catalog/api/radio/events) and streams it as a live MP3
 // (/catalog/api/radio/talk/:id/stream.mp3); engine.js plays it on an element of its own and dips the music under it.
 // This decides what a radio plays and how far the music dips.
+
+/**
+ * How far behind Max a listener hears him, in seconds, as the mic card tells him (admin/Mic.jsx): Chrome holds a live MP3
+ * until it has about 32 KB, 4.1 s at the catalog's 64 kbps, on top of the mic's 250 ms chunks and the catalog's 0.4 s
+ * from a chunk's post to its stream (the catalog's docs/app.md: 4.7 s from post to playback in Chrome; 4.5 s from going
+ * live to the first sound, measured with the dev mocks, which add no 0.4 s).
+ */
+export const TALK_LAG_S = 5;
 
 /** The music's share of the knob while a talk sounds (Max was told "about a third"): down in 250 ms, up in 450 ms after. */
 export const TALK_SHARE = 1 / 3;

@@ -10,6 +10,7 @@
 import { memo, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createMic } from './mic.js';
 import { clock, eastern } from './queue.js';
+import { TALK_LAG_S } from '../talk.js';
 import './mic.css';
 
 // drawn icons, 24 px lines like the window's own
@@ -23,7 +24,8 @@ const MIC = (
 const STOP = <rect x="7" y="7" width="10" height="10" rx="2.2" />;
 const BARS = 13;
 
-const READY = 'talk over the radio. everyone hears you about 3 s later; wear headphones so the music stays out of your mic.';
+// how late listeners hear him (talk.js, TALK_LAG_S: measured in Chrome), so he can time talking over a song's end
+const READY = `talk over the radio. everyone hears you about ${TALK_LAG_S} s later; wear headphones so the music stays out of your mic.`;
 /** Each state's heading, line and what the round button says it does. */
 const COPY = {
   ready: { h: 'go live', p: READY, act: 'go live: talk over the radio' },

@@ -25,13 +25,14 @@
 // station clock like the songs (schedule.js dropFor), so a listener tuning in during one joins it partway. Where element
 // volume works the music dips under them.
 //
-// The talk-over: Max goes live in the radio admin (admin/mic.js) and every radio hears him about 3 s later, over the
-// music (Max, 11/15/26: "so the user can talk over the radio like announcer"; he picked "works everywhere", locked
-// iPhones included). The catalog says when a talk is on (GET /radio's talk field, and its events stream, open while the
-// radio is on) and streams it as a live MP3 (/radio/talk/:id/stream.mp3), which plays on an element of its own, unlocked
-// with the others in the tap that tunes in, so it can start later on its own. Once it sounds the music dips to a third
-// (talk.js), or where element volume does not work (iPhone, iPad) is muted, playing on in place; a drop due meanwhile is
-// left out. Max's own browser dips but never plays his talk: his radio admin says so on the one-radio channel.
+// The talk-over: Max goes live in the radio admin (admin/mic.js) and every radio hears him about 5 s later (talk.js,
+// TALK_LAG_S: mostly the browser holding back the start of a live MP3), over the music (Max, 11/15/26: "so the user can
+// talk over the radio like announcer"; he picked "works everywhere", locked iPhones included). The catalog says when a
+// talk is on (GET /radio's talk field, and its events stream, open while the radio is on) and streams it as a live MP3
+// (/radio/talk/:id/stream.mp3), which plays on an element of its own, unlocked with the others in the tap that tunes in,
+// so it can start later on its own. Once it sounds the music dips to a third (talk.js), or where element volume does not
+// work (iPhone, iPad) is muted, playing on in place, until his last word has played; a drop due meanwhile is left out.
+// Max's own browser dips but never plays his talk: his radio admin says so on the one-radio channel.
 
 import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
