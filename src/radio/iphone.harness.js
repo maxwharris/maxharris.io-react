@@ -1,14 +1,18 @@
-// A stand-in iPhone for the engine's mix tests (engine.mix.test.js, engine.nomix.test.js): Safari's locked element
-// volume (the user agent says iPhone), navigator.audioSession, an AudioContext that records what is routed through it,
-// <audio> elements the test plays, the catalog's events stream spoken by the test, and fetch answering the radio's
-// routes, its probe of a song's link with CORS headers or without. One clock the test moves. Not a test itself: each
-// test file sets one up before it imports the engine, so each gets an engine of its own.
+// A stand-in iPhone for the engine's mix tests (engine.mix*.test.js, engine.nomix.test.js): Safari's locked element
+// volume (the user agent says iPhone), navigator.audioSession, iOS's rule that sound starts only from a tap (an element
+// plays once a tap has played it; an audio context starts the first time inside a tap, and resumes without one after),
+// an AudioContext that records what is routed through it and whose state iOS can change (a call, Siri), <audio>
+// elements the test plays, the catalog's events stream spoken by the test, and fetch answering the radio's routes and
+// its probe of a song's link (bucket: 'ok' with CORS headers, 'refuse' without, 'hang' never, 'slow' after 2 s). One
+// clock the test moves. Not a test itself: each test file sets one up before it imports the engine, so each gets an
+// engine, and a page, of its own.
 import { mock } from 'node:test';
 import assert from 'node:assert/strict';
 
 export const T0 = Date.UTC(2026, 10, 16, 22, 0, 0);
 const SONG = 600000;
 
+let inTap = false; // inside the test's tap (tap())
 class FakeAudio {
   constructor(list) {
     this.attrs = {};
@@ -39,6 +43,8 @@ class FakeAudio {
   load() {}
   play() {
     if (!this.attrs.src) return Promise.reject(Object.assign(new Error('no source'), { name: 'NotSupportedError' }));
+    if (inTap) this.unlocked = true;
+    if (!this.unlocked) return Promise.reject(Object.assign(new Error('not allowed'), { name: 'NotAllowedError' }));
     this.paused = false;
     this.readyState = 4;
     return Promise.resolve();
@@ -55,7 +61,9 @@ class FakeAudio {
 }
 
 class FakeParam {
-  constructor(v) { this.value = v; }
+  constructor(v) { this.v = v; this.history = [v]; }
+  get value() { return this.v; }
+  set value(x) { this.v = x; this.history.push(x); }
   cancelScheduledValues() {}
   setValueAtTime(v) { this.value = v; }
   linearRampToValueAtTime(v) { this.value = v; } // the ramps land at once: the tests read where they go
@@ -67,7 +75,7 @@ class FakeNode {
   disconnect() { this.outs = []; }
 }
 
-export async function setup({ cors }) {
+export async function setup({ bucket }) {
   mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'], now: T0 });
   Object.defineProperty(globalThis, 'performance', { value: { now: () => Date.now() - T0 }, configurable: true, writable: true });
 
@@ -76,14 +84,30 @@ export async function setup({ cors }) {
   class FakeAudioContext {
     constructor() {
       this.state = 'suspended';
+      this.started = false; // started once inside a tap: iOS lets it resume without one after
       this.sampleRate = 48000;
       this.destination = new FakeNode('destination');
       this.routed = []; // {el, node}: every element routed through this context
+      this.on = {};
+      this.resumes = 0;
       contexts.push(this);
     }
     get currentTime() { return performance.now() / 1000; }
-    resume() { this.state = 'running'; return Promise.resolve(); }
-    suspend() { this.state = 'suspended'; return Promise.resolve(); }
+    addEventListener(ev, fn) { (this.on[ev] ||= []).push(fn); }
+    /** iOS (or the page) moves it: statechange fires, as it does in Safari. */
+    becomes(state) {
+      if (this.state === state) return;
+      this.state = state;
+      for (const fn of this.on.statechange || []) fn({ type: 'statechange', target: this });
+    }
+    resume() {
+      this.resumes += 1;
+      if (this.refuse || (!this.started && !inTap)) return new Promise(() => {}); // no tap yet: it waits, and waits
+      this.started = true;
+      this.becomes('running');
+      return Promise.resolve();
+    }
+    suspend() { this.becomes('suspended'); return Promise.resolve(); }
     createGain() { const n = new FakeNode('gain'); n.gain = new FakeParam(1); return n; }
     createMediaElementSource(el) {
       if (this.routed.some((r) => r.el === el)) throw Object.assign(new Error('already routed'), { name: 'InvalidStateError' });
@@ -130,16 +154,19 @@ export async function setup({ cors }) {
     songs: [{ id: 1, title: 'one', durationMs: SONG }, { id: 2, title: 'two', durationMs: SONG }],
   };
   const probes = [];
+  let signed = 0; // each presigned link differs, as S3's do
   globalThis.fetch = async (url, opts = {}) => {
     const u = String(url);
     if (u.startsWith('https://bucket.example/')) {
-      probes.push({ url: u, mode: opts.mode });
-      if (!cors) throw new TypeError('Load failed'); // what a CORS refusal looks like to the page
+      probes.push({ url: u, mode: opts.mode, at: Date.now() });
+      if (bucket === 'refuse') throw new TypeError('Load failed'); // what a CORS refusal looks like to the page
+      if (bucket === 'hang') return new Promise(() => {}); // a weak signal: never an answer (the abort is ignored too)
+      if (bucket === 'slow') await new Promise((r) => { setTimeout(r, 2000); });
       return { ok: true, status: 200, json: async () => ({}) };
     }
     let body = null;
     if (u === '/catalog/api/radio') body = { ...STATION, now: Date.now(), talk: { on: false } };
-    else if (u.startsWith('/catalog/api/radio/play/')) body = { url: `https://bucket.example/previews/${u.split('/').pop()}.m4a?sig=x`, expires: new Date(Date.now() + 3600000).toISOString() };
+    else if (u.startsWith('/catalog/api/radio/play/')) body = { url: `https://bucket.example/previews/${u.split('/').pop()}.m4a?sig=${++signed}`, expires: new Date(Date.now() + 3600000).toISOString() };
     else if (u.startsWith('/catalog/api/radio/peaks/')) body = { peaks: [] };
     return body ? { ok: true, status: 200, json: async () => body } : { ok: false, status: 404, json: async () => ({}) };
   };
@@ -181,15 +208,20 @@ export async function setup({ cors }) {
     return { own, dip, out: dip && dip.outs[0], ctx: c };
   }
   let n = 0;
-  async function tuneIn() {
-    engine.prime(); // the tap: each idle element plays a few silent samples, which end at once
+  /** A tap: what fn does inside it may start sound; the silent clips it plays end at once. */
+  function tap(fn) {
+    inTap = true;
+    try { fn(); } finally { inTap = false; }
     for (const a of audios) {
       if (!(a.getAttribute('src') || '').startsWith('blob:') || a.paused) continue;
       a.ended = true;
       a.paused = true;
       a.fire('ended');
     }
-    engine.powerOn();
+  }
+  /** Tune in inside a tap (the power button, the terminal's Enter, the radio's icon), and wait for the song. */
+  async function tuneIn() {
+    tap(() => { engine.prime(); engine.powerOn(); });
     await advance(300);
     assert.equal(engine.getSnapshot().status, 'on');
   }
@@ -201,5 +233,5 @@ export async function setup({ cors }) {
     assert.ok(el, 'the talk is asked for');
     return { id, el };
   }
-  return { engine, audios, session, probes, advance, say, admin, voiceEl, music, sound, end, ctx, route, tuneIn, onAir, talking: () => engine.getSnapshot().talking };
+  return { engine, audios, session, probes, advance, say, admin, voiceEl, music, sound, end, ctx, route, tap, tuneIn, onAir, talking: () => engine.getSnapshot().talking, status: () => engine.getSnapshot().status };
 }

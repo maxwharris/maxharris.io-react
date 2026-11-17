@@ -116,3 +116,29 @@ test('the round button: nothing while the browser asks for the mic, a stop once 
   assert.equal(mic.get().phase, 'ready');
   assert.equal(micOpen(), false);
 });
+
+test('on an iPhone, live takes play-and-record from a radio set to playback, and stopping hands playback back', async () => {
+  const { audioSession } = await import('../session.js');
+  Object.assign(navigator, {
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1',
+    maxTouchPoints: 5,
+    audioSession: { type: 'auto' },
+  });
+  try {
+    audioSession({ radio: true }); // a radio on in this page, its music through Web Audio (engine.js, the mix)
+    assert.equal(navigator.audioSession.type, 'playback');
+    const post = await goLive();
+    assert.equal(navigator.audioSession.type, 'play-and-record', 'capture needs it: under playback the mic would not start');
+    post.answer(201, { id: ID, startedAt: Date.now(), sampleRate: 24000, chunkMs: 250 });
+    await flush();
+    assert.equal(mic.get().phase, 'live');
+    mic.tap(); // stop
+    assert.equal(mic.get().phase, 'ready');
+    assert.equal(navigator.audioSession.type, 'playback', 'the radio has its session again');
+  } finally {
+    audioSession({ radio: false, mic: false });
+    delete navigator.userAgent;
+    delete navigator.maxTouchPoints;
+    delete navigator.audioSession;
+  }
+});

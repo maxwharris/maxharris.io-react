@@ -4,7 +4,7 @@ import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { setup } from './iphone.harness.js';
 
-const h = await setup({ cors: false });
+const h = await setup({ bucket: 'refuse' });
 afterEach(() => h.engine.powerOff());
 
 test('without CORS from the bucket nothing is routed, and the songs load as before', async () => {
@@ -15,6 +15,7 @@ test('without CORS from the bucket nothing is routed, and the songs load as befo
   assert.ok(el, 'the song plays, straight from its element');
   assert.equal(el.crossOrigin, null, 'and loads without CORS');
   assert.equal(el.muted, false);
+  assert.equal(h.session.type, 'auto', 'the playback session given back: nothing plays through the context');
 });
 
 test('without the mix the talk mutes the music, in place, and unmutes it after', async () => {

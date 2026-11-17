@@ -39,6 +39,7 @@ import { onAir, dropFor } from './schedule.js';
 import { calibrate, normalizeStation, parseExpires, stationKey, titleLine } from './format.js';
 import { stretch, levelAt } from './record/peaks.js';
 import { NO_OWN, OWN_MS, TALK_SHARE, heardOwn, musicShare, normalizeTalk, playsOut, sameTalk, takesTalk, talkPlan, voiceRetryMs } from './talk.js';
+import { audioSession } from './session.js';
 
 export const API = '/catalog/api/radio';
 export const PAGE_URL = '/radio/';
@@ -242,7 +243,7 @@ let lastProgress = 0;
 let pausedAt = -1e9; // when the song on air was last paused from outside (the pause handler decides what that was)
 const T = {}; // named timers
 const DROP_TIMERS = ['duck', 'drop', 'dropEnd', 'dropStop'];
-const PLAYBACK_TIMERS = ['read', 'preload', 'fade', 'switch', 'retry', 'reconnect', 'hiss', 'leave', 'poll', 'tick', 'popping', ...DROP_TIMERS];
+const PLAYBACK_TIMERS = ['read', 'preload', 'fade', 'switch', 'retry', 'reconnect', 'hiss', 'leave', 'poll', 'tick', 'popping', 'mixWake', ...DROP_TIMERS];
 
 function later(name, fn, ms) {
   clearTimeout(T[name]);
@@ -473,16 +474,23 @@ function hissStop(quick = false) {
 // the element's own muted) and both into one more, the dip under the talk (mixDip; drops still play over the music
 // there, undipped, as before). Two things make that safe, and without either nothing is routed and the talk mutes the
 // music as before:
-// - navigator.audioSession set to 'playback' (iOS 16.4 on), which keeps an audio context running when Safari goes to
-//   the background or the phone locks (WebKit: AudioContext::shouldOverrideBackgroundPlaybackRestriction). Without it
-//   iOS stops the context there, and routed music would go silent on a locked phone, where an <audio> plays on.
+// - the page's audio session set to 'playback' (session.js; iOS 16.4 on), which keeps an audio context running when
+//   Safari goes to the background or the phone locks (WebKit: AudioContext::shouldOverrideBackgroundPlaybackRestriction).
+//   Without it iOS stops the context there, and routed music would go silent on a locked phone, where an <audio> plays
+//   on. (The radio admin's live mic takes 'play-and-record' instead, which keeps it running too.)
 // - the catalog's bucket answering this page with CORS headers (catalog docs/bucket-cors.json): a routed element whose
-//   sound would taint the page plays silence (WebKit zeroes its MediaElementAudioSourceNode). One request, before the
-//   first song, checks it (mixReady), and decides for the life of the page.
-// Once routed, an element stays routed (the Web Audio API has no way back), so the context then stays running while the
-// radio is on (hissStop leaves it), rests at power off, and wakes in the tap that tunes in (prime).
-const mix = { state: 'off', ready: null, music: null, routes: new Map() }; // state: off (not tried), checking, on, no
+//   sound would taint the page plays silence (WebKit zeroes its MediaElementAudioSourceNode). One request, before a song
+//   loads, checks it (mixReady, MIX_PROBE_MS at most), and decides for the life of the page. It waits for an audio
+//   context, which only a tap starts on iOS: a radio that tunes in on opening (the pop-out, a window) meets PUSH PWR there
+//   first, and the mix is settled at the start that tap makes. Nor is it settled while either element holds a song
+//   loaded outside CORS (it would go silent once routed): the next start does it.
+// Once routed, an element stays routed (the Web Audio API has no way back), so the context then runs while the radio
+// plays (hissStop leaves it, onMixState asks a context left suspended to resume), rests whenever it does not (restMix:
+// off, PUSH PWR, released, NO SIGNAL), and wakes in the tap that tunes in (prime) or as a song starts.
+const mix = { state: 'off', ready: null, music: null, routes: new Map() }; // state: off (not yet), checking, on, no
 const mixing = () => mix.state === 'on';
+const MIX_PROBE_MS = 6000; // the bucket not answering the check this long: no mix (the songs still play, as before)
+const MIX_RESUME_MS = 2500; // a suspended context asked to resume (a Bluetooth route can take a moment): then PUSH PWR
 
 /** Whether the music could play through Web Audio here: no element volume, and an audio session to keep it playing. */
 function mixPossible() {
@@ -494,26 +502,34 @@ function mixPossible() {
 }
 
 /**
- * Settle the mix, once per page, before the first song's element gets its link (url, a presigned link to the song): a
- * GET of it, its body let go as soon as the headers are in, tells whether the bucket answers this page with CORS. Then
- * both music elements are routed (CORS loads from here on), or never. Resolves when settled; every caller waits on the
- * same check, so no element loads a song outside CORS that is routed after.
+ * Before a song's element gets its link (url, a presigned link to the song): settle the mix, once per page, if it can be
+ * settled now (see above; otherwise this start plays as before and a later one settles it). A GET of the link, its body
+ * let go as soon as the headers are in, tells whether the bucket answers this page with CORS; then both music elements
+ * are routed (CORS loads from here on), or never. Every caller waits on the same check, so no element loads a song
+ * outside CORS that is routed after.
  */
 function mixReady(url) {
-  if (!mix.ready) mix.ready = settleMix(url);
+  if (mix.ready) return mix.ready;
+  if (!mixPossible()) { mix.state = 'no'; mix.ready = Promise.resolve(); return mix.ready; }
+  if (!ctx || els().some((e) => e && e.getAttribute('src') && !isUnlock(e))) return Promise.resolve();
+  mix.ready = settleMix(url);
   return mix.ready;
 }
 async function settleMix(url) {
-  if (!mixPossible() || !ctx) { mix.state = 'no'; return; }
   mix.state = 'checking';
   let ok = false;
+  const ac = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ac ? setTimeout(() => ac.abort(), MIX_PROBE_MS) : 0;
   try {
-    const ac = typeof AbortController === 'function' ? new AbortController() : null;
-    const r = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store', ...(ac ? { signal: ac.signal } : {}) });
+    const r = await Promise.race([
+      fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store', ...(ac ? { signal: ac.signal } : {}) }),
+      new Promise((_, no) => { setTimeout(() => no(new Error('no answer')), MIX_PROBE_MS + 50); }),
+    ]);
     ok = !!r && r.ok;
-    if (ac) ac.abort();
   } catch { ok = false; }
-  if (!ok || !ctx) { mix.state = 'no'; return; }
+  clearTimeout(timer);
+  if (ac) ac.abort(); // the body is not wanted
+  if (!ok || !ctx || ctx.state === 'closed') { mix.state = 'no'; audioSession({ radio: false }); return; }
   try {
     const music = ctx.createGain();
     music.gain.value = talking ? TALK_SHARE : 1;
@@ -529,11 +545,29 @@ async function settleMix(url) {
       mix.routes.set(el, { src, gain });
     }
     mix.state = 'on';
+    links.clear(); // fresh links from here on: none an element fetched outside CORS (a cached answer has no CORS headers)
   } catch {
-    // whatever got routed plays through the context, which must keep running for it; the rest plays as before
+    // Whatever got routed plays through the context, which must run for it; an element left out plays as before, and
+    // the talk mutes it (musicMuted asks per element).
     mix.state = mix.routes.size ? 'on' : 'no';
   }
-  if (mixing() && ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume().catch(() => {});
+  if (!mixing()) { audioSession({ radio: false }); return; }
+  try { ctx.addEventListener('statechange', onMixState); } catch { /* no events: begin() still checks */ }
+  if (!session) restMix(); // switched off while it checked
+  else if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+}
+
+/**
+ * The context the music plays through went to 'suspended' while the radio plays (iOS can leave it so after a call or
+ * Siri; this radio only rests it when it is not playing): ask it to resume, and if it will not without a tap, PUSH PWR
+ * rather than a radio that says it plays and is silent. ('interrupted' is iOS's own, and it ends it.)
+ */
+function onMixState() {
+  if (!mixing() || !ctx || ctx.state !== 'suspended' || !session || snap.status !== 'on') return;
+  ctx.resume().catch(() => {});
+  later('mixWake', () => {
+    if (mixing() && ctx && ctx.state === 'suspended' && session && snap.status === 'on') blocked();
+  }, MIX_RESUME_MS);
 }
 
 /** A music element's mute: the element's own, and where it plays through the mix, its gain's too. */
@@ -544,9 +578,13 @@ function hush(el, on) {
   if (r) { try { r.gain.gain.value = on ? 0 : 1; } catch { /* the context went away */ } }
 }
 
-/** The radio is off (or another tab took it): the music's context rests; the tap that tunes in wakes it (prime). */
+/**
+ * The radio is not playing (off, PUSH PWR, released, NO SIGNAL): the context the music plays through rests, from
+ * 'interrupted' too (a call: suspended by the page, iOS does not start it again when the call ends). A tap that tunes in
+ * (prime), or the next song's start, wakes it.
+ */
 function restMix() {
-  if (mixing() && ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+  if (mixing() && ctx && ctx.state !== 'closed' && ctx.state !== 'suspended') ctx.suspend().catch(() => {});
 }
 
 /** The dip under the talk where the music plays through the mix: to `to` of full, over `ms`. */
@@ -778,8 +816,8 @@ let esLive = false; // it has said where the talk stands since it last (re)conne
 let esTries = 0;
 const TALK_TIMERS = ['voiceTick', 'voiceRetry', 'voiceTail', 'voiceHold', 'own', 'events'];
 
-/** Where neither element volume nor the mix can dip it, the music is muted under the talk instead (playing on, in place). */
-const musicMuted = () => talking && !snap.volumeWorks && !mixing();
+/** Where neither element volume nor the mix can dip it, a music element is muted under the talk instead (playing on, in place). */
+const musicMuted = (el) => talking && !snap.volumeWorks && !mix.routes.has(el);
 
 function voiceEl() {
   if (!V && BROWSER && typeof Audio === 'function') {
@@ -875,7 +913,7 @@ function setTalking(on) {
   if (on === talking) return;
   talking = on;
   if (on && dropDips()) skipDrop();
-  if (!snap.volumeWorks && !mixing()) for (const el of [A, B]) if (el && el !== leaving) hush(el, on);
+  if (!snap.volumeWorks) for (const el of [A, B]) if (el && el !== leaving && !mix.routes.has(el)) hush(el, on);
   duckTo(musicShare({ talking: on, drop: dropDips() }), on ? DUCK_MS : UNDUCK_MS);
   mixDip(on ? TALK_SHARE : 1, on ? DUCK_MS : UNDUCK_MS);
   set({ talking: on });
@@ -954,7 +992,7 @@ function stopTalk() {
   hold = { id: '', at: 0 };
   if (talking) {
     talking = false;
-    if (!snap.volumeWorks && !mixing()) for (const el of [A, B]) if (el && el !== leaving) hush(el, false);
+    if (!snap.volumeWorks) for (const el of [A, B]) if (el && el !== leaving && !mix.routes.has(el)) hush(el, false);
     mixDip(1, 0);
     set({ talking: false });
   }
@@ -994,9 +1032,20 @@ async function begin(g, slot, how) {
       return;
     }
     if (g !== gen) { if (loading === el) loading = null; return; }
-    await mixReady(url); // the first song decides whether the music plays through Web Audio here (iPhone, iPad)
+    const unmixed = !mixing();
+    await mixReady(url); // a start decides whether the music plays through Web Audio here (iPhone, iPad)
     if (g !== gen) { if (loading === el) loading = null; return; }
-    hush(el, musicMuted()); // Max on the mic where the music cannot dip: the song starts muted, in place
+    if (unmixed && mixing()) {
+      // routed just now: a link fetched before it is not used (see links.clear() in settleMix)
+      try { url = await linkFor(slot.song.id, true); }
+      catch (e) {
+        if (loading === el) loading = null;
+        if (g === gen) failed(e);
+        return;
+      }
+      if (g !== gen) { if (loading === el) loading = null; return; }
+    }
+    hush(el, musicMuted(el)); // Max on the mic where the music cannot dip: the song starts muted, in place
     el.src = at(url, (now() - slot.startedAt) / 1000 + START_LEAD); // a little ahead: it takes a moment to start
   }
   gainOf(el, how === 'switch' ? 1 : 0);
@@ -1025,16 +1074,16 @@ async function begin(g, slot, how) {
   } finally {
     clearTimeout(timer);
   }
+  // Through the mix a song sounds only while the audio context runs. One left suspended (it rested while the radio did
+  // not play, and no tap has woken it) is asked to resume, MIX_RESUME_MS at most; if the browser will not without a tap,
+  // PUSH PWR asks for one. ('interrupted', a call or Siri, is iOS's own to end.) The element stays the one loading
+  // meanwhile, so a retune cannot take it.
+  if (g === gen && mix.routes.has(el) && ctx && ctx.state === 'suspended') {
+    try { await Promise.race([ctx.resume(), new Promise((r) => { setTimeout(r, MIX_RESUME_MS); })]); } catch { /* refused */ }
+  }
   if (loading === el) loading = null;
   if (g !== gen) { stopEl(el); return; }
-  // Through the mix a song sounds only while the audio context runs. One left suspended (it rested at power off, and no
-  // tap woke it) is asked to resume; if the browser will not without a tap, PUSH PWR asks for one. ('interrupted', a
-  // call or Siri, is iOS's own to end.)
-  if (mix.routes.has(el) && ctx && ctx.state === 'suspended') {
-    try { await Promise.race([ctx.resume(), new Promise((r) => { setTimeout(r, 1000); })]); } catch { /* refused */ }
-    if (g !== gen) { stopEl(el); return; }
-    if (ctx.state === 'suspended') { blocked(); return; }
-  }
+  if (mix.routes.has(el) && ctx && ctx.state === 'suspended') { blocked(); return; }
   handOver(g, el, slot, how);
 }
 
@@ -1091,7 +1140,7 @@ async function preload(g) {
   if (g !== gen || !cur || el === cur.el || el === loading || el === leaving) return;
   await mixReady(url); // settled by the first song already: only ever a moment
   if (g !== gen || !cur || el === cur.el || el === loading || el === leaving) return;
-  hush(el, musicMuted());
+  hush(el, musicMuted(el));
   gainOf(el, 1);
   el.src = at(url, x.offsetMs / 1000);
   pre = { slot, el };
@@ -1249,6 +1298,7 @@ function offair(reason) {
   stopAll();
   hissStop();
   set({ status: 'offair', reason, song: null, next: null });
+  restMix();
   mediaShow(null);
   later('reconnect', reconnect, BACKOFF_MS[Math.min(offairTries++, BACKOFF_MS.length - 1)]);
 }
@@ -1287,6 +1337,7 @@ function endSession() {
 }
 function blocked() {
   endSession();
+  restMix();
   set({ status: 'blocked', song: null, next: null, popping: false });
   mediaShow(null);
 }
@@ -1327,11 +1378,9 @@ export function prime() {
   if (d && !(drop && drop.on)) unlock(d);
   const v = voiceEl();
   if (v && !(voice && v.getAttribute('src') && !isUnlock(v))) unlock(v); // so a talk can start later with no tap (iOS)
-  // iPhone, iPad: a playback audio session, so the context the music may play through (the mix) keeps running with the
-  // phone locked, as an <audio> does; set before the context starts
-  if (mix.state !== 'no' && mixPossible()) {
-    try { if (navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch { /* left as it was */ }
-  }
+  // iPhone, iPad: a playback audio session (session.js), so the context the music may play through (the mix) keeps
+  // running with the phone locked, as an <audio> does; set before the context starts
+  if (mix.state !== 'no' && mixPossible()) audioSession({ radio: true });
   wakeStatic();
   mediaHandlers();
 }

@@ -18,6 +18,7 @@
 import { startTalk, sendAudio, endTalk } from './api.js';
 import { Uplink } from './uplink.js';
 import { low } from './queue.js';
+import { audioSession } from '../session.js';
 
 const WORKLET = new URL('./talk-worklet.js', import.meta.url);
 const SAY_EVERY = 8; // chunks: the radios here hear 'talking' again every 2 s
@@ -119,6 +120,7 @@ export function createMic() {
     try { if (c.src) c.src.disconnect(); } catch { /* gone */ }
     if (c.stream) for (const t of c.stream.getTracks()) { try { t.stop(); } catch { /* stopped */ } }
     if (c.ctx && c.ctx.state !== 'closed') c.ctx.close().catch(() => {});
+    audioSession({ mic: false }); // iPhone, iPad: a radio here gets its playback session back (session.js)
     for (const fn of levelFns) fn(0);
   }
   /** Off air with a plain line: the talk ends (the catalog may have ended it already), and the radios here come back. */
@@ -183,6 +185,9 @@ export function createMic() {
       return;
     }
     cur = c;
+    // iPhone, iPad: capture needs a play-and-record session, which a radio here set to playback would otherwise hold off
+    // (session.js); teardown hands it back
+    audioSession({ mic: true });
     emit({ phase: 'asking', why: '', elsewhere: null });
     try {
       c.stream = await md.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
